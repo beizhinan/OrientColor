@@ -45,7 +45,6 @@ npm install
 # 启动开发模式（微信小程序）
 npm run dev:mp-weixin
 ```
-````
 
 > 用微信开发者工具打开 `dist/dev/mp-weixin` 目录
 
