@@ -1,0 +1,51 @@
+{
+ "pages": [
+    {
+      "path": "pages/ads/ads",  
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "首页" } },
+    { "path": "pages/showcase/showcase", "style": { "navigationBarTitleText": "展示" } },
+    { "path": "pages/search/search", "style": { "navigationBarTitleText": "检索" } },
+    { "path": "pages/user/user", "style": { "navigationBarTitleText": "个人中心" } }
+  ],
+  "tabBar": {
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabs/home.png",
+        "selectedIconPath": "static/tabs/home-active.png"
+      },
+      {
+        "pagePath": "pages/showcase/showcase",
+        "text": "展示",
+        "iconPath": "static/tabs/showcase.png",
+        "selectedIconPath": "static/tabs/showcase-active.png"
+      },
+      {
+        "pagePath": "pages/search/search",
+        "text": "检索",
+        "iconPath": "static/tabs/search.png",
+        "selectedIconPath": "static/tabs/search-active.png"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "text": "我的",
+        "iconPath": "static/tabs/user.png",
+        "selectedIconPath": "static/tabs/user-active.png"
+      }
+    ],
+    "color": "#999",
+    "selectedColor": "#007AFF"
+  },
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	}
+}
