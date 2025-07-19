@@ -1,6 +1,5 @@
 # OrientColor - 色彩主题小程序
 
-
 一款基于 uni-app 开发的色彩主题展示与管理小程序，包含开屏广告、多导航页和个性化推荐功能。
 
 ## 📌 目录
@@ -51,7 +50,9 @@ npm run dev:mp-weixin
 
 ```
 orientColor/
+├── components/           # 自定义组件封装
 ├── pages/                # 页面组件
+│   ├── ads/              # 开屏广告页面
 │   ├── index/            # 首页
 │   ├── showcase/         # 色彩展示
 │   ├── search/           # 检索页
@@ -59,7 +60,7 @@ orientColor/
 ├── static/               # 静态资源
 │   ├── splash.jpg        # 开屏广告图
 │   └── tabs/             # 导航栏图标
-├── App.vue               # 根组件（含开屏逻辑）
+├── App.vue               # 根组件
 └── pages.json            # 页面配置
 ```
 
@@ -70,6 +71,8 @@ orientColor/
 | `npm run dev:mp-weixin`   | 微信小程序开发模式 |
 | `npm run build:mp-weixin` | 生产环境打包       |
 | `npm run lint`            | ESLint 代码检查    |
+
+> 使用差量编译，修改后自动刷新
 
 ### 代码规范
 
