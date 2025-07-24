@@ -51,6 +51,11 @@
     /* 小程序特有相关 */
     "mp-weixin" : {
         "appid" : "",
+        "permission": {
+            "scope.userInfo": {
+            "desc": "获取你的用户信息"
+            }
+        },
         "setting" : {
             "urlCheck" : false
         },
