@@ -12,6 +12,8 @@
     { "path": "pages/search/search", "style": { "navigationBarTitleText": "检索" } },
     { "path": "pages/user/user", "style": { "navigationBarTitleText": "个人中心" } },
     { "path": "pages/login/login", "style": { "navigationBarTitleText": "登录" } },
+    {"path": "pages/collection/collection","style": {"navigationBarTitleText": "收藏"}},
+    {"path": "pages/favorites/favorites","style": {"navigationBarTitleText": "收藏"}},
     {
     	"path" : "pages/chart/chart",
     	"style" : 
