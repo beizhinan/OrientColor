@@ -18,7 +18,6 @@
 </template>
 
 <script>
-	import buttonTab from
 	export default{
 		data(){
 			return{
