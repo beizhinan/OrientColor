@@ -1,10 +1,10 @@
 <template>
 	<view>
 		<view class="title">{{this.name}}</view>
-			<view class="frame">
-				<view class="content"
-				v-for="(item,index) in data"
-				:key = "item.id">
+		<view class="frame" v-show="this.flag">
+			<view class="content"
+			v-for="(item,index) in data"
+			:key = "item.id">
 				<view class="band"></view>
 				<view class="order">色卡{{item.id}}</view>
 				<view class="brief">#红色系，淡调，唐代，建筑</view>
@@ -14,14 +14,17 @@
 				</view>
 			</view>
 		</view>
+		<buttomTab></buttomTab>
 	</view>
 </template>
 
 <script>
+	import buttomTabVue from '../../components/buttomTab/buttomTab.vue'
 	export default{
 		data(){
 			return{
 				name:'',
+				flag:true,//判断是否删除了所有内容
 				//测试数据
 				data:[
 					{
@@ -45,7 +48,13 @@
 				// splice(索引, 删除数量)：直接修改原数组，删除指定元素
 				this.data.splice(index, 1)
 				console.log(`已删除索引为${index}的元素`)
+				if(this.data.length === 0){
+					this.flag=false
+				}
 			}
+		},
+		components:{
+			buttomTabVue,
 		}
 	}
 </script>
