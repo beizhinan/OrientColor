@@ -1,35 +1,38 @@
 <template>
-	<!--搜索框-->
-	<view class="findBox">
-		<!-- 用v-model绑定输入框内容到inputValue -->
-		<input placeholder="搜索我的收藏" class="find" v-model="inputValue">
-		<view class="iconfont icon-sousuo search-icon" @click="findData"></view>
-	</view>
-	<!--收藏夹-->
-	<view class="box">
-		<view class="collection">收藏夹</view>
-		<view class='mamage'>管理</view>
-	</view>
-	<!--具体内容-->
-	<view class="content">
-		<navigator class="favorites" :url="`/pages/favorites/favorites?name=${item.name}`" open-type="navigate"
-			v-for="(item,index) in dataList"
-			:key="item.id"
-			>
-			<view class="header"></view>
-			<view class="name">{{item.name}}</view>
-			<view class="number">{{item.colorCard.length}} 项</view>
-		</navigator>
-		<view class="favorites" @click="addFavorites">
-			<view class="iconfont icon-tianjiajiahaowubiankuang iconAdd"></view>
+	<view>
+		<!--搜索框-->
+		<view class="findBox">
+			<!-- 用v-model绑定输入框内容到inputValue -->
+			<input placeholder="搜索我的收藏" class="find" v-model="inputValue">
+			<view class="iconfont icon-sousuo search-icon" @click="findData"></view>
 		</view>
-		<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
-		<view class="block"></view>
+		<!--收藏夹-->
+		<view class="box">
+			<view class="collection">收藏夹</view>
+			<view class='mamage'>管理</view>
+		</view>
+		<!--具体内容-->
+		<view class="content">
+			<navigator class="favorites" :url="`/pages/favorites/favorites?name=${item.name}`" open-type="navigate"
+				v-for="(item,index) in dataList"
+				:key="item.id"
+				>
+				<view class="header"></view>
+				<view class="name">{{item.name}}</view>
+				<view class="number">{{item.colorCard.length}} 项</view>
+			</navigator>
+			<view class="favorites" @click="addFavorites">
+				<view class="iconfont icon-tianjiajiahaowubiankuang iconAdd"></view>
+			</view>
+			<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
+			<view class="block"></view>
+		</view>
+		<buttomTab></buttomTab>
 	</view>
-	
 </template>
 
 <script>
+	import buttomTabVue from '../../components/buttomTab/buttomTab.vue'
 	export default{
 		data(){
 			return{
@@ -135,6 +138,7 @@
 				}
 				// 筛选出名称包含关键词的数据
 				this.dataList = this.data.filter(item => {
+					this.inputValue=''
 					return item.name.includes(value);
 				});
 			},
@@ -163,6 +167,9 @@
 				// 提示成功
 				uni.showToast({ title: '添加成功', icon: 'success' });
 			}
+		},
+		components:{
+			buttomTabVue,
 		}
 	}
 </script>
