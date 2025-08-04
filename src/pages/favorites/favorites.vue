@@ -12,7 +12,7 @@
 				</view>
 				<button class="btn" style="margin-bottom: 8rpx;" @click="deleteData(index)">删除</button>
 				<view class="box">
-					<view class="colorSolid">查看色立体</view>
+					<view class="colorSolid" @click="goToDetail(item)">查看色立体</view>
 					<view class="entry">查看词条</view>
 				</view>
 			</view>
@@ -58,7 +58,16 @@
 				if(this.data.length === 0){
 					this.flag=false
 				}
-			}
+			},
+			goToDetail(item) {
+				// 跳转到页面
+			    if (!this.managerFlag) {
+					console.log(item.colorId)
+					uni.navigateTo({
+						url: `/pages/collection/collection?colorId=${item.colorId}`
+					})
+				}
+			},
 		},
 		components:{
 			buttomTabVue,
