@@ -4,16 +4,17 @@
 		<view class="frame" v-show="this.flag">
 			<view class="content"
 			v-for="(item,index) in data?.colorCard"
-			:key = "item.cardId">
+			:key = "item.cardId"
+			>
 				<view class="details">
-					<view class="band"></view>
+					<view class="band" :style="{ background: colorCards[index].gradient }"></view>
 					<view class="order">{{item.name}}</view>
 					<view class="brief">#{{item.form}}</view>
 				</view>
 				<button class="btn" style="margin-bottom: 8rpx;" @click="deleteData(index)">删除</button>
 				<view class="box">
-					<view class="colorSolid" @click="goToDetail(item)">查看色立体</view>
-					<view class="entry">查看词条</view>
+					<view class="colorSolid" @click="goToColorblock(item)">查看色立体</view>
+					<view class="entry" @click="goToShowcase(item)">查看词条</view>
 				</view>
 			</view>
 		</view>
@@ -27,8 +28,10 @@
 		data(){
 			return{
 				name:'',
+				colorCards:[],
 				flag:true,//判断是否删除了所有内容
 				//测试数据
+				//每种颜色都有自己的id
 				data:{}
 			}
 		},
@@ -44,10 +47,17 @@
 				// 关键：如果 colorCard 不是数组，强制转为空数组
 				if (!Array.isArray(this.data?.colorCard)) {
 				    this.data.colorCard = []
-				    console.log("colorCard 不是数组，已重置为空数组")
-				} else {
-				    console.log("colorCard 是数组，长度：", this.data.colorCard.length)
-				}
+				    //console.log("colorCard 不是数组，已重置为空数组")
+				} 
+				// else {
+				//     console.log("colorCard 是数组，长度：", this.data.colorCard.length)
+				// }
+				 // 提取colorCard数组，并为每个项生成渐变样式
+				this.colorCards = (this.item.colorCard || []).map(card => ({
+				    ...card,
+				    gradient: this.generateGradient(card.color) // 直接使用card.color生成渐变
+				}));
+				console.log(this.colorCards[0].gradient)
 			}
 		},
 		methods:{
@@ -59,15 +69,31 @@
 					this.flag=false
 				}
 			},
-			goToDetail(item) {
+			goToColorblock(item) {
 				// 跳转到页面
-			    if (!this.managerFlag) {
-					console.log(item.colorId)
-					uni.navigateTo({
-						url: `/pages/collection/collection?colorId=${item.colorId}`
-					})
-				}
+			    uni.navigateTo({
+					url: `/pages/colorblock/colorblock?colorId=${item.colorId}`
+				})
 			},
+			goToShowcase(item){
+				uni.switchTab({
+					url: `/pages/showcase/showcase?colorId=${item.colorId}`
+				})
+			},
+			// 生成渐变色字符串（按等分段处理，如4种颜色分4段）
+			generateGradient(colors) {
+				const segment = 25 // 每段占比（如4种颜色各占25%）
+				let gradient = 'to right, '
+			  
+				colors.forEach((color, index) => {
+					const start = index * segment; // 本段起始百分比
+					const end = (index + 1) * segment; // 本段结束百分比
+					// 拼接格式：颜色 起始%, 颜色 结束%, 
+					gradient += `${color} ${start}%, ${color} ${end}%, `
+				});
+				// 去除最后一个逗号和空格
+				return `linear-gradient(${gradient.slice(0, -2)})`
+			}
 		},
 		components:{
 			buttomTabVue,
@@ -113,7 +139,7 @@
 		  */
 		background: linear-gradient(
 		    to right, 
-		       #f9f9f9 0%,   /* 第一段：0% ~ 25% */
+				#f9f9f9 0%,   /* 第一段：0% ~ 25% */
 		        #f9f9f9 25%,  /* 硬边缘分割 */
 		        #f1f1f1 25%,  /* 第二段：25% ~ 50% */
 		        #f1f1f1 50%,  /* 硬边缘分割 */
