@@ -37,15 +37,17 @@
 			</view>
 			
 			<modelButtonVue class="delete" v-show="managerFlag"
-			@click.stop="()=>{this.deletes=true}"
+			@click.stop="judge"
 			>删除</modelButtonVue>
 			
 			<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
 			<view class="block" v-show="dataListLength%3===2||!managerFlag"></view>
 		</view>
+		
+		<!--确认框-->
 		<view class="background" v-show="this.deletes">
 			<view class="mains">
-				<view class="words">是否确认删除“”</view>
+				<view class="words">{{msg}}</view>
 				<view class="option">
 					<modelButtonVue @click="this.deletes=false">取消</modelButtonVue>
 					<modelButtonVue @click="deleteData">确认</modelButtonVue>
@@ -68,6 +70,7 @@
 				dataList:[],  //筛选后的数据,用来显示需要的收藏夹
 				dataListLength:0,//用于判断是否需要添加block
 				selectedIds: [], // 存储选中项的 ID（避免索引变化问题）
+				msg:'',//用于输出部分消息
 				deletes:false,
 				//原始数据
 				data:[
@@ -79,13 +82,15 @@
 								cardId:1,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:1
 							},
 							{
 								cardId:2,
 								color:'blue',
 								name:'xxxxx色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:2
 							}
 						]
 					},
@@ -97,19 +102,22 @@
 								cardId:1,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:3
 							},
 							{
 								cardId:2,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:4
 							},
 							{
 								cardId:3,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:5
 							}
 						]
 					},
@@ -121,13 +129,15 @@
 								cardId:1,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:6
 							},
 							{
 								cardId:2,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:7
 							}
 						]
 					},
@@ -139,13 +149,15 @@
 								cardId:1,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:8
 							},
 							{
 								cardId:2,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:9
 							}
 						]
 					},
@@ -157,13 +169,15 @@
 								cardId:1,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:10
 							},
 							{
 								cardId:2,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:11
 							}
 						]
 					},
@@ -175,13 +189,15 @@
 								cardId:1,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:12
 							},
 							{
 								cardId:2,
 								color:'red',
 								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑'
+								form:'红色系,淡调,唐代,建筑',
+								colorId:13
 							}
 						]
 					},
@@ -199,7 +215,7 @@
 				// 只有在非管理模式下才跳转
 				// 将对象转为JSON字符串
 				const itemStr = encodeURIComponent(JSON.stringify(item));
-				console.log(itemStr)
+				//console.log(itemStr)
 				// 跳转到页面
 			    if (!this.managerFlag) {
 					uni.navigateTo({
@@ -247,7 +263,7 @@
 				};
 				    
 				// 添加到数据源
-				this.data.push(newItem);
+				this.data.push(newItem)
 				// 清空输入框
 				this.newName = ''
 				// 提示成功
@@ -264,7 +280,7 @@
 					this.dataList = this.data
 					this.dataListLength = this.dataList.length;
 					// 清空选中状态（删除后重置选择）
-					this.selectedIds = [];
+					this.selectedIds = []
 				}else{
 					this.dataList = this.data
 					this.dataListLength=this.dataList.length
@@ -280,10 +296,23 @@
 				// 判断是否已选中
 				if (this.selectedIds.includes(id)) {
 					// 取消选中：从数组移除
-					this.selectedIds = this.selectedIds.filter(i => i !== id);
+					this.selectedIds = this.selectedIds.filter(i => i !== id)
 				} else {
 					// 选中：加入数组
 					this.selectedIds.push(id);
+				}
+			},
+			judge(){
+				this.deletes = true
+				if(this.selectedIds.length === 0){
+					this.msg = "没有选中的文件夹"
+				}
+				else if(this.selectedIds.length === 1){
+					const selectedItem = this.dataList.find(item => item.id === this.selectedIds[0]);
+					this.msg = `是否确认删除“${selectedItem.name}”`
+				}
+				else{
+					this.msg = "是否确认删除所选文件夹"
 				}
 			}
 		},
