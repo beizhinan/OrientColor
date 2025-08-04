@@ -16,7 +16,8 @@
     	"path" : "pages/chart/chart",
     	"style" : 
     	{
-    		"navigationBarTitleText" : "三维色谱"
+    		"navigationBarTitleText" : "三维色谱",
+			"disableScroll": true
     	}
     }
     ],
