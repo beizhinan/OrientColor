@@ -80,14 +80,14 @@
 						colorCard:[
 							{
 								cardId:1,
-								color:'red',
+								color:['#f9f9f9','#f1f1f1','#e6e6e6','#d9d9d9'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:1
 							},
 							{
 								cardId:2,
-								color:'blue',
+								color:['blue','white','yellow','orange'],
 								name:'xxxxx色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:2
@@ -100,21 +100,21 @@
 						colorCard:[
 							{
 								cardId:1,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:3
 							},
 							{
 								cardId:2,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:4
 							},
 							{
 								cardId:3,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:5
@@ -127,14 +127,14 @@
 						colorCard:[
 							{
 								cardId:1,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:6
 							},
 							{
 								cardId:2,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:7
@@ -147,14 +147,14 @@
 						colorCard:[
 							{
 								cardId:1,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:8
 							},
 							{
 								cardId:2,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:9
@@ -167,14 +167,14 @@
 						colorCard:[
 							{
 								cardId:1,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:10
 							},
 							{
 								cardId:2,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:11
@@ -187,14 +187,14 @@
 						colorCard:[
 							{
 								cardId:1,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:12
 							},
 							{
 								cardId:2,
-								color:'red',
+								color:['red'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:13
