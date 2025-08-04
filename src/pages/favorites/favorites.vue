@@ -1,16 +1,19 @@
 <template>
 	<view>
-		<view class="title">{{this.name}}</view>
+		<view class="title">{{data.name}}</view>
 		<view class="frame" v-show="this.flag">
 			<view class="content"
-			v-for="(item,index) in data"
-			:key = "item.id">
-				<view class="band"></view>
-				<view class="order">色卡{{item.id}}</view>
-				<view class="brief">#红色系，淡调，唐代，建筑</view>
+			v-for="(item,index) in data?.colorCard"
+			:key = "item.cardId">
+				<view class="details">
+					<view class="band"></view>
+					<view class="order">{{item.name}}</view>
+					<view class="brief">#{{item.form}}</view>
+				</view>
+				<button class="btn" style="margin-bottom: 8rpx;" @click="deleteData(index)">删除</button>
 				<view class="box">
-					<button class="btn" style="margin-bottom: 8rpx;" @click="deleteData(index)">删除</button>
-					<button class="btn">详情</button>
+					<view class="colorSolid">查看色立体</view>
+					<view class="entry">查看词条</view>
 				</view>
 			</view>
 		</view>
@@ -26,27 +29,31 @@
 				name:'',
 				flag:true,//判断是否删除了所有内容
 				//测试数据
-				data:[
-					{
-						id:1
-					},
-					{
-						id:2
-					},
-					{
-						id:3
-					}
-				]
+				data:{}
 			}
 		},
 		onLoad(options){
-			this.name=options.name
-			console.log(this.name)
+			// this.name=options.name
+			// console.log(this.name)
+			 // 解析JSON字符串为对象
+			if (options.item) {
+				this.item = JSON.parse(decodeURIComponent(options.item))
+				console.log("接收的对象数据：", this.item)
+				this.data = this.item
+				console.log(this.data)
+				// 关键：如果 colorCard 不是数组，强制转为空数组
+				if (!Array.isArray(this.data?.colorCard)) {
+				    this.data.colorCard = []
+				    console.log("colorCard 不是数组，已重置为空数组")
+				} else {
+				    console.log("colorCard 是数组，长度：", this.data.colorCard.length)
+				}
+			}
 		},
 		methods:{
 			deleteData(index){
 				// splice(索引, 删除数量)：直接修改原数组，删除指定元素
-				this.data.splice(index, 1)
+				this.data.colorCard.splice(index, 1)
 				console.log(`已删除索引为${index}的元素`)
 				if(this.data.length === 0){
 					this.flag=false
@@ -70,17 +77,22 @@
 	}
 	/*主要内容*/
 	.frame{
-		margin: 0 48rpx;
+		box-sizing: border-box;
+		margin: 0 43rpx;
 		background-color: #ffffff;
 		border-radius: 10rpx;
-		padding: 10rpx 32rpx 15rpx 48rpx;
+		padding: 10rpx 12rpx 15rpx 12rpx;
 	}
 	.content{
 		position: relative;
-		height: 130rpx;
-		padding-top: 15rpx;
-		padding-bottom: 15rpx;
+		height: 145rpx;
+		padding: 15rpx 0;
 		border-bottom: 5rpx solid #f4f5f7;
+	}
+	.details{
+		position: absolute;
+		top: 25rpx;
+		left: 50rpx;
 	}
 	.band{
 		width: 325rpx;
@@ -111,21 +123,49 @@
 		font-size: 16rpx;
 		color:#cdcdcd;
 	}
-	.box{
-		position: absolute;
-		top: 15rpx;
-		right: 30rpx;
-		width: 80rpx;
-		height: 100rpx;
-	}
 	.btn{
+		position: absolute;
+		top: 25rpx;
+		right: 20rpx;
 		width: 80rpx;
-		height: 48rpx;
+		height: 50rpx;
 		padding: 0;
 		background-color: #ffffff;
 		text-align: center;
 		line-height: 48rpx;
 		font-size: 16rpx;
 		border:1rpx #b9b9b9 solid;
+	}
+	.box{
+		box-sizing: border-box;
+		position: absolute;
+		right:20rpx;
+		bottom: 13rpx;
+		display: flex;
+		justify-content: space-between;
+		width: 250rpx;
+		height:36rpx;
+		font-size: 16rpx ;
+		white-space: nowrap;
+	}
+	.box .colorSolid{
+		box-sizing: border-box;
+		width: 130rpx;
+		height: 34rpx;
+		line-height: 100%;
+		text-align: center;
+		border: 3rpx solid #b2b2b2;
+		border-radius: 8rpx;
+		color:#b2b2b2 ;
+	}
+	.entry{
+		box-sizing: border-box;
+		width:104rpx;
+		height: 34rpx;
+		line-height: 100%;
+		text-align: center;
+		border: 3rpx solid #b2b2b2;
+		border-radius: 8rpx;
+		color:#b2b2b2 ;
 	}
 </style>
