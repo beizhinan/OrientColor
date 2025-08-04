@@ -9,36 +9,66 @@
 		<!--收藏夹-->
 		<view class="box">
 			<view class="collection">收藏夹</view>
-			<view class='mamage'>管理</view>
+			<view class='mamage' :class="{'blue-color':managerFlag}"
+			@click="changeManager">管理</view>
 		</view>
 		<!--具体内容-->
 		<view class="content">
-			<navigator class="favorites" :url="`/pages/favorites/favorites?name=${item.name}`" open-type="navigate"
-				v-for="(item,index) in dataList"
+			<view class="favorites" :url="`/pages/favorites/favorites?name=${item.name}`" open-type="navigate"
+				v-for="(item) in dataList"
 				:key="item.id"
+				@click="goToDetail(item,index)"
+				:class="{'actives':selectedIds.includes(item.id)}"
 				>
 				<view class="header"></view>
 				<view class="name">{{item.name}}</view>
 				<view class="number">{{item.colorCard.length}} 项</view>
-			</navigator>
-			<view class="favorites" @click="addFavorites">
+				<!-- .stop阻止事件冒泡,筛选中 -->
+				<view class="selected" v-show="this.managerFlag" 
+				@click.stop="select(item, index)"
+				:class="{'icon-seleted':selectedIds.includes(item.id),
+				'iconfont':selectedIds.includes(item.id),
+				'active':selectedIds.includes(item.id)}"
+				></view>
+			</view>
+			
+			<view class="favorites" @click="addFavorites" v-show="!managerFlag">
 				<view class="iconfont icon-tianjiajiahaowubiankuang iconAdd"></view>
 			</view>
+			
+			<modelButtonVue class="delete" v-show="managerFlag"
+			@click.stop="()=>{this.deletes=true}"
+			>删除</modelButtonVue>
+			
 			<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
-			<view class="block"></view>
+			<view class="block" v-show="dataListLength%3===2||!managerFlag"></view>
 		</view>
-		<buttomTab></buttomTab>
+		<view class="background" v-show="this.deletes">
+			<view class="mains">
+				<view class="words">是否确认删除“”</view>
+				<view class="option">
+					<modelButtonVue @click="this.deletes=false">取消</modelButtonVue>
+					<modelButtonVue @click="deleteData">确认</modelButtonVue>
+				</view>
+			</view>
+		</view>
+		<buttomTabVue></buttomTabVue>
 	</view>
 </template>
 
 <script>
 	import buttomTabVue from '../../components/buttomTab/buttomTab.vue'
+	import modelButtonVue from '../../components/collect/modelButton.vue'
 	export default{
 		data(){
 			return{
 				inputValue:'',
 				newName: '',  // 存储新收藏夹名称
+				managerFlag:false,//是否进入管理，默认为false
 				dataList:[],  //筛选后的数据,用来显示需要的收藏夹
+				dataListLength:0,//用于判断是否需要添加block
+				selectedIds: [], // 存储选中项的 ID（避免索引变化问题）
+				deletes:false,
 				//原始数据
 				data:[
 					{
@@ -48,10 +78,14 @@
 							{
 								cardId:1,
 								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
 								cardId:2,
 								color:'blue',
+								name:'xxxxx色谱',
+								form:'红色系,淡调,唐代,建筑'
 							}
 						]
 					},
@@ -60,13 +94,22 @@
 						name:'收藏夹2',
 						colorCard:[
 							{
-								cardId:1
+								cardId:1,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
-								cardId:2
+								cardId:2,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
-								cardId:3
+								cardId:3,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							}
 						]
 					},
@@ -75,10 +118,16 @@
 						name:'收藏夹3',
 						colorCard:[
 							{
-								cardId:1
+								cardId:1,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
-								cardId:2
+								cardId:2,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							}
 						]
 					},
@@ -87,10 +136,16 @@
 						name:'收藏夹4',
 						colorCard:[
 							{
-								cardId:1
+								cardId:1,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
-								cardId:2
+								cardId:2,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							}
 						]
 					},
@@ -99,10 +154,16 @@
 						name:'收藏夹5',
 						colorCard:[
 							{
-								cardId:1
+								cardId:1,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
-								cardId:2
+								cardId:2,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							}
 						]
 					},
@@ -111,10 +172,16 @@
 						name:'收藏夹6',
 						colorCard:[
 							{
-								cardId:1
+								cardId:1,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							},
 							{
-								cardId:2
+								cardId:2,
+								color:'red',
+								name:'开化寺色谱',
+								form:'红色系,淡调,唐代,建筑'
 							}
 						]
 					},
@@ -124,8 +191,25 @@
 		onLoad(){
 			//初始化dataList
 			this.dataList = this.data
+			this.dataListLength=this.dataList.length
 		},
 		methods:{
+			// 手动实现导航逻辑
+			goToDetail(item) {
+				// 只有在非管理模式下才跳转
+				// 将对象转为JSON字符串
+				const itemStr = encodeURIComponent(JSON.stringify(item));
+				console.log(itemStr)
+				// 跳转到页面
+			    if (!this.managerFlag) {
+					uni.navigateTo({
+						url: `/pages/favorites/favorites?item=${itemStr}`
+					})
+				}
+				// else{
+				// 	this.select(item,index)
+				// }
+			},
 			//搜索函数
 			findData(){
 				const value = this.inputValue.trim()// 获取输入的关键词（去除空格）
@@ -134,11 +218,13 @@
 				if(!value){
 					//重置dataList
 					this.dataList = this.data
+					this.dataListLength=this.dataList.length
 					return
 				}
 				// 筛选出名称包含关键词的数据
 				this.dataList = this.data.filter(item => {
 					this.inputValue=''
+					this.dataListLength=this.dataList.length;
 					return item.name.includes(value);
 				});
 			},
@@ -157,19 +243,53 @@
 				 const newItem = {
 				  id: maxId + 1,
 				  name: this.newName.trim(),
-				  colorCard: []  // 默认卡片数据
+				  colorCard: []  ,// 默认卡片数据
 				};
 				    
 				// 添加到数据源
 				this.data.push(newItem);
 				// 清空输入框
-				this.newName = '';
+				this.newName = ''
 				// 提示成功
-				uni.showToast({ title: '添加成功', icon: 'success' });
+				uni.showToast({ title: '添加成功', icon: 'success' })
+				this.findData()
+			},
+			deleteData(){
+				if(this.selectedIds.length!==0){
+					this.data = this.data.filter(item => {
+					    // 检查当前项的id是否不在选中数组中
+					    return !this.selectedIds.includes(item.id);
+					});
+					// 更新列表长度
+					this.dataList = this.data
+					this.dataListLength = this.dataList.length;
+					// 清空选中状态（删除后重置选择）
+					this.selectedIds = [];
+				}else{
+					this.dataList = this.data
+					this.dataListLength=this.dataList.length
+				}
+				this.deletes=false
+			},
+			changeManager(){
+				this.managerFlag=!this.managerFlag
+				this.selectedIds=[]
+			},
+			select(item,index){
+				const id = item.id;
+				// 判断是否已选中
+				if (this.selectedIds.includes(id)) {
+					// 取消选中：从数组移除
+					this.selectedIds = this.selectedIds.filter(i => i !== id);
+				} else {
+					// 选中：加入数组
+					this.selectedIds.push(id);
+				}
 			}
 		},
 		components:{
 			buttomTabVue,
+			modelButtonVue,
 		}
 	}
 </script>
@@ -227,10 +347,17 @@
 	.mamage{
 		font-size: 26rpx;
 		color:#acacb3;
+		cursor: pointer;
+	}
+	/* 新增蓝色样式类 */
+	.blue-color {
+	    color: #007aff;
 	}
 	
 	/*内容*/
 	.content{
+		box-sizing: border-box;
+		position: relative;
 		display:flex;
 		justify-content: space-between;
 		flex-wrap: wrap;
@@ -238,6 +365,8 @@
 		margin:0 50rpx;
 	}
 	.favorites{
+		box-sizing: border-box;
+		position: relative;
 		height: 200rpx;
 		width: 200rpx;
 		margin-bottom: 15rpx;
@@ -264,6 +393,36 @@
 		font-size: ;
 		color:#bebebe;
 	}
+	.selected{
+		box-sizing: border-box;
+		position: absolute;
+		top: 10rpx;
+		left:10rpx;
+		height: 24rpx;
+		width: 24rpx;
+		background-color: #d9d9d9;
+		border-radius: 50%;
+		cursor: pointer;
+		/* 核心居中设置 */
+		display: flex; /* 启用弹性盒布局 */
+	    justify-content: center; /* 水平居中 */
+	    align-items: center; /* 垂直居中 */
+	}
+	.active{
+		border:3rpx solid #e6e6fb;
+		background-color: white;
+		font-size: 16rpx;
+		font-weight: bold;
+		color:#5c59e8;
+	}
+	.actives{
+		border:3rpx solid #5c59e8;
+	}
+	.delete{
+		position:absolute;
+		right: 0rpx;
+		bottom: -140rpx;
+	}
 	.iconAdd{
 		height: 200rpx;
 		width: 200rpx;
@@ -272,5 +431,43 @@
 		font-size: 60rpx;
 		color:#799fce;
 		cursor: pointer;
+	}
+	/*确认框*/
+	.background{
+		position: fixed; /* 固定定位，脱离文档流覆盖全屏 */
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0; /* 四边贴齐屏幕边缘 */
+		background-color: rgba(243, 242, 245,0.8);
+		z-index: 999; /* 确保在页面内容上方（需大于其他元素z-index） */
+	}
+	/* 中间弹窗内容（可选样式，让弹窗居中） */
+	.mains {
+		position: absolute; /* 相对于蒙版定位 */
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%); /* 居中对齐 */
+		background-color: white; 
+		height:475rpx;
+		width: 650rpx;
+		border-radius: 20rpx;
+		/* opacity: 1; */ /* 透明度 */
+	}
+	.words{
+		position: absolute; 
+		top: 175rpx; 
+		left: 50%; 
+		transform: translateX(-50%); /* 水平居中修正 */
+		font-size: 28rpx;
+	}
+	.option{
+		position: absolute; 
+		bottom: 80rpx;
+		right:45rpx;
+		display: flex;
+		justify-content: space-between;
+		height:80rpx;
+		width: 320rpx;
 	}
 </style>
