@@ -1,50 +1,48 @@
 <template>
   <view class="container">
-    <!-- 标题 -->
-    <view class="logo">
-      <view class="logo-bg">
-        <image src="/static/logo.png" class="logo-img"></image>
-      </view>
+    <view>
+      <image src="/static/logo.png" mode="" class="logo"></image>
     </view>
+    <!-- 标题 -->
     <view class="title">东方色彩</view>
 
-    <!-- 登录表单 -->
-    <view class="login-form">
-      <!-- 微信登录按钮 -->
-      <button class="wechat-login-btn" @click="handleWechatLogin">
-        一键登录
-      </button>
+    <!-- 权限申请信息 -->
+    <view class="permission-info">
+      <view class="permission-title">申请获得以下权限</view>
+      <view class="permission-desc">获得你的公开信息（昵称、头像等）</view>
+    </view>
 
-      <!--手机号码登录/注册按钮-->
-      <button class="phone-login-btn" @click="handlePhoneLogin">
-        手机号登录/注册
-      </button>
-
-      <!-- 暂不登录链接 -->
-      <view class="skip-login" @tap="handleSkipLogin">
-        暂不登录
-        <image src="/static/ques.png" class="question-icon"></image>
-      </view>
-
-      <!-- 协议勾选 -->
-      <view class="agreement">
-        <view class="custom-checkbox" @tap="toggleAgreement">
-          <view class="checkbox-icon" :class="{ checked: agreed }">
-            <view class="checkmark" v-if="agreed"></view>
-          </view>
-          <text class="agreement-text">我已阅读并同意</text>
+    <!-- 协议勾选 -->
+    <view class="agreement">
+      <view class="custom-checkbox" @tap="toggleAgreement">
+        <view class="checkbox-icon" :class="{ checked: agreed }">
+          <view class="checkmark" v-if="agreed"></view>
         </view>
-        <text class="protocol" @tap="handleViewProtocol">《用户协议》</text>
-        <text>和</text>
-        <text class="protocol" @tap="handleViewPrivacy">《用户隐私协议》</text>
+        <text class="agreement-text">同意</text>
+        <text class="protocol">《用户服务协议》</text>
+        <text class="agreement-text">及</text>
+        <text class="protocol">《隐私政策》</text>
+      </view>
+    </view>
+
+    <!-- 按钮区域 -->
+    <view class="button-group">
+      <button
+        class="auth-btn"
+        :class="{ disabled: !agreed }"
+        @click="handleAuthLogin"
+      >
+        授权登录
+      </button>
+      <button class="cancel-btn" @click="handleCancelAuth">取消授权</button>
+      <view class="skip-login" @tap="handleSkipLogin">
+        暂不登录 <image class="ques" src="/static/ques.png"></image>
       </view>
     </view>
   </view>
 </template>
 
 <script>
-import { useAuthStore } from "@/stores/auth";
-
 export default {
   data() {
     return {
@@ -57,9 +55,8 @@ export default {
       this.agreed = !this.agreed;
     },
 
-    // 微信登录处理
-    async handleWechatLogin() {
-      // 检查用户是否同意协议
+    // 授权登录处理
+    handleAuthLogin() {
       if (!this.agreed) {
         uni.showToast({
           title: "请先同意用户协议",
@@ -67,49 +64,16 @@ export default {
         });
         return;
       }
-
-      try {
-        // 使用 auth store 完成登录
-        const authStore = useAuthStore();
-        const res = await authStore.completeLogin();
-
-        if (res.code === 200) {
-          uni.showToast({
-            title: "登录成功",
-            icon: "success",
-          });
-
-          // 跳转回上一级页面
-          setTimeout(() => {
-            uni.navigateBack({
-              delta: 1,
-            });
-          }, 1000);
-        } else {
-          uni.showToast({
-            title: "登录失败",
-            icon: "none",
-          });
-        }
-      } catch (error) {
-        console.error("登录失败:", error);
-        if (error.errMsg && error.errMsg.includes("cancel")) {
-          uni.showToast({
-            title: "授权已取消",
-            icon: "none",
-          });
-        } else {
-          uni.showToast({
-            title: "登录失败，请重试",
-            icon: "none",
-          });
-        }
-      }
+      // 授权登录逻辑
+      uni.showToast({
+        title: "授权登录成功",
+        icon: "success",
+      });
     },
 
-    // 手机号登录
-    handlePhoneLogin() {
-      // 实现手机号登录逻辑
+    // 取消授权
+    handleCancelAuth() {
+      uni.navigateBack();
     },
 
     // 暂不登录
@@ -117,16 +81,6 @@ export default {
       uni.switchTab({
         url: "/pages/user/user",
       });
-    },
-
-    // 查看用户协议
-    handleViewProtocol() {
-      // 实现查看用户协议逻辑
-    },
-
-    // 查看隐私协议
-    handleViewPrivacy() {
-      // 实现查看隐私协议逻辑
     },
   },
 };
@@ -143,114 +97,53 @@ export default {
 }
 
 .logo {
-  margin-top: 60rpx;
-  margin-bottom: 20rpx;
-}
-
-.logo-bg {
-  width: 320rpx;
-  height: 320rpx;
+  width: 250rpx;
+  height: 250rpx;
+  margin-top: 50rpx;
   border-radius: 50%;
-  background-color: rgb(230, 230, 230);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-}
-
-.logo-img {
-  width: 140rpx;
-  height: 140rpx;
 }
 
 .title {
   font-size: 48rpx;
   font-weight: bold;
   color: #333;
-  margin-bottom: 100rpx;
-  letter-spacing: 4rpx;
+  margin-top: 20rpx;
+  margin-bottom: 80rpx;
 }
 
-.login-form {
+.permission-info {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 120rpx;
+  margin-bottom: 60rpx;
 }
 
-.wechat-login-btn {
-  width: 100%;
-  height: 90rpx;
-  line-height: 90rpx;
-  background-color: #dedefa;
-  color: #6155f5;
-  border-radius: 20rpx;
-  font-size: 26rpx;
+.permission-title {
+  font-size: 30rpx;
+  color: #333;
   margin-bottom: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.wechat-login-btn::after {
-  border: none;
-}
-
-.phone-login-btn {
-  width: 100%;
-  height: 90rpx;
-  line-height: 90rpx;
-  background-color: white;
-  color: #6155f5;
-  border-radius: 20rpx;
+.permission-desc {
   font-size: 26rpx;
-  margin-bottom: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.phone-login-btn::after {
-  border: none;
-}
-
-.skip-login {
-  font-size: 26rpx;
-  color: #999;
-  margin-bottom: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: underline;
-}
-
-.question-icon {
-  width: 28rpx;
-  height: 28rpx;
-  margin-left: 10rpx;
+  color: #ccc;
 }
 
 .agreement {
+  width: 100%;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  font-size: 22rpx;
-  color: #666;
+  margin-top: 120rpx;
+  margin-bottom: 30rpx;
 }
 
 .custom-checkbox {
   display: flex;
   align-items: center;
-  margin-right: 8rpx;
 }
 
 .checkbox-icon {
-  width: 20rpx;
-  height: 20rpx;
+  width: 32rpx;
+  height: 32rpx;
   border: 2rpx solid #ccc;
-  border-radius: 50%;
+  border-radius: 4rpx;
   margin-right: 10rpx;
   display: flex;
   align-items: center;
@@ -264,16 +157,81 @@ export default {
 }
 
 .checkmark {
-  width: 8rpx;
-  height: 6rpx;
+  width: 16rpx;
+  height: 10rpx;
   border-left: 3rpx solid white;
   border-bottom: 3rpx solid white;
   transform: rotate(-45deg);
   margin-top: -4rpx;
 }
 
+.agreement-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
 .protocol {
-  color: #6155f5;
+  font-size: 24rpx;
   font-weight: bold;
+  color: #9f7735;
+}
+
+.button-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-btn {
+  width: 100%;
+  height: 100rpx;
+  line-height: 100rpx;
+  background-color: #fdf1e8;
+  color: #9f7735;
+  border-radius: 20rpx;
+  font-size: 32rpx;
+  margin-bottom: 30rpx;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+  position: relative;
+}
+
+.auth-btn::after {
+  display: none !important;
+}
+
+.auth-btn.disabled {
+  background-color: #cccccc;
+  color: #999999;
+}
+
+.cancel-btn {
+  width: 100%;
+  height: 100rpx;
+  line-height: 100rpx;
+  background-color: white;
+  color: #9f7735;
+  border: 3rpx solid #e6e6e6;
+  border-radius: 20rpx;
+  font-size: 32rpx;
+  margin-bottom: 30rpx;
+}
+
+.skip-login {
+  font-size: 28rpx;
+  color: #999;
+  text-decoration: underline;
+}
+
+.ques {
+  width: 24rpx;
+  height: 24rpx;
+  margin-left: 10rpx;
 }
 </style>
