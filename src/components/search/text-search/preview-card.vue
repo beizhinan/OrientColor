@@ -1,5 +1,5 @@
 <template>
-  <view class="color-card">
+  <view class="color-card" @click="$emit('click')">
     <view class="color-preview" :style="{ backgroundColor: colorCode }"></view>
     <view class="color-info">
       <text class="color-name">{{ colorName }}</text>
@@ -38,6 +38,7 @@ export default {
   overflow: hidden;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
   background-color: #fff;
+  cursor: pointer; /* 添加鼠标指针样式 */
 }
 
 .color-preview {

@@ -109,28 +109,28 @@
 <script>
 // 静态数据定义保持不变
 const colorDatabase = {
-  上好大绿: {
-    id: 1,
-    no: "B-1-12",
-    name: "上好大绿",
-    value: "#2E8B57",
-    description:
-      "来自明清官式建筑彩画标准色谱。单色样块使用的实验颜料来源包括日本中川凤凰堂和国产姜思序堂特级二青等。彩度较高，给人奢华贵重、典雅的视觉感受。",
-    approxColorCode: "45",
-    lch: "L69C60H",
-    prefix: "上好",
-    tone: "暗",
-    hue: "绿色",
-    englishHue: "G",
-    chroma: "45",
-    graphy: "L69C60H",
-    lightness: "上好",
-    sourcetype: "暗",
-    macro: "https://placebear.com/340/340",
-    microcosmic: "https://placebear.com/440/440",
-    labch: "L69C60H",
-    rgb: "(44, 108, 76)",
-  },
+  id: 1,
+  no: "B-1-12",
+  name: "上好大绿",
+  value: "#2E8B57",
+  description:
+    "来自明清官式建筑彩画标准色谱。单色样块使用的实验颜料来源包括日本中川凤凰堂和国产姜思序堂特级二青等。彩度较高，给人奢华贵重、典雅的视觉感受。",
+  approxColorCode: "45",
+  lch: "L69C60H",
+  prefix: "上好",
+  tone: "暗",
+  hue: "绿色",
+  englishHue: "G",
+  chroma: "45",
+  graphy: "L69C60H",
+  lightness: "上好",
+  sourcetype: "暗",
+  macro: "https://placebear.com/340/340",
+  microcosmic: "https://placebear.com/440/440",
+  labch: "L69C60H",
+  rgb: "(44, 108, 76)",
+
+  // 可以添加更多颜色数据
 };
 
 export default {
@@ -149,13 +149,41 @@ export default {
     if (options.name) {
       const colorName = decodeURIComponent(options.name);
 
-      // 从静态数据库获取数据或使用传递的参数
-      this.colorData = colorDatabase[colorName] || {
-        name: colorName,
-        value: options.value ? decodeURIComponent(options.value) : "#ccc",
-        id: options.id || null,
-        description: options.description || "",
-      };
+      // 从静态数据库获取数据
+      const staticColorData = colorDatabase;
+
+      if (staticColorData) {
+        // 使用静态数据，但允许 id, name, titlePath 被参数覆盖
+        this.colorData = {
+          ...staticColorData,
+          id: options.id || staticColorData.id,
+          name: colorName,
+          value: staticColorData.value, // 保持静态数据
+        };
+      } else {
+        // 如果在数据库中找不到，则使用传递的参数
+        this.colorData = {
+          name: colorName,
+          value: options.value ? decodeURIComponent(options.value) : "#ccc",
+          id: options.id || null,
+          description: options.description || "",
+          no: options.no || "",
+          approxColorCode: options.approxColorCode || "",
+          lch: options.lch || "",
+          prefix: options.prefix || "",
+          tone: options.tone || "",
+          hue: options.hue || "",
+          englishHue: options.englishHue || "",
+          chroma: options.chroma || "",
+          graphy: options.graphy || "",
+          lightness: options.lightness || "",
+          sourcetype: options.sourcetype || "",
+          macro: options.macro || "",
+          microcosmic: options.microcosmic || "",
+          labch: options.labch || "",
+          rgb: options.rgb || "",
+        };
+      }
 
       this.parentColor = options.parentColor
         ? decodeURIComponent(options.parentColor)
@@ -196,6 +224,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .container {
@@ -326,7 +355,6 @@ export default {
   width: 50%;
   text-align: center;
 }
-
 
 /* 在整个区域添加垂直中线，使其贯穿所有行 */
 .info-content.info-grid::before {
