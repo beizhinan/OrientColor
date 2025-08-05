@@ -10,19 +10,16 @@
       <text class="content-title">{{ title }}</text>
       <text class="content-desc">{{ description }}</text>
     </view>
-    <login-prompt ref="loginPrompt"></login-prompt>
   </view>
 </template>
 
 <script>
-import { useAuthStore } from "@/stores/auth";
-import loginPrompt from "@/components/auth/login-prompt.vue";
-
 export default {
-  components: {
-    loginPrompt,
-  },
   props: {
+    id: {
+      type: Number,
+      default: null,
+    },
     headerText: {
       type: String,
       default: null,
@@ -41,33 +38,21 @@ export default {
     },
   },
   methods: {
-    async handleCardClick() {
+    handleCardClick() {
       console.log("卡片点击事件触发");
-      const authStore = useAuthStore();
-      const isLoggedIn = await authStore.checkLogin();
-
-      if (isLoggedIn) {
-        this.performAction();
-      } else {
-        console.log("显示登录弹窗");
-        this.$refs.loginPrompt.showPrompt();
-      }
+      this.performAction();
     },
 
     performAction() {
       console.log("执行色谱卡片点击后的操作");
-      uni.showToast({
-        title: "卡片点击成功",
-        icon: "success",
+      // 跳转到色谱详情页，携带ID和标题
+      uni.navigateTo({
+        url: `/pages/chromatogarphy/chromatogarphy?id=${this.id}&title=${encodeURIComponent(this.title)}`
       });
     },
   },
 };
 </script>
-
-<style scoped>
-/* 保持原有样式 */
-</style>
 
 <style scoped>
 .color-card {
