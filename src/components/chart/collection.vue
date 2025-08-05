@@ -8,7 +8,7 @@
 	<!-- 色彩详情 -->
 	<view class="detail" v-if="showDetail">
 		<view class="detail-flex">
-			<view class="circle" :style="{ backgroundColor: colorCode }"></view>
+			<view class="circle" :style="{ backgroundColor: colorCode }" @tap="goToColorblock"></view>
 			<text class="detail-name">{{ colorName }}</text>
 			<text class="detail-code">{{ colorCode }}</text>
 		</view>
@@ -214,6 +214,11 @@
 			    uni.navigateBack({
 			    delta: 1
 			    });
+			},
+			goToColorblock(){
+				uni.navigateTo({
+					url: `/pages/colorblock/colorblock`
+				})
 			}
 		}
 	}

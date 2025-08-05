@@ -1,11 +1,12 @@
 <template>
 	<view class="container">
 		<!-- 色立体 -->
-		<view class="color-cube">
+		<view class="color-cube" @tap="goToDetailPage">
 			<view class="chart">
 				<canvas 
 					type="webgl2" 
 					id="canvas" 
+					v-if="showCanvas"
 					@touchstart="canvasEventHandler" 
 					@touchmove="canvasEventHandler"
 					@touchcancel="canvasEventHandler" 
@@ -40,6 +41,7 @@
 		  code: ''
 		})
 		const showDetail = ref(false)
+		const showCanvas= ref(true)
 		const colorPoints = [
 			// 示例数据
 			{ x: 2.3, y: -0.1, z: 0.3, name: "暗灰", code: "#373733" },
@@ -187,11 +189,11 @@
 		}
 		
 		//跳转色彩详情页
-		function goToDetailPage() {
+		/*function goToDetailPage() {
 		  uni.navigateTo({
-		    //url: /pages/colorDetail/colorDetail?name=${selectedColor.value.name}&code=${selectedColor.value.code}
+		    url: `/pages/colorblock/colorblock?name=${selectedColor.value.name}&code=${selectedColor.value.code}`
 		  });
-		}
+		}*/
 	
 	</script>
 
