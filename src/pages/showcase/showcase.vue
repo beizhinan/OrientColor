@@ -9,8 +9,6 @@
     <!-- 色彩展示区域 -->
     <color-display :dimension="activeDimension" :filterData="selectedFilters" />
 
-    <!-- 交互提示 -->
-    <interaction-tip />
   </view>
 </template>
 
@@ -18,18 +16,17 @@
 import DimensionTabs from '@/components/showcase/DimensionTabs.vue'
 import FilterBar from '@/components/showcase/FilterBar.vue'
 import ColorDisplay from '@/components/showcase/ColorDisplay.vue'
-import InteractionTip from '@/components/showcase/InteractionTip.vue'
 
 export default {
   components: {
     DimensionTabs,
     FilterBar,
-    ColorDisplay,
-    InteractionTip
+    ColorDisplay
   },
   data() {
     return {
       activeDimension: '3D',
+	  activeButton: 'button1',
       selectedFilters: {
         category: '全部',
         colorSeries: '',
@@ -70,4 +67,5 @@ export default {
 .page {
   padding: 22rpx 42rpx 30rpx 42rpx;
 }
+
 </style>

@@ -15,7 +15,9 @@
 
 		<!-- 图表 -->
 		<view class="chart-cube">
-			<view class="chart">
+			<view class="chart" v-if="dimension == '3D'">
+			</view>
+			<view class="chart" v-if="dimension != '3D'">
 				<l-echart ref="chartRef" @finished="init"></l-echart>
 			</view>
 		</view>
@@ -24,6 +26,9 @@
 			<view class="desc">点击查看模型细节</view>
 		</view>
 	</view>
+	<!-- 交互提示 -->
+	<interaction-tip :dimension="props.dimension" :button="selectedButton"></interaction-tip>
+
 </template>
 
 <script setup>
@@ -33,13 +38,24 @@
 		watch,
 		onMounted
 	} from 'vue'
+	import InteractionTip from '@/components/showcase/InteractionTip.vue'
 	const echarts = require('../../uni_modules/lime-echart/static/echarts.min')
+	import * as THREE from 'three';
+	import {
+		adapter
+	} from '@minisheep/three-platform-adapter';
+	import '@minisheep/mini-program-polyfill-core/wechat-polyfill';
+	import {
+		wechat
+	} from '@minisheep/three-platform-adapter/wechat';
 
 	// 接收 props
 	const props = defineProps({
 		dimension: String,
 		filterData: [Object, Array]
 	})
+	const selectedButton = ref('button1')
+	const chartRef = ref(null)
 
 	// 触发事件
 	const emit = defineEmits(['button-change'])
@@ -62,25 +78,8 @@
 		}
 	]
 
-	const selectedButton = ref('button1')
-	const chartRef = ref(null)
-
 	// 图表配置字典
 	const optionMap = {
-		'3D': {
-			xAxis: {},
-			yAxis: {},
-			series: [{
-				symbolSize: 10,
-				type: 'scatter',
-				data: [
-					[10, 10],
-					[20, 20],
-					[30, 15],
-					[40, 30]
-				]
-			}]
-		},
 		'2D-button1': {
 			xAxis: {},
 			yAxis: {},
@@ -141,7 +140,7 @@
 					show: false,
 					position: 'center'
 				},
-				data: [1,2,3]
+				data: [1, 2, 3]
 			}]
 		}
 	}
@@ -161,12 +160,13 @@
 			button: buttonKey === 'button1' ? button1.value : button2.value,
 			key: buttonKey
 		})
-		
+
 	}
 
 	function goToDetail() {
 		uni.navigateTo({
 			url: `/pages/chart/chart?dimension=${props.dimension}`
+			//url: `/pages/example/example?dimension=${props.dimension}`
 		})
 	}
 
@@ -179,10 +179,13 @@
 
 	// 更新图表配置
 	function updateChartOption() {
-		const key = props.dimension === '3D' ? '3D' : `${props.dimension}-${selectedButton.value}`
-		option.value = optionMap[key] || {}
-		init()
+		if (props.dimension !== '3D') {
+			const key = `${props.dimension}-${selectedButton.value}`;
+			option.value = optionMap[key] || {};
+			init();
+		}
 	}
+
 
 	// 监听 dimension和button 变化
 	watch(() => props.dimension, () => {
@@ -222,7 +225,6 @@
 		left: 12rpx;
 		display: flex;
 		gap: 12rpx;
-		z-index: 1000;
 	}
 
 	.button {
@@ -253,6 +255,12 @@
 	.chart {
 		margin-top: 80rpx;
 		height: 80%;
+		width: 100%;
+		z-index: 0;
+	}
+
+	canvas {
+		height: 100%;
 		width: 100%;
 	}
 

@@ -5,11 +5,21 @@
     { "path": "pages/search/search", "style": { "navigationBarTitleText": "检索" } },
     { "path": "pages/user/user", "style": { "navigationBarTitleText": "个人中心" } },
     { "path": "pages/login/login", "style": { "navigationBarTitleText": "登录" } },
+
+    {
+    	"path" : "pages/chart/chart",
+    	"style" : 
+    	{
+    		"navigationBarTitleText" : "三维色谱",
+			"disableScroll": true
+    	}
+    }，
+
     { "path": "pages/collection/collection","style": {"navigationBarTitleText": "收藏"}},
     { "path": "pages/favorites/favorites","style": {"navigationBarTitleText": "收藏"}},
-    { "path" : "pages/chart/chart","style" : {"navigationBarTitleText" : "三维色谱"}},
     { "path" : "pages/chromatogarphy/chromatogarphy","style" : {"navigationBarTitleText" : ""}},
     { "path" : "pages/colorblock/colorblock","style" : {"navigationBarTitleText" : ""}}
+
     ],
   "tabBar": {
     "list": [
