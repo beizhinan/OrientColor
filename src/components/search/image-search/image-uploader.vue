@@ -25,7 +25,8 @@
           v-for="(color, index) in result"
           :key="index"
           class="color-block-item"
-          :style="{ backgroundColor: color }"
+          :style="{ backgroundColor: color.value }"
+          @click="goToColorDetail(color)"
         ></view>
       </view>
 
@@ -41,16 +42,66 @@ export default {
     return {
       imageSrc: "",
       result: [
-        "#FF6B6B", // 红色
-        "#4ECDC4", // 青色
-        "#45B7D1", // 蓝色
-        "#FFBE0B", // 黄色
-        "#FB5607", // 橙色
-        "#8338EC", // 紫色
-        "#3A86FF", // 亮蓝色
-        "#38B000", // 绿色
-        "#9D4EDD", // 紫罗兰
-        "#FF006E", // 粉色
+        {
+          id: 1,
+          name: "活力红",
+          value: "#FF6B6B",
+          titlePath: "红-大红-活力红",
+        },
+        {
+          id: 2,
+          name: "清新青",
+          value: "#4ECDC4",
+          titlePath: "识别颜色-清新青",
+        },
+        {
+          id: 3,
+          name: "天空蓝",
+          value: "#45B7D1",
+          titlePath: "识别颜色-天空蓝",
+        },
+        {
+          id: 4,
+          name: "明亮黄",
+          value: "#FFBE0B",
+          titlePath: "识别颜色-明亮黄",
+        },
+        {
+          id: 5,
+          name: "活力橙",
+          value: "#FB5607",
+          titlePath: "识别颜色-活力橙",
+        },
+        {
+          id: 6,
+          name: "优雅紫",
+          value: "#8338EC",
+          titlePath: "识别颜色-优雅紫",
+        },
+        {
+          id: 7,
+          name: "宝石蓝",
+          value: "#3A86FF",
+          titlePath: "识别颜色-宝石蓝",
+        },
+        {
+          id: 8,
+          name: "翠绿",
+          value: "#38B000",
+          titlePath: "识别颜色-翠绿",
+        },
+        {
+          id: 9,
+          name: "紫罗兰",
+          value: "#9D4EDD",
+          titlePath: "识别颜色-紫罗兰",
+        },
+        {
+          id: 10,
+          name: "洋红",
+          value: "#FF006E",
+          titlePath: "识别颜色-洋红",
+        },
       ],
     };
   },
@@ -68,6 +119,29 @@ export default {
         fail: (err) => {
           console.error("选择图片失败", err);
         },
+      });
+    },
+    // 跳转到颜色详情页
+    goToColorDetail(color) {
+      console.log("跳转到颜色详情页", color);
+
+      // 构造跳转参数
+      const params = {
+        name: encodeURIComponent(color.name),
+        value: encodeURIComponent(color.code),
+        id: color.id || null,
+        titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null,
+      };
+
+      // 过滤掉空值参数并构建查询字符串
+      const queryString = Object.keys(params)
+        .filter((key) => params[key] !== null && params[key] !== undefined)
+        .map((key) => `${key}=${params[key]}`)
+        .join("&");
+
+      // 跳转到详情页
+      uni.navigateTo({
+        url: `/pages/colorblock/colorblock?${queryString}`,
       });
     },
   },

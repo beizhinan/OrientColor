@@ -45,7 +45,7 @@ const authStore = useAuthStore();
 const defaultAvatar = "../../static/default-avatar.png";
 
 const menuList = ref([
-  { id: 1, title: "我的收藏", icon: "icon-order", path: "/pages/order/list" },
+  { id: 1, title: "我的收藏", icon: "icon-order", path: "/pages/collection/collection" },
   {
     id: 2,
     title: "我的客服",

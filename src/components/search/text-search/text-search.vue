@@ -36,6 +36,7 @@
           :key="index"
           :color-name="color.name"
           :color-code="color.code"
+          @click="goToColorDetail(color)"
         />
       </view>
     </view>
@@ -54,10 +55,10 @@ export default {
     return {
       searchValue: "",
       colorTagList: ["全部", "红", "黄", "蓝", "白", "灰", "绿", "紫", "黑"],
-      selectedTag: "全部", // 默认选中“全部”标签
+      selectedTag: "全部", // 默认选中"全部"标签
       // 添加颜色数据
       colorList: [
-        { name: "肉红", code: "#DBC2B6" },
+        { id: 1, name: "肉红", code: "#DBC2B6", titlePath: "红-一红-二红" },
         { name: "珠子褐", code: "#BBA89C" },
         { name: "鹰背褐", code: "#8D6B62" },
         { name: "麝香褐", code: "#67493A" },
@@ -81,6 +82,29 @@ export default {
       this.selectedTag = tag;
       // 可以在这里添加标签选择后的逻辑
     },
+    // 跳转到颜色详情页
+    goToColorDetail(color) {
+      console.log('跳转到颜色详情页', color);
+      
+      // 构造跳转参数
+      const params = {
+        name: encodeURIComponent(color.name),
+        value: encodeURIComponent(color.code),
+        id: color.id || null,
+        titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null
+      };
+      
+      // 过滤掉空值参数并构建查询字符串
+      const queryString = Object.keys(params)
+        .filter(key => params[key] !== null && params[key] !== undefined)
+        .map(key => `${key}=${params[key]}`)
+        .join('&');
+      
+      // 跳转到详情页
+      uni.navigateTo({
+        url: `/pages/colorblock/colorblock?${queryString}`
+      });
+    }
   },
 };
 </script>

@@ -12,6 +12,7 @@
           <color-card
             v-for="(card, index) in leftColumnCards"
             :key="'left-' + index"
+            :id="card.id"
             :headerText="card.headerText"
             :headerImage="card.headerImage"
             :title="card.title"
@@ -23,6 +24,7 @@
           <color-card
             v-for="(card, index) in rightColumnCards"
             :key="'right-' + index"
+            :id="card.id"
             :headerText="card.headerText"
             :headerImage="card.headerImage"
             :title="card.title"
@@ -57,24 +59,28 @@ export default {
       showPopup: true,
       cardList: [
         {
+          id: 1,
           headerText: "最新",
           headerImage: "https://placebear.com/340/340",
           title: "开化寺",
           description: "古老的佛教寺庙，拥有精美的壁画和建筑",
         },
         {
+          id: 2,
           headerText: "热门",
           headerImage: "https://placebear.com/340/240",
           title: "晋祠",
           description: "中国古代建筑艺术的瑰宝，园林景观优美",
         },
         {
+          id: 3,
           headerText: null,
           headerImage: "https://placebear.com/340/240",
           title: "平遥古城",
           description: "保存完整的明清时期古城，世界文化遗产",
         },
         {
+          id: 4,
           headerText: null,
           headerImage: "https://placebear.com/340/340",
           title: "五台山",
