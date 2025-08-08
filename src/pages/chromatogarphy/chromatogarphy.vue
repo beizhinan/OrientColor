@@ -6,6 +6,11 @@
         class="info"
         :style="{ backgroundImage: 'url(' + colorData.imgurl + ')' }"
       >
+        <!-- 添加收藏按钮 -->
+        <view class="favorite-button" @click="toggleFavorite">
+          <text>收藏</text>
+        </view>
+
         <view class="description-overlay">
           <text class="title">{{ colorData.name }}：</text>
           <text class="description-text">{{ colorData.description }}</text>
@@ -197,6 +202,7 @@ export default {
       selectedTag: colorDataMap[defaultColor].subColors[0].name,
       allColorData: colorDataMap,
       colorData: colorDataMap[defaultColor],
+      isFavorite: false,
     };
   },
   computed: {
@@ -256,6 +262,13 @@ export default {
     // 选择标签
     selectTag(tag) {
       this.selectedTag = tag;
+    },
+
+    // 添加收藏切换方法
+    toggleFavorite() {
+      this.isFavorite = !this.isFavorite;
+      // 这里可以添加实际的收藏逻辑，比如保存到本地存储或发送到服务器
+      console.log(`收藏状态: ${this.isFavorite ? "已收藏" : "取消收藏"}`);
     },
 
     // 跳转到颜色详情页面
@@ -327,6 +340,22 @@ export default {
   margin-bottom: 20rpx;
   position: relative;
   overflow: hidden;
+}
+
+.favorite-button {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 150rpx;
+  height: 60rpx;
+  background-color: rgba(222, 182, 127, 0.8); 
+  color: white;
+  border-radius: 30rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .description-overlay {

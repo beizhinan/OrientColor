@@ -53,7 +53,6 @@
     "@dcloudio/uni-mp-xhs": "3.0.0-4070520250711001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4070520250711001",
     "@minisheep/mini-program-polyfill-core": "^1.1.5",
-    "@minisheep/three-platform-adapter": "^2.0.4",
     "pinia": "^3.0.3",
     "vue": "^3.5.11",
     "vue-i18n": "^9.1.9"
@@ -64,6 +63,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-4070520250711001",
     "@dcloudio/uni-stacktracey": "3.0.0-4070520250711001",
     "@dcloudio/vite-plugin-uni": "3.0.0-4070520250711001",
+    "@minisheep/three-platform-adapter": "^2.0.4",
     "@vue/runtime-core": "^3.4.21",
     "vite": "5.2.8"
   }

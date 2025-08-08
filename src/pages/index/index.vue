@@ -1,8 +1,5 @@
 <template>
   <view class="container">
-    <!-- 顶部卡片组件 -->
-    <premium-top @viewDetails="handleViewDetails" />
-
     <!-- 推荐色谱卡片列表 -->
     <view class="cards">
       <text class="title">推荐色谱</text>
@@ -45,13 +42,11 @@
 
 <script>
 import premiumPopup from "@/components/home/premium-popup.vue";
-import premiumTop from "@/components/home/premium-top.vue";
 import colorCard from "@/components/home/color-card.vue";
 
 export default {
   components: {
     premiumPopup,
-    premiumTop,
     colorCard,
   },
   data() {
