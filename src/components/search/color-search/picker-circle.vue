@@ -1,1380 +1,1232 @@
 <template>
-  <view class="color-picker-wrapper">
-    <!-- Main Color Wheel -->
-    <view class="color-picker-container">
-      <canvas
-        class="color-picker-canvas"
-        canvas-id="colorPickerCanvas"
-        :style="{ width: size + 'px', height: size + 'px' }"
-        @touchstart="handleTouchStart"
-        @touchmove="handleTouchMove"
-        @touchend="handleTouchEnd"
-      ></canvas>
+  <view class="color-picker-container">
+    <!-- 中间三个颜色信息显示
+    <view class="center-colors-info" v-if="centerColors.length > 0">
       <view
-        class="labels-container"
-        :style="{ width: size + 'px', height: size + 'px' }"
+        v-for="(color, index) in centerColors"
+        :key="index"
+        class="center-color-item"
+        :class="{ 'center-main': index === 1 }"
+        @click="selectColor(color)"
       >
         <view
-          v-for="(section, index) in gener"
-          :key="index"
-          class="color-label"
-          :style="getLabelStyle(section, index)"
-        >
-          {{ section.name }}
-        </view>
+          class="center-color-preview"
+          :style="{ backgroundColor: color.hex }"
+        ></view>
+        <text class="center-color-label">{{ color.label }}</text>
       </view>
-    </view>
-    <view class="chart-description">高彩度色彩</view>
+    </view> -->
 
-    <!-- Low Chroma Pie Chart -->
-    <view class="low-color-container">
-      <canvas
-        class="low-color-canvas"
-        canvas-id="lowColorCanvas"
-        :style="{ width: lowSize + 'px', height: lowSize + 'px' }"
-        @touchstart="handleLowTouchStart"
-        @touchmove="handleLowTouchMove"
-        @touchend="handleLowTouchEnd"
-      ></canvas>
-      <view
-        class="low-labels-container"
-        :style="{ width: lowSize + 'px', height: lowSize + 'px' }"
-      >
+    <!-- 手势识别区域 -->
+    <view
+      class="gesture-container"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
+      @touchcancel="handleTouchEnd"
+    >
+      <!-- 主图表容器 -->
+      <view class="chart-fixed-container">
+        <!-- 旋转容器 -->
         <view
-          v-for="(section, index) in low"
-          :key="'low-' + index"
-          class="low-color-label"
-          :style="getLowLabelStyle(section, index)"
+          class="chart-rotate-container"
+          :style="{ transform: `rotate(${currentAngle}deg)` }"
         >
-          {{ section.name }}
-        </view>
-      </view>
-    </view>
-    <view class="chart-description">低彩度色彩</view>
-
-    <view class="result-list" v-if="!selectedColor">
-      <text class="main-title">结果列表</text>
-      <image class="placeholder-image"></image>
-      <text class="placeholder-text">请点击色盘选择颜色</text>
-    </view>
-
-    <view class="result-list" v-if="selectedColor">
-      <view class="title">
-        <text class="main-title">色彩列表</text>
-        <text class="second-title">{{ selectedColorInfo }}</text>
-      </view>
-
-      <!-- 水平明度色序条 (分为两行) -->
-      <view class="horizontal-lightness-scale-wrapper">
-        <!-- 第一行 -->
-        <view class="horizontal-lightness-scale-row">
-          <view
-            v-for="(range, index) in getFirstRowRanges()"
-            :key="'scale-first-' + index"
-            class="horizontal-scale-item"
-          >
-            <text class="horizontal-scale-label"
-              >{{ range[0] }}-{{ range[1] }}</text
-            >
-            <view
-              v-if="getScaleColor(index, true)"
-              class="horizontal-scale-color"
-              :style="{
-                backgroundColor: getScaleColor(index, true),
-              }"
-            >
-            </view>
-            <view v-else class="horizontal-scale-color empty"></view>
-          </view>
-        </view>
-
-        <!-- 第二行 -->
-        <view class="horizontal-lightness-scale-row">
-          <view
-            v-for="(range, index) in getSecondRowRanges()"
-            :key="'scale-second-' + index"
-            class="horizontal-scale-item"
-          >
-            <text class="horizontal-scale-label"
-              >{{ range[0] }}-{{ range[1] }}</text
-            >
-            <view
-              v-if="getScaleColor(index, false)"
-              class="horizontal-scale-color"
-              :style="{
-                backgroundColor: getScaleColor(index, false),
-              }"
-            >
-            </view>
-            <view v-else class="horizontal-scale-color empty"></view>
+          <!-- 图表容器 -->
+          <view class="chart-container">
+            <l-echart
+              ref="chart"
+              :custom-style="chartStyleStr"
+              type="2d"
+              @finished="initChart"
+            ></l-echart>
           </view>
         </view>
       </view>
 
-      <!-- 右侧颜色表格 -->
-      <view class="color-grid">
-        <view
-          v-for="(row, rowIndex) in isLowChroma ? lowColorGrid : colorGrid"
-          :key="'row-' + rowIndex"
-          class="grid-row"
-        >
-          <view
-            v-for="(color, colIndex) in row"
-            :key="'col-' + colIndex"
-            class="grid-cell"
-            :style="{ backgroundColor: color ? color.color : 'transparent' }"
-          ></view>
-        </view>
+      <!-- 中心点击区域（覆盖层） -->
+      <view
+        class="center-click-area"
+        @click="handleCenterClick"
+        :style="{ backgroundColor: showLowChroma ? '#888' : '#f0f0f0' }"
+      >
+        <text class="center-text">{{ showLowChroma ? "返回" : "低彩度" }}</text>
       </view>
     </view>
   </view>
 </template>
 
-<script>
-export default {
-  name: "ColorPickerCircle",
-  props: {
-    size: {
-      type: Number,
-      default: 300,
-    },
-  },
-  data() {
-    return {
-      gener: [
-        {
-          name: "P",
-          label: "紫色",
-          h: [300, 290],
-          c: [[14, 73]],
-          colors: [{ l: 51, a: 8, b: -17, c: 19, h: 297 }],
-        },
-        {
-          name: "PB",
-          label: "蓝紫色",
-          h: [290, 275],
-          c: [
-            [27, 36],
-            [42, 65],
-          ],
-          colors: [
-            { l: 34, a: 3, b: -27, c: 27, h: 276 },
-            { l: 50, a: 8, b: -41, c: 42, h: 281 },
-          ],
-        },
-        {
-          name: "B",
-          label: "蓝色",
-          h: [275, 255],
-          c: [
-            [14, 36],
-            [36, 42, 42, 65],
-          ],
-          colors: [
-            { l: 70, a: -3, b: -27, c: 27, h: 264 },
-            { l: 55, a: 2, b: -42, c: 42, h: 272 },
-            { l: 53, a: -13, b: -40, c: 42, h: 252 },
-          ],
-        },
-        {
-          name: "gB",
-          label: "偏绿的蓝色",
-          h: [255, 220],
-          c: [
-            [14, 21],
-            [21, 35],
-          ],
-          colors: [
-            { l: 74, a: -4, b: -12, c: 13, h: 252 },
-            { l: 47, a: -6, b: -20, c: 21, h: 254 },
-          ],
-        },
-        {
-          name: "bG",
-          label: "偏蓝的绿色",
-          h: [220, 170],
-          c: [
-            [14, 22],
-            [24, 50],
-          ],
-          colors: [
-            { l: 54, a: -19, b: -12, c: 22, h: 213 },
-            { l: 67, a: -34, b: -4, c: 35, h: 187 },
-          ],
-        },
-        {
-          name: "G",
-          label: "绿色",
-          h: [170, 150],
-          c: [
-            [14, 27],
-            [27, 34],
-            [50, 65],
-          ],
-          colors: [
-            { l: 78, a: -15, b: 5, c: 16, h: 161 },
-            { l: 67, a: -25, b: 10, c: 27, h: 158 },
-            { l: 69, a: -58, b: 18, c: 60, h: 163 },
-            { l: 58, a: -55, b: 19, c: 58, h: 161 },
-            { l: 52, a: -50, b: 21, c: 54, h: 157 },
-          ],
-        },
-        {
-          name: "yG",
-          label: "偏黄的绿色",
-          h: [150, 110],
-          c: [
-            [0, 19],
-            [20, 40],
-          ],
-          colors: [
-            { l: 69, a: -14, b: 9, c: 17, h: 148 },
-            { l: 59, a: -17, b: 13, c: 21, h: 143 },
-          ],
-        },
-        {
-          name: "gY",
-          label: "偏绿的黄色",
-          h: [110, 95],
-          c: [[35, 50]],
-          colors: [{ l: 85, a: -8, b: 37, c: 38, h: 103 }],
-        },
-        {
-          name: "Y",
-          label: "黄色",
-          h: [95, 83],
-          c: [
-            [35, 55],
-            [65, 95],
-          ],
-          colors: [
-            { l: 85, a: 5, b: 54, c: 54, h: 85 },
-            { l: 83, a: 4, b: 75, c: 75, h: 87 },
-          ],
-        },
-        {
-          name: "oY",
-          label: "偏橙的黄色",
-          h: [83, 65],
-          c: [
-            [14, 26],
-            [26, 42],
-            [42, 65],
-            [65, 95],
-          ],
-          colors: [
-            { l: 70, a: 7, b: 22, c: 23, h: 72 },
-            { l: 73, a: 11, b: 31, c: 33, h: 71 },
-            { l: 80, a: 12, b: 47, c: 46, h: 75 },
-            { l: 76, a: 25, b: 60, c: 65, h: 68 },
-          ],
-        },
-        {
-          name: "O",
-          label: "橙色",
-          h: [65, 40],
-          c: [
-            [14, 28],
-            [28, 50],
-            [50, 67],
-            [67, 100],
-          ],
-          colors: [
-            { l: 58, a: 13, b: 23, c: 26, h: 60 },
-            { l: 69, a: 17, b: 31, c: 35, h: 61 },
-            { l: 64, a: 31, b: 41, c: 52, h: 53 },
-            { l: 66, a: 49, b: 45, c: 67, h: 43 },
-          ],
-        },
-        {
-          name: "oR",
-          label: "偏橙的红色",
-          h: [40, 31],
-          c: [
-            [20, 50],
-            [50, 67],
-          ],
-          colors: [
-            { l: 51, a: 17, b: 11, c: 20, h: 33 },
-            { l: 62, a: 42, b: 36, c: 55, h: 40 },
-          ],
-        },
-        {
-          name: "R",
-          label: "红色",
-          h: [31, 10],
-          c: [
-            [14, 28],
-            [28, 41],
-            [42, 67],
-          ],
-          colors: [
-            { l: 71, a: 22, b: 9, c: 24, h: 22 },
-            { l: 52, a: 35, b: 13, c: 37, h: 21 },
-            { l: 54, a: 48, b: 28, c: 56, h: 30 },
-          ],
-        },
-      ],
-      low: [
-        {
-          name: "Np",
-          label: "紫色",
-          h: [330, 310],
-          colors: [{ l: 11, a: 7, b: -8, c: 11, h: 312 }],
-        },
-        {
-          name: "Npb",
-          label: "蓝紫色",
-          h: [310, 275],
-          colors: [{ l: 18, a: 1, b: -5, c: 5, h: 281 }],
-        },
-        {
-          name: "Nb",
-          label: "蓝色",
-          h: [275, 190],
-          colors: [{ l: 7, a: -4, b: -14, c: 15, h: 254 }],
-        },
-        {
-          name: "Ng",
-          label: "绿色",
-          h: [190, 127],
-          colors: [{ l: 9, a: -17, b: 11, c: 20, h: 147 }],
-        },
-        {
-          name: "Ngy",
-          label: "黄绿色",
-          h: [127, 91],
-          colors: [{ l: 23, a: -1, b: 3, c: 3, h: 108 }],
-        },
-        {
-          name: "No",
-          label: "橙色",
-          h: [91, 45],
-          colors: [{ l: 7, a: 0, b: 7, c: 7, h: 90 }],
-        },
-        {
-          name: "",
-          label: "无数据1",
-          h: [45, 0],
-          colors: [],
-          empty: true,
-        },
-        {
-          name: "",
-          label: "无数据2",
-          h: [0, 330],
-          colors: [],
-          empty: true,
-        },
-      ],
-      allcolor: [
-        [
-          { l: 69, a: -58, b: 18, c: 60, h: 163 },
-          { l: 58, a: -55, b: 19, c: 58, h: 161 },
-          { l: 52, a: -50, b: 21, c: 54, h: 157 },
-        ],
-      ],
-      maxCValue: 100,
-      lowSize: 200,
-      ctx: null,
-      lowCtx: null,
-      touchStartX: 0,
-      touchStartY: 0,
-      selectedColor: null, // 用于存储选中的颜色
-      lightnessRanges: [
-        [21, 25],
-        [26, 30],
-        [31, 35],
-        [36, 40],
-        [41, 45],
-        [46, 50],
-        [51, 55],
-        [56, 60],
-        [61, 65],
-        [66, 70],
-        [71, 75],
-        [76, 80],
-        [81, 85],
-        [86, 90],
-        [91, 95],
-      ],
-      // 低彩度色盘的明度范围（从0开始）
-      lowLightnessRanges: [
-        [0, 5],
-        [6, 10],
-        [11, 15],
-        [16, 20],
-        [21, 25],
-        [26, 30],
-        [31, 35],
-        [36, 40],
-        [41, 45],
-        [46, 50],
-        [51, 55],
-        [56, 60],
-        [61, 65],
-        [66, 70],
-        [71, 75],
-        [76, 80],
-        [81, 85],
-        [86, 90],
-        [91, 95],
-      ],
-      scaleItemHeight: 20,
-      selectedColorInfo: "",
-      matchedColors: [],
-      matchedColorsByLightness: [],
-      colorGrid: [],
-      // 低彩度相关数据
-      lowMatchedColors: [],
-      lowMatchedColorsByLightness: [],
-      lowColorGrid: [],
-      isLowChroma: false,
-    };
-  },
-  mounted() {
-    this.initCanvas();
-    this.initLowColorCanvas();
-  },
-  methods: {
-    initCanvas() {
-      this.ctx = uni.createCanvasContext("colorPickerCanvas", this);
-      this.drawColorPicker();
-      this.ctx.draw();
-    },
-
-    initLowColorCanvas() {
-      this.lowCtx = uni.createCanvasContext("lowColorCanvas", this);
-      this.drawLowColorPicker();
-      this.lowCtx.draw();
-    },
-
-    drawColorPicker() {
-      const center = this.size / 2;
-      const radius = this.size / 2 - 10;
-
-      this.ctx.clearRect(0, 0, this.size, this.size);
-
-      // Draw white background
-      this.ctx.beginPath();
-      this.ctx.arc(center, center, radius, 0, 2 * Math.PI);
-      this.ctx.setFillStyle("#FFFFFF");
-      this.ctx.fill();
-
-      // Draw gray background (no color area)
-      this.drawSectorFill(
-        center,
-        center,
-        0,
-        radius,
-        ((360 - 360) % 360) * (Math.PI / 180),
-        ((360 - 300) % 360) * (Math.PI / 180),
-        "#F5F5F5"
-      );
-      this.drawSectorFill(
-        center,
-        center,
-        0,
-        radius,
-        ((360 - 10) % 360) * (Math.PI / 180),
-        ((360 - 0) % 360) * (Math.PI / 180),
-        "#F5F5F5"
-      );
-
-      // Draw all color sections
-      this.drawAllFill(center, radius);
-
-      // Draw center circle
-      this.ctx.beginPath();
-      this.ctx.arc(center, center, 10, 0, 2 * Math.PI);
-      this.ctx.setFillStyle("#FFFFFF");
-      this.ctx.fill();
-      this.ctx.setStrokeStyle("#DDDDDD");
-      this.ctx.setLineWidth(1);
-      this.ctx.stroke();
-
-      // Draw radial lines
-      this.drawSubtleRadialLines(center, radius);
-    },
-
-    drawLowColorPicker() {
-      const center = this.lowSize / 2;
-      const radius = this.lowSize / 2 - 10;
-
-      this.lowCtx.clearRect(0, 0, this.lowSize, this.lowSize);
-
-      // Draw background
-      this.lowCtx.beginPath();
-      this.lowCtx.arc(center, center, radius, 0, 2 * Math.PI);
-      this.lowCtx.setFillStyle("#F5F5F5");
-      this.lowCtx.fill();
-
-      // Draw each sector
-      this.low.forEach((section, index) => {
-        const [hStart, hEnd] = section.h;
-        const startAngle = ((360 - hStart) % 360) * (Math.PI / 180);
-        const endAngle = ((360 - hEnd) % 360) * (Math.PI / 180);
-
-        if (section.empty) {
-          // Empty data area
-          this.drawLowSector(
-            center,
-            center,
-            0,
-            radius,
-            startAngle,
-            endAngle,
-            "#EEEEEE",
-            "rgba(0,0,0,0.1)"
-          );
-        } else {
-          // Colored area
-          const color =
-            section.colors && section.colors[0]
-              ? this.labToRgb(
-                  section.colors[0].l,
-                  section.colors[0].a,
-                  section.colors[0].b
-                )
-              : "#CCCCCC";
-
-          this.drawLowSector(
-            center,
-            center,
-            0,
-            radius,
-            startAngle,
-            endAngle,
-            color,
-            "rgba(0,0,0,0.1)"
-          );
-        }
-      });
-
-      // Draw center circle
-      this.lowCtx.beginPath();
-      this.lowCtx.arc(center, center, 5, 0, 2 * Math.PI);
-      this.lowCtx.setFillStyle("#FFFFFF");
-      this.lowCtx.fill();
-      this.lowCtx.setStrokeStyle("#DDDDDD");
-      this.lowCtx.setLineWidth(1);
-      this.lowCtx.stroke();
-    },
-
-    drawLowSector(
-      x,
-      y,
-      innerRadius,
-      outerRadius,
-      startAngle,
-      endAngle,
-      fillColor,
-      strokeColor
-    ) {
-      this.lowCtx.beginPath();
-      this.lowCtx.arc(x, y, outerRadius, startAngle, endAngle, false);
-      this.lowCtx.lineTo(
-        x + Math.cos(endAngle) * innerRadius,
-        y + Math.sin(endAngle) * innerRadius
-      );
-      this.lowCtx.arc(x, y, innerRadius, endAngle, startAngle, true);
-      this.lowCtx.closePath();
-      this.lowCtx.setFillStyle(fillColor || "transparent");
-      this.lowCtx.fill();
-
-      // Add border
-      this.lowCtx.beginPath();
-      this.lowCtx.arc(x, y, outerRadius, startAngle, endAngle, false);
-      this.lowCtx.setStrokeStyle(strokeColor || "rgba(0,0,0,0.1)");
-      this.lowCtx.setLineWidth(1);
-      this.lowCtx.stroke();
-    },
-
-    drawAllFill(center, radius) {
-      this.gener.forEach((section) => {
-        const [hStart, hEnd] = section.h;
-        const startAngle = ((360 - hStart) % 360) * (Math.PI / 180);
-        const endAngle = ((360 - hEnd) % 360) * (Math.PI / 180);
-
-        if (section.c) {
-          section.c.forEach((cRange, rangeIndex) => {
-            const ranges = this.parseCRange(cRange);
-            ranges.forEach(([cMin, cMax]) => {
-              // 使用该范围内第一个颜色数据作为背景色
-              let fillColor = "#CCCCCC"; // 默认颜色
-
-              // 查找该范围内的第一个颜色
-              if (section.colors && section.colors.length > 0) {
-                const colorInRange = section.colors.find(
-                  (color) => color.c >= cMin && color.c <= cMax
-                );
-
-                if (colorInRange) {
-                  fillColor = this.labToRgb(
-                    colorInRange.l,
-                    colorInRange.a,
-                    colorInRange.b
-                  );
-                } else {
-                  // 如果没找到匹配的颜色，则使用范围内的代表性颜色
-                  fillColor = this.getDominantColorForRange(
-                    section,
-                    cMin,
-                    cMax
-                  );
-                }
-              } else {
-                // 如果没有颜色数据，则使用范围内的代表性颜色
-                fillColor = this.getDominantColorForRange(section, cMin, cMax);
-              }
-
-              this.drawSectorFill(
-                center,
-                center,
-                (cMin / this.maxCValue) * radius,
-                (cMax / this.maxCValue) * radius,
-                startAngle,
-                endAngle,
-                fillColor
-              );
-            });
-          });
-        }
-      });
-    },
-
-    drawSubtleRadialLines(center, radius) {
-      this.ctx.setStrokeStyle("rgba(0,0,0,0.1)");
-      this.ctx.setLineWidth(0.5);
-
-      this.gener.forEach((section) => {
-        const [hStart] = section.h;
-        const angle = ((360 - hStart) % 360) * (Math.PI / 180);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(center, center);
-        this.ctx.lineTo(
-          center + radius * Math.cos(angle),
-          center + radius * Math.sin(angle)
-        );
-        this.ctx.stroke();
-      });
-    },
-
-    drawSectorFill(
-      x,
-      y,
-      innerRadius,
-      outerRadius,
-      startAngle,
-      endAngle,
-      fillColor
-    ) {
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, outerRadius, startAngle, endAngle, false);
-      this.ctx.lineTo(
-        x + Math.cos(endAngle) * innerRadius,
-        y + Math.sin(endAngle) * innerRadius
-      );
-      this.ctx.arc(x, y, innerRadius, endAngle, startAngle, true);
-      this.ctx.closePath();
-      this.ctx.setFillStyle(fillColor || "transparent");
-      this.ctx.fill();
-
-      // Add border
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, outerRadius, startAngle, endAngle, false);
-      this.ctx.setStrokeStyle("rgba(0,0,0,0.05)");
-      this.ctx.setLineWidth(0.5);
-      this.ctx.stroke();
-    },
-
-    getDominantColorForRange(section, cMin, cMax) {
-      if (section.colors) {
-        const matchedColor = section.colors.find(
-          (color) => color.c >= cMin && color.c <= cMax
-        );
-        if (matchedColor) {
-          return this.labToRgb(matchedColor.l, matchedColor.a, matchedColor.b);
-        }
-      }
-
-      const midC = (cMin + cMax) / 2;
-      return this.labToRgb(
-        50,
-        section.name.includes("B") ? -40 : section.name.includes("R") ? 40 : 0,
-        section.name.includes("G") ? 40 : section.name.includes("Y") ? 60 : -40
-      );
-    },
-
-    parseCRange(cRange) {
-      if (cRange.length === 2) return [[cRange[0], cRange[1]]];
-      if (cRange.length === 4)
-        return [
-          [cRange[0], cRange[1]],
-          [cRange[2], cRange[3]],
-        ];
-      return [];
-    },
-
-    labToRgb(l, a, b) {
-      // LAB to XYZ conversion
-      let y = (l + 16) / 116;
-      let x = a / 500 + y;
-      let z = y - b / 200;
-
-      x = 0.95047 * (x > 0.206893 ? x * x * x : (x - 16 / 116) / 7.787);
-      y = 1.0 * (y > 0.206893 ? y * y * y : (y - 16 / 116) / 7.787);
-      z = 1.08883 * (z > 0.206893 ? z * z * z : (z - 16 / 116) / 7.787);
-
-      // XYZ to RGB conversion
-      let r = x * 3.2406 + y * -1.5372 + z * -0.4986;
-      let g = x * -0.9689 + y * 1.8758 + z * 0.0415;
-      let bValue = x * 0.0557 + y * -0.204 + z * 1.057;
-
-      // Gamma correction
-      r = r > 0.0031308 ? 1.055 * Math.pow(r, 1 / 2.4) - 0.055 : 12.92 * r;
-      g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
-      bValue =
-        bValue > 0.0031308
-          ? 1.055 * Math.pow(bValue, 1 / 2.4) - 0.055
-          : 12.92 * bValue;
-
-      // Clamp and convert to HEX
-      r = Math.max(0, Math.min(1, r));
-      g = Math.max(0, Math.min(1, g));
-      bValue = Math.max(0, Math.min(1, bValue));
-
-      const toHex = (c) => {
-        const hex = Math.round(c * 255).toString(16);
-        return hex.length === 1 ? "0" + hex : hex;
-      };
-
-      return `#${toHex(r)}${toHex(g)}${toHex(bValue)}`;
-    },
-
-    handleTouchStart(e) {
-      this.touchStartX = e.touches[0].x;
-      this.touchStartY = e.touches[0].y;
-    },
-
-    handleTouchMove(e) {
-      // Touch move interaction can be added here
-    },
-
-    // 重置所有颜色相关数据
-    resetColorData() {
-      this.matchedColors = [];
-      this.matchedColorsByLightness = Array(this.lightnessRanges.length)
-        .fill()
-        .map(() => []);
-      this.colorGrid = [];
-
-      this.lowMatchedColors = [];
-      this.lowMatchedColorsByLightness = Array(this.lowLightnessRanges.length)
-        .fill()
-        .map(() => []);
-      this.lowColorGrid = [];
-    },
-
-    handleTouchEnd(e) {
-      const x = e.changedTouches[0].x;
-      const y = e.changedTouches[0].y;
-      const center = this.size / 2;
-      const dx = x - center;
-      const dy = y - center;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const radius = this.size / 2 - 10;
-
-      if (distance <= radius) {
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        const normalizedAngle = (360 - angle) % 360;
-        const cValue = (distance / radius) * this.maxCValue;
-
-        const selectedColor = this.getColorFromGener(normalizedAngle, cValue);
-        this.selectedColor = selectedColor;
-        this.$emit("color-selected", selectedColor);
-
-        // 重置数据并设置为高彩度模式
-        this.isLowChroma = false;
-        this.resetColorData();
-
-        // 新增：查找匹配的颜色并更新显示
-        this.findMatchedColors(normalizedAngle, cValue);
-      }
-    },
-
-    // 修改 findMatchedColors 方法中的这部分代码
-    findMatchedColors(h, c) {
-      // 查找匹配的色系
-      const matchedSection = this.gener.find((section) => {
-        const [hStart, hEnd] = section.h;
-        return h >= hEnd && h <= hStart;
-      });
-
-      if (!matchedSection) {
-        this.matchedColors = [];
-        this.selectedColorInfo = "未找到匹配色系";
-        return;
-      }
-
-      // 查找匹配C范围的所有颜色
-      const matchedCRanges = this.getMatchedCRanges(matchedSection.c, c);
-
-      // 这里修改为只显示选中颜色所在的C范围
-      const selectedCRangeText = matchedCRanges
-        .map((range) => `${range[0]}-${range[1]}`)
-        .join("; ");
-
-      // 设置选中颜色信息，只显示选中的C范围
-      this.selectedColorInfo = `${matchedSection.label} (${matchedSection.name}) H:${matchedSection.h[1]}-${matchedSection.h[0]}° C:${selectedCRangeText}`;
-
-      this.matchedColors = matchedSection.colors.filter((color) => {
-        return matchedCRanges.some(
-          (range) => color.c >= range[0] && color.c <= range[1]
-        );
-      });
-
-      // 转换为RGB格式并添加颜色信息
-      this.matchedColors = this.matchedColors.map((color) => ({
-        ...color,
-        color: this.labToRgb(color.l, color.a, color.b),
-        lightnessRange: this.getLightnessRange(color.l),
-      }));
-
-      // 按明度分组
-      this.groupColorsByLightness();
-
-      // 生成颜色网格
-      this.generateColorGrid();
-    },
-    // 新增方法：获取C范围文本
-    getCRangesText(cRanges) {
-      if (!cRanges) return "";
-      return cRanges
-        .map((range) => {
-          if (range.length === 2) return `${range[0]}-${range[1]}`;
-          if (range.length === 4)
-            return `${range[0]}-${range[1]},${range[2]}-${range[3]}`;
-          return "";
-        })
-        .join("; ");
-    },
-
-    // 新增方法：获取匹配的C范围
-    getMatchedCRanges(cRanges, cValue) {
-      if (!cRanges) return [];
-      const matched = [];
-
-      cRanges.forEach((range) => {
-        if (range.length === 2) {
-          if (cValue >= range[0] && cValue <= range[1]) {
-            matched.push([range[0], range[1]]);
-          }
-        } else if (range.length === 4) {
-          if (cValue >= range[0] && cValue <= range[1]) {
-            matched.push([range[0], range[1]]);
-          }
-          if (cValue >= range[2] && cValue <= range[3]) {
-            matched.push([range[2], range[3]]);
-          }
-        }
-      });
-
-      return matched;
-    },
-
-    // 新增方法：获取明度范围
-    getLightnessRange(l) {
-      return this.lightnessRanges.find(
-        (range) => l >= range[0] && l <= range[1]
-      );
-    },
-
-    // 新增方法：按明度分组颜色
-    groupColorsByLightness() {
-      this.matchedColorsByLightness = this.lightnessRanges.map((range) => {
-        return this.matchedColors.filter((color) => {
-          return color.l >= range[0] && color.l <= range[1];
-        });
-      });
-    },
-
-    generateColorGrid() {
-      this.colorGrid = [];
-      const columns = 5;
-
-      // 创建颜色副本
-      const colors = [...this.matchedColors];
-
-      // 生成行，确保每一行都有5个单元格
-      for (let i = 0; i < 3; i++) {
-        // 确保有3行
-        const row = [];
-        // 每行填充5个单元格
-        for (let j = 0; j < columns; j++) {
-          const index = i * columns + j;
-          if (index < colors.length) {
-            row.push(colors[index]);
-          } else {
-            row.push(null); // 用null填充空单元格
-          }
-        }
-        this.colorGrid.push(row);
-      }
-    },
-
-    handleLowTouchEnd(e) {
-      const x = e.changedTouches[0].x;
-      const y = e.changedTouches[0].y;
-      const center = this.lowSize / 2;
-      const dx = x - center;
-      const dy = y - center;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const radius = this.lowSize / 2 - 10;
-
-      if (distance <= radius) {
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        const normalizedAngle = (360 - angle) % 360;
-
-        const matchedSection = this.low.find((section) => {
-          const [hStart, hEnd] = section.h;
-          return hEnd <= normalizedAngle && normalizedAngle <= hStart;
-        });
-
-        if (
-          matchedSection &&
-          matchedSection.colors &&
-          matchedSection.colors[0]
-        ) {
-          const color = matchedSection.colors[0];
-          const selectedColor = this.labToRgb(color.l, color.a, color.b);
-          this.selectedColor = selectedColor;
-          this.$emit("color-selected", selectedColor);
-
-          // 重置数据并设置为低彩度模式
-          this.isLowChroma = true;
-          this.resetColorData();
-
-          // 查找匹配的颜色并更新显示
-          this.findLowMatchedColors(normalizedAngle);
-        }
-      }
-    },
-
-    // 修改 findLowMatchedColors 方法
-    findLowMatchedColors(h) {
-      // 查找匹配的色系
-      const matchedSection = this.low.find((section) => {
-        const [hStart, hEnd] = section.h;
-        return hEnd <= h && h <= hStart;
-      });
-
-      if (!matchedSection || !matchedSection.colors) {
-        this.selectedColorInfo = "未找到匹配色系";
-        return;
-      }
-
-      // 设置选中颜色信息
-      this.selectedColorInfo = `${matchedSection.label} (${matchedSection.name})`;
-
-      // 获取所有颜色
-      this.lowMatchedColors = matchedSection.colors.map((color) => ({
-        ...color,
-        color: this.labToRgb(color.l, color.a, color.b),
-        lightnessRange: this.getLowLightnessRange(color.l),
-      }));
-
-      // 按明度分组
-      this.groupLowColorsByLightness();
-
-      // 生成颜色网格 (5列4行)
-      this.generateLowColorGrid();
-    },
-
-    // 获取低彩度明度范围
-    getLowLightnessRange(l) {
-      return this.lowLightnessRanges.find(
-        (range) => l >= range[0] && l <= range[1]
-      );
-    },
-
-    // 按明度分组低彩度颜色
-    groupLowColorsByLightness() {
-      this.lowMatchedColorsByLightness = this.lowLightnessRanges.map(
-        (range) => {
-          return this.lowMatchedColors.filter((color) => {
-            return color.l >= range[0] && color.l <= range[1];
-          });
-        }
-      );
-    },
-
-    // 生成低彩度颜色网格 (5列4行)
-    generateLowColorGrid() {
-      this.lowColorGrid = [];
-      const columns = 5;
-
-      // 创建颜色副本
-      const colors = [...this.lowMatchedColors];
-
-      // 生成行，确保每一行都有5个单元格
-      for (let i = 0; i < 4; i++) {
-        // 确保有4行
-        const row = [];
-        // 每行填充5个单元格
-        for (let j = 0; j < columns; j++) {
-          const index = i * columns + j;
-          if (index < colors.length) {
-            row.push(colors[index]);
-          } else {
-            row.push(null); // 用null填充空单元格
-          }
-        }
-        this.lowColorGrid.push(row);
-      }
-    },
-
-    getColorFromGener(h, c) {
-      const matchedSection = this.gener.find((section) => {
-        const [hStart, hEnd] = section.h;
-        return h >= hEnd && h <= hStart;
-      });
-
-      if (!matchedSection) return "#FFFFFF";
-
-      if (matchedSection.colors) {
-        const matchedColor = matchedSection.colors.find((color) => {
-          return Math.abs(color.c - c) < 10;
-        });
-        if (matchedColor) {
-          return this.labToRgb(matchedColor.l, matchedColor.a, matchedColor.b);
-        }
-      }
-
-      if (matchedSection.c) {
-        for (const cRange of matchedSection.c) {
-          const ranges = this.parseCRange(cRange);
-          for (const [cMin, cMax] of ranges) {
-            if (c >= cMin && c <= cMax) {
-              return this.getDominantColorForRange(matchedSection, cMin, cMax);
-            }
-          }
-        }
-      }
-
-      return "#FFFFFF";
-    },
-
-    getLabelStyle(section, index) {
-      const center = this.size / 2;
-      const radius = this.size / 2 + 25;
-      const [hStart, hEnd] = section.h;
-      const middleAngle = ((360 - (hStart + hEnd) / 2) % 360) * (Math.PI / 180);
-      const x = center + radius * Math.cos(middleAngle);
-      const y = center + radius * Math.sin(middleAngle);
-
-      return {
-        left: `${x}px`,
-        top: `${y}px`,
-        transform: "translate(-50%, -50%)",
-      };
-    },
-
-    getLowLabelStyle(section, index) {
-      const center = this.lowSize / 2;
-      const radius = this.lowSize / 2 + 20;
-      const [hStart, hEnd] = section.h;
-      const middleAngle = ((360 - (hStart + hEnd) / 2) % 360) * (Math.PI / 180);
-      const x = center + radius * Math.cos(middleAngle);
-      const y = center + radius * Math.sin(middleAngle);
-
-      return {
-        left: `${x}px`,
-        top: `${y}px`,
-        transform: "translate(-50%, -50%)",
-        color: section.empty ? "#999" : "#333",
-      };
-    },
-
-    getLabForColor(hexColor) {
-      // 遍历 gener 和 low 数组查找匹配的颜色
-      for (const section of this.gener) {
-        for (const color of section.colors) {
-          const rgb = this.labToRgb(color.l, color.a, color.b);
-          if (rgb.toLowerCase() === hexColor.toLowerCase()) {
-            return `L:${color.l} A:${color.a} B:${color.b}`;
-          }
-        }
-      }
-
-      for (const section of this.low) {
-        if (section.colors) {
-          for (const color of section.colors) {
-            const rgb = this.labToRgb(color.l, color.a, color.b);
-            if (rgb.toLowerCase() === hexColor.toLowerCase()) {
-              return `L:${color.l} A:${color.a} B:${color.b}`;
-            }
-          }
-        }
-      }
-
-      return "未找到LAB值";
-    },
-
-    // 获取第一行的明度范围（7个或9个）
-    getFirstRowRanges() {
-      const ranges = this.isLowChroma
-        ? this.lowLightnessRanges
-        : this.lightnessRanges;
-      const count = this.isLowChroma ? 9 : 7;
-      return ranges.slice(0, count);
-    },
-
-    // 获取第二行的明度范围（8个或10个）
-    getSecondRowRanges() {
-      const ranges = this.isLowChroma
-        ? this.lowLightnessRanges
-        : this.lightnessRanges;
-      const start = this.isLowChroma ? 9 : 7;
-      return ranges.slice(start);
-    },
-
-    // 获取指定位置的颜色
-    getScaleColor(index, isFirstRow) {
-      const dataArray = this.isLowChroma
-        ? this.lowMatchedColorsByLightness
-        : this.matchedColorsByLightness;
-      let actualIndex;
-
-      if (isFirstRow) {
-        actualIndex = index;
-      } else {
-        actualIndex = (this.isLowChroma ? 9 : 7) + index;
-      }
-
-      if (dataArray[actualIndex] && dataArray[actualIndex].length > 0) {
-        return this.isLowChroma
-          ? dataArray[actualIndex][0].color
-          : dataArray[actualIndex][0].color;
-      }
-
-      return null;
-    },
-  },
+<script setup>
+import { onBeforeUnmount, ref, watch } from "vue";
+
+// 微信小程序兼容的动画帧函数
+const raf = (callback) => {
+  if (typeof wx !== "undefined" && wx.requestAnimationFrame) {
+    return wx.requestAnimationFrame(callback);
+  }
+  return setTimeout(callback, 16);
 };
+
+const caf = (id) => {
+  if (typeof wx !== "undefined" && wx.cancelAnimationFrame) {
+    wx.cancelAnimationFrame(id);
+  } else {
+    clearTimeout(id);
+  }
+};
+
+// 图表引用和状态
+const chart = ref(null);
+let chartInstance = null;
+const selectedColor = ref(null);
+const currentAngle = ref(0);
+const chartStyleStr = "width: 100%; height: 300px;";
+const showLowChroma = ref(false);
+
+// 中心颜色相关
+const centerColors = ref([]);
+
+const emit = defineEmits(["low-chroma-toggle"]);
+
+// 手势状态管理
+const gestureState = ref({
+  isDragging: false,
+  isClick: true,
+  startX: 0,
+  startY: 0,
+  startAngle: 0,
+  lastTimestamp: 0,
+  velocity: 0,
+  inertiaTimer: null,
+});
+
+// 防抖定时器
+let updateTimer = null;
+
+// LAB颜色空间转换函数
+function labToRgb(l, a, b) {
+  let y = (l + 16) / 116;
+  let x = a / 500 + y;
+  let z = y - b / 200;
+
+  const x3 = x * x * x;
+  const y3 = y * y * y;
+  const z3 = z * z * z;
+
+  x = x3 > 0.008856 ? x3 : (x - 16 / 116) / 7.787;
+  y = y3 > 0.008856 ? y3 : (y - 16 / 116) / 7.787;
+  z = z3 > 0.008856 ? z3 : (z - 16 / 116) / 7.787;
+
+  x = x * 95.047;
+  y = y * 100.0;
+  z = z * 108.883;
+
+  x = x / 100;
+  y = y / 100;
+  z = z / 100;
+
+  let r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+  let g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+  let b2 = x * 0.0557 + y * -0.204 + z * 1.057;
+
+  r = r > 0.0031308 ? 1.055 * Math.pow(r, 1 / 2.4) - 0.055 : 12.92 * r;
+  g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
+  b2 = b2 > 0.0031308 ? 1.055 * Math.pow(b2, 1 / 2.4) - 0.055 : 12.92 * b2;
+
+  r = Math.min(Math.max(0, r), 1);
+  g = Math.min(Math.max(0, g), 1);
+  b2 = Math.min(Math.max(0, b2), 1);
+
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b2 * 255),
+  };
+}
+
+function rgbToHex(r, g, b) {
+  return (
+    "#" +
+    [r, g, b]
+      .map((x) => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      })
+      .join("")
+  );
+}
+
+// 极坐标数据生成
+function generatePolarData(generData, startAngle = 0, endAngle = 360) {
+  startAngle = ((startAngle % 360) + 360) % 360;
+  endAngle = ((endAngle % 360) + 360) % 360;
+
+  const seriesData = [];
+  const minC = 0;
+  const maxC = 100;
+  const minDisplayC = showLowChroma.value ? 0 : 14; // 低艳色从0开始，主色从14开始
+
+  // 无数据区域 (仅主色盘需要)
+  if (!showLowChroma.value) {
+    seriesData.push({
+      name: "no-data-1",
+      value: [
+        0,
+        0,
+        0.1 + (minDisplayC / maxC) * 0.9,
+        1,
+        ((360 - 360) * Math.PI) / 180,
+        ((360 - 300) * Math.PI) / 180,
+      ],
+      itemStyle: {
+        color: "rgba(224,224,224,0.5)",
+        borderWidth: 0,
+      },
+      customData: { isNoData: true },
+      silent: true,
+    });
+
+    seriesData.push({
+      name: "no-data-2",
+      value: [
+        0,
+        0,
+        0.1 + (minDisplayC / maxC) * 0.9,
+        1,
+        ((360 - 10) * Math.PI) / 180,
+        ((360 - 0) * Math.PI) / 180,
+      ],
+      itemStyle: {
+        color: "rgba(224,224,224,0.5)",
+        borderWidth: 0,
+      },
+      customData: { isNoData: true },
+      silent: true,
+    });
+  }
+
+  // 中心区域
+  seriesData.push({
+    name: "low-chroma-center",
+    value: [0, 0, 0, 0.1 + (minDisplayC / maxC) * 0.9, 0, 2 * Math.PI],
+    itemStyle: {
+      color: showLowChroma.value ? "#888" : "#f0f0f0",
+      borderWidth: 0,
+    },
+    customData: {
+      name: "中心区域",
+      label: showLowChroma.value ? "返回主色盘" : "低彩度",
+      hStart: 0,
+      hEnd: 360,
+      cStart: 0,
+      cEnd: minDisplayC,
+      l: showLowChroma.value ? 50 : 80,
+      a: 0,
+      b: 0,
+      hex: showLowChroma.value ? "#888" : "#f0f0f0",
+      isCenter: true,
+    },
+  });
+
+  // 处理每个颜色类别
+  generData.forEach((category) => {
+    const hStart = 360 - (category.h[1] || 0);
+    const hEnd = 360 - (category.h[0] || 0);
+
+    if (showLowChroma.value) {
+      // 低艳色色盘 - 简单渲染方式
+      const colorObj = category.colors?.[0] || { l: 50, a: 0, b: 0 };
+      const rgb = labToRgb(colorObj.l, colorObj.a, colorObj.b);
+      const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+      seriesData.push({
+        name: category.label,
+        value: [0, 0, 0.1, 1, (hStart * Math.PI) / 180, (hEnd * Math.PI) / 180],
+        itemStyle: {
+          color: hexColor,
+          borderWidth: 0.5,
+          borderColor: "#fff",
+        },
+        customData: {
+          name: category.name,
+          label: category.label,
+          hStart: category.h[0],
+          hEnd: category.h[1],
+          cStart: 0,
+          cEnd: 100,
+          ...colorObj,
+          hex: hexColor,
+        },
+      });
+    } else {
+      // 主色盘 - 按c范围划分
+      const sortedCRanges = [...category.c].sort(
+        (a, b) => (a[0] || 0) - (b[0] || 0)
+      );
+      let prevCEnd = minDisplayC;
+
+      sortedCRanges.forEach((cRange, cIndex) => {
+        const cStart = Math.max(cRange[0] || 0, minDisplayC);
+        const cEnd = cRange[1] || cStart || 0;
+
+        const actualCStart = Math.max(cStart, prevCEnd);
+        const actualCEnd = cEnd;
+
+        if (actualCStart >= actualCEnd) return;
+
+        let matchedColor = null;
+        if (category.colors?.length > 0) {
+          for (const color of category.colors) {
+            const colorC = color.c || 0;
+            if (colorC >= actualCStart && colorC < actualCEnd) {
+              matchedColor = color;
+              break;
+            }
+          }
+        }
+
+        if (!matchedColor) {
+          prevCEnd = actualCEnd;
+          return;
+        }
+
+        const innerRadius = 0.1 + (actualCStart / maxC) * 0.9;
+        const outerRadius = 0.1 + (actualCEnd / maxC) * 0.9;
+
+        const rgb = labToRgb(matchedColor.l, matchedColor.a, matchedColor.b);
+        const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+        seriesData.push({
+          name: `${category.label}-${cIndex + 1}`,
+          value: [
+            cIndex,
+            0,
+            innerRadius,
+            outerRadius,
+            (hStart * Math.PI) / 180,
+            (hEnd * Math.PI) / 180,
+          ],
+          itemStyle: {
+            color: hexColor,
+            borderWidth: 0.5,
+            borderColor: "#fff",
+          },
+          customData: {
+            name: category.name,
+            label: category.label,
+            hStart: category.h[0],
+            hEnd: category.h[1],
+            cStart: actualCStart,
+            cEnd: actualCEnd,
+            ...matchedColor,
+            hex: hexColor,
+          },
+        });
+
+        prevCEnd = actualCEnd;
+      });
+    }
+  });
+
+  return seriesData;
+}
+
+// 自定义渲染器
+function renderPolarSector(params, api) {
+  const values = [
+    api.value(0) || 0,
+    api.value(1) || 0,
+    api.value(2) || 0,
+    api.value(3) || 0,
+    api.value(4) || 0,
+    api.value(5) || 0,
+  ];
+
+  const [
+    categoryIndex,
+    itemIndex,
+    innerRadius,
+    outerRadius,
+    startAngle,
+    endAngle,
+  ] = values;
+  const coordSys = params.coordSys;
+
+  if (!coordSys || startAngle === endAngle) return;
+
+  // 添加无数据区域特殊处理
+  if (params.data?.customData?.isNoData) {
+    return {
+      type: "sector",
+      shape: {
+        cx: coordSys.cx,
+        cy: coordSys.cy,
+        r0: innerRadius * coordSys.r,
+        r: outerRadius * coordSys.r,
+        startAngle: startAngle,
+        endAngle: endAngle,
+      },
+      style: {
+        fill: "rgba(224,224,224,0.5)",
+        stroke: "transparent",
+      },
+      silent: true,
+    };
+  }
+
+  return {
+    type: "sector",
+    shape: {
+      cx: coordSys.cx,
+      cy: coordSys.cy,
+      r0: innerRadius * coordSys.r,
+      r: outerRadius * coordSys.r,
+      startAngle: startAngle,
+      endAngle: endAngle,
+    },
+    style: api.style({
+      fill: api.visual("color"),
+      stroke: api.style().borderColor || "#fff",
+      lineWidth: api.style().borderWidth || 0.5,
+    }),
+  };
+}
+
+// 处理中心点击
+const handleCenterClick = () => {
+  showLowChroma.value = !showLowChroma.value;
+  updateChart();
+
+  // 发送事件通知父组件
+  emit("low-chroma-toggle", showLowChroma.value);
+
+  // 震动反馈（小程序环境）
+  if (typeof wx !== "undefined" && wx.vibrateShort) {
+    wx.vibrateShort();
+  }
+};
+
+// 更新图表
+const updateChart = () => {
+  if (!chartInstance) return;
+
+  const centerAngle = -currentAngle.value;
+  const startAngle = centerAngle - 90;
+  const endAngle = centerAngle + 90;
+
+  const currentData = showLowChroma.value ? low : gener;
+  const seriesData = generatePolarData(currentData, startAngle, endAngle);
+
+  const option = {
+    angleAxis: {
+      startAngle: -currentAngle.value,
+    },
+    series: [
+      {
+        data: seriesData,
+        silent: true, // 禁用主图表交互
+      },
+    ],
+  };
+
+  chartInstance.setOption(option);
+  calculateCenterColors();
+};
+
+// 计算中心三个颜色
+const calculateCenterColors = () => {
+  const centerAngle = (((currentAngle.value + 90) % 360) + 360) % 360;
+  const chartCenterAngle = centerAngle;
+
+  const currentData = showLowChroma.value ? low : gener;
+  const result = [];
+
+  // 左侧颜色 (中心角度-15度)
+  const leftAngle = (chartCenterAngle - 15 + 360) % 360;
+  const leftColor = findColorAtAngle(currentData, leftAngle);
+  if (leftColor) result.push(leftColor);
+
+  // 中心颜色 (y轴正方向)
+  const centerColor = findColorAtAngle(currentData, chartCenterAngle);
+  if (centerColor) {
+    result.push(centerColor);
+    // 自动选择中心颜色
+    if (!gestureState.value.isDragging) {
+      selectedColor.value = centerColor;
+    }
+  }
+
+  // 右侧颜色 (中心角度+15度)
+  const rightAngle = (chartCenterAngle + 15) % 360;
+  const rightColor = findColorAtAngle(currentData, rightAngle);
+  if (rightColor) result.push(rightColor);
+
+  centerColors.value = result;
+};
+
+// 根据角度查找颜色
+const findColorAtAngle = (data, angle) => {
+  const chartAngle = angle;
+
+  for (const category of data) {
+    const hStart = category.h[0] || 0;
+    const hEnd = category.h[1] || 0;
+
+    let inRange = false;
+    if (hStart <= hEnd) {
+      inRange = chartAngle >= hStart && chartAngle <= hEnd;
+    } else {
+      inRange = chartAngle >= hStart || chartAngle <= hEnd;
+    }
+
+    if (inRange) {
+      const colorIndex = Math.min(
+        Math.floor(category.colors.length / 2),
+        category.colors.length - 1
+      );
+      const colorObj = category.colors[colorIndex];
+
+      if (colorObj) {
+        const rgb = labToRgb(colorObj.l, colorObj.a, colorObj.b);
+        const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+        return {
+          name: category.name,
+          label: category.label,
+          hStart: category.h[0],
+          hEnd: category.h[1],
+          ...colorObj,
+          hex: hexColor,
+        };
+      }
+    }
+  }
+  return null;
+};
+
+// 选择颜色
+const selectColor = (color) => {
+  selectedColor.value = color;
+};
+
+// 手势处理
+function handleTouchStart(event) {
+  if (event.touches.length > 0) {
+    // 检查是否点击中心区域
+    const { clientX, clientY } = event.touches[0];
+    const centerX = event.currentTarget.offsetWidth / 2;
+    const centerY = 150; // 图表中心Y位置
+    const distance = Math.sqrt(
+      Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2)
+    );
+
+    // 如果触摸点在中心区域，则不处理手势
+    if (distance < 30) {
+      gestureState.value.isClick = false;
+      return;
+    }
+
+    if (gestureState.value.inertiaTimer) {
+      caf(gestureState.value.inertiaTimer);
+      gestureState.value.inertiaTimer = null;
+    }
+
+    gestureState.value = {
+      ...gestureState.value,
+      isDragging: false,
+      isClick: true,
+      startX: clientX,
+      startY: clientY,
+      startAngle: currentAngle.value,
+      lastTimestamp: Date.now(),
+      velocity: 0,
+    };
+  }
+}
+
+function handleTouchMove(event) {
+  if (!gestureState.value.isClick) return;
+
+  const moveThreshold = 5;
+  const deltaX = Math.abs(event.touches[0].clientX - gestureState.value.startX);
+  const deltaY = Math.abs(event.touches[0].clientY - gestureState.value.startY);
+
+  if (deltaX > moveThreshold || deltaY > moveThreshold) {
+    gestureState.value.isDragging = true;
+    gestureState.value.isClick = false;
+  }
+
+  if (gestureState.value.isDragging && event.touches.length > 0) {
+    event.preventDefault();
+
+    const now = Date.now();
+    const currentX = event.touches[0].clientX;
+    const deltaX = currentX - gestureState.value.startX;
+    const deltaTime = now - gestureState.value.lastTimestamp;
+
+    const velocity = deltaTime > 0 ? deltaX / deltaTime : 0;
+    currentAngle.value = gestureState.value.startAngle + deltaX * 0.5;
+
+    if (chartInstance) {
+      if (!updateTimer) {
+        const centerAngle = -currentAngle.value;
+        const startAngle = centerAngle - 90;
+        const endAngle = centerAngle + 90;
+
+        const currentData = showLowChroma.value ? low : gener;
+        const seriesData = generatePolarData(currentData, startAngle, endAngle);
+
+        const option = {
+          angleAxis: {
+            startAngle: -currentAngle.value,
+          },
+          series: [
+            {
+              data: seriesData,
+            },
+          ],
+        };
+        chartInstance.setOption(option);
+
+        updateTimer = setTimeout(() => {
+          updateTimer = null;
+        }, 30);
+      }
+    }
+
+    gestureState.value = {
+      ...gestureState.value,
+      lastTimestamp: now,
+      velocity: velocity,
+    };
+  }
+}
+
+function handleTouchEnd() {
+  if (!gestureState.value.isDragging) return;
+
+  gestureState.value.isDragging = false;
+
+  if (Math.abs(gestureState.value.velocity) > 0.1) {
+    let velocity = gestureState.value.velocity;
+
+    const animateInertia = () => {
+      velocity *= 0.95;
+      currentAngle.value += velocity * 16;
+
+      if (chartInstance) {
+        if (!updateTimer) {
+          const centerAngle = -currentAngle.value;
+          const startAngle = centerAngle - 90;
+          const endAngle = centerAngle + 90;
+
+          const currentData = showLowChroma.value ? low : gener;
+          const seriesData = generatePolarData(
+            currentData,
+            startAngle,
+            endAngle
+          );
+
+          const option = {
+            angleAxis: {
+              startAngle: -currentAngle.value,
+            },
+            series: [
+              {
+                data: seriesData,
+              },
+            ],
+          };
+          chartInstance.setOption(option);
+
+          updateTimer = setTimeout(() => {
+            updateTimer = null;
+          }, 30);
+        }
+      }
+
+      if (Math.abs(velocity) > 0.01) {
+        gestureState.value.inertiaTimer = raf(animateInertia);
+      } else {
+        gestureState.value.inertiaTimer = null;
+        calculateCenterColors();
+      }
+    };
+
+    gestureState.value.inertiaTimer = raf(animateInertia);
+  } else {
+    calculateCenterColors();
+  }
+}
+
+// 初始化图表
+const initChart = async () => {
+  try {
+    const echarts = require("../../../uni_modules/lime-echart/static/echarts.min.js");
+
+    if (!chart.value || !chart.value.init) return;
+
+    chartInstance = await chart.value.init(echarts);
+
+    const centerAngle = -currentAngle.value;
+    const startAngle = centerAngle - 90;
+    const endAngle = centerAngle + 90;
+
+    const currentData = showLowChroma.value ? low : gener;
+    const seriesData = generatePolarData(currentData, startAngle, endAngle);
+
+    const option = {
+      polar: {
+        center: ["50%", "50%"],
+        radius: "100%",
+      },
+      angleAxis: {
+        type: "value",
+        startAngle: -currentAngle.value,
+        clockwise: false,
+        show: false,
+        min: 0,
+        max: 360,
+        animation: false,
+      },
+      radiusAxis: {
+        type: "value",
+        min: 0,
+        max: 1,
+        show: false,
+        animation: false,
+      },
+      series: [
+        {
+          type: "custom",
+          renderItem: renderPolarSector,
+          data: seriesData,
+          coordinateSystem: "polar",
+          animation: false,
+          // 移除了 silent: true，启用交互
+        },
+      ],
+    };
+
+    chartInstance.setOption(option);
+
+    // 添加点击事件监听
+    chartInstance.on("click", (params) => {
+      console.log("点击了颜色块:", params);
+
+      const customData = params.data?.customData;
+      if (customData) {
+        console.log("颜色数据:", customData);
+
+        // 如果不是无数据区域且不是中心区域，则选择该颜色
+        if (!customData.isNoData && !customData.isCenter) {
+          selectColor(customData);
+          console.log("已选择颜色:", customData.hex);
+        } else if (customData.isNoData) {
+          console.log("点击了无数据区域");
+        } else if (customData.isCenter) {
+          console.log("点击了中心区域");
+        }
+      } else {
+        console.log("未找到自定义数据");
+      }
+    });
+
+    // 初始化后选择中心颜色
+    calculateCenterColors();
+    if (centerColors.value.length > 1) {
+      selectedColor.value = centerColors.value[1];
+    }
+  } catch (error) {
+    console.error("初始化图表失败:", error);
+  }
+};
+
+// 颜色数据
+const gener = [
+  {
+    name: "R",
+    label: "红色",
+    h: [10, 31],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 71, a: 22, b: 9, c: 24, h: 22 },
+      { l: 59, a: 18, b: 9, c: 20, h: 27 },
+      { l: 40, a: 21, b: 10, c: 23, h: 26 },
+      { l: 32, a: 24, b: 9, c: 26, h: 20 },
+      { l: 29, a: 14, b: 3, c: 14, h: 14 },
+      { l: 21, a: 23, b: 10, c: 26, h: 24 },
+
+      { l: 52, a: 35, b: 13, c: 37, h: 21 },
+      { l: 45, a: 31, b: 11, c: 33, h: 20 },
+      { l: 37, a: 31, b: 12, c: 34, h: 22 },
+      { l: 29, a: 37, b: 14, c: 39, h: 22 },
+      { l: 25, a: 35, b: 19, c: 40, h: 28 },
+
+      { l: 54, a: 48, b: 28, c: 56, h: 30 },
+      { l: 47, a: 41, b: 23, c: 47, h: 30 },
+      { l: 40, a: 39, b: 23, c: 45, h: 31 },
+      { l: 30, a: 37, b: 20, c: 42, h: 28 },
+    ],
+  },
+  {
+    name: "oR",
+    label: "偏橙的红色",
+    h: [31, 40],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 51, a: 17, b: 11, c: 20, h: 33 },
+      { l: 42, a: 27, b: 20, c: 33, h: 36 },
+      { l: 41, a: 33, b: 24, c: 41, h: 36 },
+      { l: 32, a: 21, b: 15, c: 26, h: 37 },
+
+      { l: 62, a: 42, b: 36, c: 55, h: 40 },
+      { l: 52, a: 55, b: 40, c: 68, h: 35 },
+      { l: 49, a: 40, b: 30, c: 50, h: 37 },
+      { l: 42, a: 44, b: 34, c: 55, h: 37 },
+    ],
+  },
+  {
+    name: "O",
+    label: "橙色",
+    h: [40, 65],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 58, a: 13, b: 23, c: 26, h: 60 },
+      { l: 51, a: 14, b: 17, c: 21, h: 51 },
+      { l: 37, a: 15, b: 15, c: 21, h: 45 },
+      { l: 25, a: 12, b: 14, c: 18, h: 49 },
+
+      { l: 69, a: 17, b: 31, c: 35, h: 61 },
+      { l: 55, a: 25, b: 33, c: 41, h: 53 },
+      { l: 47, a: 13, b: 28, c: 31, h: 64 },
+      { l: 43, a: 23, b: 39, c: 45, h: 60 },
+      { l: 37, a: 24, b: 24, c: 34, h: 45 },
+      { l: 30, a: 18, b: 20, c: 27, h: 48 },
+
+      { l: 64, a: 31, b: 41, c: 52, h: 53 },
+      { l: 57, a: 34, b: 44, c: 56, h: 52 },
+      { l: 54, a: 36, b: 52, c: 63, h: 56 },
+
+      { l: 66, a: 49, b: 45, c: 67, h: 43 },
+      { l: 62, a: 59, b: 71, c: 92, h: 50 },
+      { l: 59, a: 53, b: 61, c: 81, h: 49 },
+      { l: 52, a: 44, b: 55, c: 70, h: 51 },
+    ],
+  },
+  {
+    name: "oY",
+    label: "偏橙的黄色",
+    h: [65, 83],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 70, a: 7, b: 22, c: 23, h: 72 },
+      { l: 59, a: 10, b: 23, c: 25, h: 67 },
+      { l: 43, a: 5, b: 15, c: 16, h: 72 },
+      { l: 33, a: 4, b: 14, c: 14, h: 74 },
+
+      { l: 73, a: 11, b: 31, c: 33, h: 71 },
+      { l: 69, a: 10, b: 40, c: 41, h: 77 },
+      { l: 59, a: 12, b: 35, c: 37, h: 71 },
+      { l: 49, a: 13, b: 28, c: 31, h: 66 },
+
+      { l: 80, a: 12, b: 47, c: 48, h: 75 },
+      { l: 67, a: 15, b: 44, c: 47, h: 71 },
+      { l: 64, a: 17, b: 53, c: 56, h: 72 },
+      { l: 56, a: 19, b: 40, c: 44, h: 65 },
+
+      { l: 76, a: 25, b: 60, c: 65, h: 68 },
+      { l: 69, a: 17, b: 65, c: 67, h: 75 },
+      { l: 77, a: 13, b: 65, c: 67, h: 79 },
+      { l: 71, a: 11, b: 68, c: 69, h: 81 },
+      { l: 64, a: 20, b: 67, c: 70, h: 73 },
+    ],
+  },
+  {
+    name: "Y",
+    label: "黄色",
+    h: [83, 95],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 85, a: 5, b: 54, c: 54, h: 85 },
+      { l: 79, a: -1, b: 45, c: 45, h: 91 },
+      { l: 75, a: 4, b: 35, c: 35, h: 84 },
+
+      { l: 83, a: 4, b: 75, c: 75, h: 87 },
+      { l: 72, a: -1, b: 65, c: 65, h: 91 },
+    ],
+  },
+  {
+    name: "gY",
+    label: "偏绿的黄色",
+    h: [95, 110],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 85, a: -8, b: 37, c: 38, h: 103 },
+      { l: 66, a: -6, b: 19, c: 20, h: 108 },
+      { l: 49, a: -5, b: 15, c: 16, h: 109 },
+      { l: 40, a: -2, b: 13, c: 13, h: 99 },
+    ],
+  },
+  {
+    name: "yG",
+    label: "偏黄的绿色",
+    h: [110, 150],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 69, a: -14, b: 9, c: 17, h: 148 },
+      { l: 64, a: -8, b: 8, c: 11, h: 135 },
+      { l: 57, a: -8, b: 8, c: 11, h: 135 },
+      { l: 54, a: -14, b: 11, c: 17, h: 141 },
+      { l: 47, a: -14, b: 9, c: 17, h: 147 },
+      { l: 46, a: -11, b: 11, c: 15, h: 134 },
+      { l: 36, a: -5, b: 10, c: 11, h: 117 },
+      { l: 59, a: -17, b: 13, c: 21, h: 143 },
+      { l: 49, a: -14, b: 14, c: 20, h: 136 },
+      { l: 40, a: -23, b: 25, c: 34, h: 133 },
+      { l: 36, a: -28, b: 20, c: 35, h: 144 },
+      { l: 27, a: -11, b: 18, c: 21, h: 123 },
+    ],
+  },
+  {
+    name: "G",
+    label: "绿色",
+    h: [150, 170],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 78, a: -15, b: 5, c: 16, h: 161 },
+      { l: 70, a: -19, b: 8, c: 21, h: 157 },
+      { l: 61, a: -18, b: 8, c: 20, h: 156 },
+      { l: 48, a: -22, b: 12, c: 25, h: 151 },
+      { l: 39, a: -20, b: 11, c: 23, h: 152 },
+      { l: 67, a: -25, b: 10, c: 27, h: 158 },
+      { l: 62, a: -28, b: 11, c: 30, h: 159 },
+      { l: 54, a: -29, b: 12, c: 32, h: 158 },
+      { l: 47, a: -29, b: 8, c: 30, h: 164 },
+      { l: 41, a: -29, b: 12, c: 31, h: 158 },
+
+      { l: 69, a: -58, b: 18, c: 60, h: 163 },
+      { l: 58, a: -55, b: 19, c: 58, h: 161 },
+      { l: 52, a: -50, b: 21, c: 54, h: 157 },
+    ],
+  },
+  {
+    name: "bG",
+    label: "偏蓝的绿色",
+    h: [170, 220],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 54, a: -19, b: -12, c: 22, h: 213 },
+      { l: 49, a: -12, b: -4, c: 13, h: 198 },
+      { l: 40, a: -20, b: -7, c: 21, h: 199 },
+
+      { l: 67, a: -34, b: -4, c: 35, h: 187 },
+      { l: 52, a: -24, b: 2, c: 24, h: 176 },
+      { l: 51, a: -42, b: -2, c: 42, h: 183 },
+      { l: 41, a: -25, b: 4, c: 26, h: 171 },
+      { l: 35, a: -30, b: -4, c: 30, h: 188 },
+    ],
+  },
+  {
+    name: "gB",
+    label: "偏绿的蓝色",
+    h: [220, 255],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 74, a: -4, b: -12, c: 13, h: 252 },
+      { l: 46, a: -11, b: -14, c: 18, h: 231 },
+      { l: 35, a: -12, b: -10, c: 16, h: 220 },
+
+      { l: 47, a: -6, b: -20, c: 21, h: 254 },
+      { l: 38, a: -10, b: -23, c: 25, h: 247 },
+    ],
+  },
+  {
+    name: "B",
+    label: "蓝色",
+    h: [255, 275],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 70, a: -3, b: -27, c: 27, h: 264 },
+      { l: 61, a: -5, b: -22, c: 22, h: 257 },
+      { l: 49, a: -6, b: -29, c: 29, h: 262 },
+      { l: 39, a: -3, b: -24, c: 25, h: 263 },
+      { l: 34, a: -4, b: -28, c: 28, h: 262 },
+
+      { l: 55, a: 2, b: -42, c: 42, h: 272 },
+      { l: 44, a: -9, b: -44, c: 45, h: 259 },
+      { l: 40, a: -5, b: -37, c: 37, h: 263 },
+      { l: 34, a: 3, b: -42, c: 42, h: 274 },
+
+      { l: 53, a: -13, b: -40, c: 42, h: 252 },
+      { l: 37, a: -2, b: -50, c: 51, h: 267 },
+    ],
+  },
+  {
+    name: "PB",
+    label: "蓝紫色",
+    h: [275, 290],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 34, a: 3, b: -27, c: 27, h: 276 },
+      { l: 27, a: 7, b: -34, c: 35, h: 281 },
+
+      { l: 50, a: 8, b: -41, c: 42, h: 281 },
+      { l: 39, a: 16, b: -48, c: 51, h: 289 },
+      { l: 34, a: 17, b: -58, c: 61, h: 286 },
+      { l: 29, a: 15, b: -49, c: 51, h: 287 },
+    ],
+  },
+  {
+    name: "P",
+    label: "紫色",
+    h: [290, 300],
+    c: [
+      [14, 36],
+      [36, 50],
+      [50, 65],
+      [65, 95],
+    ],
+    colors: [
+      { l: 51, a: 8, b: -17, c: 19, h: 297 },
+      { l: 34, a: 34, b: -64, c: 72, h: 298 },
+      { l: 26, a: 15, b: -39, c: 42, h: 292 },
+    ],
+  },
+];
+
+//低艳色数据
+const low = [
+  {
+    name: "Np",
+    label: "紫色",
+    h: [310, 330],
+    c: [[0, 100]],
+    colors: [{ l: 22, a: 10, b: -6, c: 12, h: 330 }],
+  },
+  {
+    name: "Npb",
+    label: "蓝紫色",
+    h: [275, 310],
+    c: [[0, 100]],
+    colors: [{ l: 30, a: 2, b: -4, c: 5, h: 294 }],
+  },
+  {
+    name: "Nb",
+    label: "蓝色",
+    h: [190, 275],
+    c: [[0, 100]],
+    colors: [{ l: 54, a: -7, b: -7, c: 10, h: 227 }],
+  },
+  {
+    name: "Ng",
+    label: "绿色",
+    h: [127, 190],
+    c: [[0, 100]],
+    colors: [{ l: 94, a: 0, b: 0, c: 0, h: 182 }],
+  },
+  {
+    name: "Ngy",
+    label: "黄绿色",
+    h: [91, 127],
+    c: [[0, 100]],
+    colors: [{ l: 92, a: -1, b: 4, c: 4, h: 102 }],
+  },
+  {
+    name: "No",
+    label: "橙色",
+    h: [45, 91],
+    c: [[0, 100]],
+    colors: [{ l: 87, a: 2, b: 7, c: 7, h: 74 }],
+  },
+];
+
+// 监听角度变化，更新中心颜色
+watch(currentAngle, () => {
+  if (!gestureState.value.isDragging) {
+    calculateCenterColors();
+  }
+});
+
+// 监听色盘切换
+watch(showLowChroma, () => {
+  updateChart();
+});
+
+onBeforeUnmount(() => {
+  if (gestureState.value.inertiaTimer) {
+    caf(gestureState.value.inertiaTimer);
+  }
+  if (chartInstance) {
+    chartInstance.dispose();
+  }
+  if (updateTimer) {
+    clearTimeout(updateTimer);
+  }
+});
 </script>
 
 <style scoped>
-.color-picker-wrapper {
+.color-picker-container {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 30px;
 }
 
-.color-picker-container,
-.low-color-container {
+.gesture-container {
+  width: 100%;
+  height: 300px;
+  margin-top: auto;
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #ffffff;
-  border-radius: 16rpx;
-}
-
-.color-picker-canvas,
-.low-color-canvas {
-  border-radius: 50%;
-  box-shadow: 0 0 20rpx rgba(0, 0, 0, 0.05);
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
 }
 
-.labels-container,
-.low-labels-container {
-  position: absolute;
-  pointer-events: none;
-}
-
-.color-label,
-.low-color-label {
-  position: absolute;
-  font-size: 12px;
-  font-weight: bold;
-  white-space: nowrap;
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.7);
-}
-
-.low-color-label {
-  font-size: 10px;
-}
-
-.chart-description {
-  font-size: 14px;
-  color: #666;
-  margin-top: 30px;
-  margin-bottom: 30px;
-}
-
-.result-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.placeholder-image {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 10px;
-}
-
-.placeholder-text {
-  font-size: 14px;
-  color: #999;
-}
-
-.selected-color-info {
-  font-size: 16px;
-  color: #333;
-}
-
-.content {
-  display: flex;
+.chart-fixed-container {
   width: 100%;
-  margin-top: 15px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
 }
 
-.lightness-scale {
+.chart-rotate-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: center center;
+  transition: transform 0.1s linear;
+}
+
+.chart-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+
+.center-click-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  z-index: 10;
   display: flex;
-  flex-direction: column;
-  border-right: 1px solid #eee;
-  padding-right: 10px;
-}
-
-.scale-item {
-  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.scale-label {
+.center-text {
   font-size: 12px;
-  color: #666;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.scale-color {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 1px solid #eee;
-}
-
-/* 水平明度色序条样式 */
-.horizontal-lightness-scale-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 10px 0;
-  width: 100%;
-}
-
-.horizontal-lightness-scale-row {
+.center-colors-info {
   display: flex;
   justify-content: center;
-  gap: 5px;
+  align-items: center;
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
 }
 
-.horizontal-scale-item {
+.center-color-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 30px;
+  margin: 0 10px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
 }
 
-.horizontal-scale-label {
-  font-size: 8px;
-  color: #666;
-  text-align: center;
-  margin-bottom: 3px;
+.center-color-item.center-main {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
-.horizontal-scale-color {
-  width: 24px;
-  height: 20px;
-  border-radius: 3px;
-  border: 1px solid #eee;
-}
-
-.horizontal-scale-color.empty {
-  background-color: #f0f0f0;
-}
-
-.color-grid {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
-  width: 100%;
-}
-
-.grid-row {
-  display: flex;
-  justify-content: center;
+.center-color-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   margin-bottom: 5px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.grid-cell {
-  width: 40px;
-  height: 30px;
-  margin: 0 2px;
-  border-radius: 4px;
-  border: 1px solid #eee;
-  flex: none;
-}
-
-.grid-cell:last-child {
-  margin-right: 2px;
-}
-
-.grid-cell {
-  width: 40px;
-  height: 30px;
-  margin-right: 5px;
-  border-radius: 4px;
-  border: 1px solid #eee;
-  flex: none; /* 禁止弹性伸缩 */
-}
-
-.grid-cell:last-child {
-  margin-right: 0;
-}
-
-.title {
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.main-title {
-  font-weight: bold; /* 主标题加粗 */
-  margin-right: 10px; /* 与副标题保持间距 */
-  flex-shrink: 0; /* 防止主标题被压缩 */
-}
-
-.second-title {
-  font-size: 14px;
-  color: #666;
-  flex: 1; /* 占据剩余空间 */
-  text-align: left; /* 改为左对齐 */
-  white-space: nowrap; /* 防止换行 */
-  overflow: hidden; /* 超出部分隐藏 */
-  text-overflow: ellipsis; /* 超出部分显示省略号 */
+.center-color-label {
+  font-size: 12px;
+  text-align: center;
 }
 </style>

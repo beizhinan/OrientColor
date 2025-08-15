@@ -1,0 +1,35 @@
+// src/stores/colorStore.js
+import { defineStore } from 'pinia'
+
+export const useColorStore = defineStore('color', {
+  state: () => ({
+    // 控制显示哪个视图: 'picker-list', 'picker-detail'
+    currentView: 'picker-list',
+    // 当前选中的颜色
+    selectedColor: null
+  }),
+  
+  actions: {
+    showPickerAndList() {
+      this.currentView = 'picker-list'
+      this.selectedColor = null
+    },
+    
+    showPickerAndDetail(color) {
+      this.currentView = 'picker-detail'
+      if (color) {
+        this.selectedColor = color
+      }
+    },
+    
+    selectColor(color) {
+      this.selectedColor = color
+    },
+
+    // 重置到初始状态
+    reset() {
+      this.currentView = 'picker-list'
+      this.selectedColor = null
+    }
+  }
+})

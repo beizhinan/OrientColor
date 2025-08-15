@@ -95,6 +95,10 @@ export default {
 </script>
 
 <style>
+.content {
+  max-height: 600rpx;
+}
+
 .head {
   display: flex;
   flex-direction: column;
