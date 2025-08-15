@@ -1,5 +1,7 @@
 <template>
 	<view>
+		<!-- 背景 -->
+		<view class="back"></view>
 		<!--搜索框-->
 		<view class="findBox">
 			<!-- 用v-model绑定输入框内容到inputValue -->
@@ -37,7 +39,7 @@
 			</view>
 			
 			<modelButtonVue class="delete" v-show="managerFlag"
-			@click.stop="judge"
+			@tap="judge"
 			>删除</modelButtonVue>
 			
 			<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
@@ -49,8 +51,8 @@
 			<view class="mains">
 				<view class="words">{{msg}}</view>
 				<view class="option">
-					<modelButtonVue @click="this.deletes=false">取消</modelButtonVue>
-					<modelButtonVue @click="deleteData">确认</modelButtonVue>
+					<modelButtonVue @tap="this.deletes=false">取消</modelButtonVue>
+					<modelButtonVue @tap="deleteData">确认</modelButtonVue>
 				</view>
 			</view>
 		</view>
@@ -301,8 +303,10 @@
 					// 选中：加入数组
 					this.selectedIds.push(id);
 				}
+				//console.log(item.id)
 			},
 			judge(){
+				//console.log(this.deletes)
 				this.deletes = true
 				if(this.selectedIds.length === 0){
 					this.msg = "没有选中的文件夹"
@@ -324,8 +328,14 @@
 </script>
 
 <style>
-	body{
+	.back{
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
 		background-color: #f4f3f6;
+		z-index: -1;
 	}
 	
 	/*搜索框*/
@@ -419,7 +429,7 @@
 		margin-bottom: 8rpx;
 	}
 	.number{
-		font-size: ;
+		font-size: 20rpx;
 		color:#bebebe;
 	}
 	.selected{
