@@ -2,12 +2,18 @@
 	<view class="filter-bar">
 		<!-- 顶部筛选项 -->
 		<view class="filters">
-			<view v-for="item in filters" :key="item.key" class="filter-item"
-				:class="{ active: item.key === selectedParentKey }"
-				@tap="toggleDropdown(item.key)"
-				>
-				<view class="filter-content">
-					<image class="icon" :src=item.icon></image>
+			<view 
+			 v-for="item in filters" 
+			 :key="item.key" 
+			 class="filter-item"
+			 :class="{ active: item.key === selectedParentKey, all: item.key === 'all' }"
+			 @tap="toggleDropdown(item.key)"
+			>
+				<view v-if="item.key === 'all'" class="filter-all">
+				    <text class="label">{{ item.label }}</text>
+				</view>
+				<view v-else class="filter-content">
+					<image class="icon" :src="item.key === selectedParentKey ? item.iconActive : item.icon"></image>
 					<text class="lable">{{ item.label }}</text>
 					<image v-if="item.key !== 'all'" class="arrow" :class="{ open: item.key === activeKey }"
 						src="/static/showcase/filter-arrows.png">
@@ -20,11 +26,18 @@
 		<view v-if="activeKey && activeKey !== 'all'" class="dropdown-panel"
 			:style="{ top: dropdownPosition.top + 'rpx', left: dropdownPosition.left + 'rpx' }">
 			<view class="option-grid">
-				<view v-for="opt in getActiveOptions()" :key="opt" class="option"
-					:class="{ selected: selectedChildOption.key === activeKey && selectedChildOption.value === opt }" 
-					@tap="selectOption(opt)"
-					>
-					<image class="icon-small" src="/static/showcase/filter-icon.png"></image>
+				<view 
+				 v-for="opt in getActiveOptions()" 
+				 :key="opt" 
+				 :class="[selectedParentKey === 'category' ? 'option-c' : 'option', 
+				         { selected: selectedChildOption.key === activeKey && selectedChildOption.value === opt }]"
+				 @tap="selectOption(opt)">
+					<!-- 只有色系有icon -->
+					<view 
+					 v-if="selectedParentKey === 'system'" 
+					 class="icon-color" 
+					 :style="{ backgroundColor: getColorCode(opt) }">
+					</view>
 					<text class="option-text">{{ opt }}</text>
 				</view>
 			</view>
@@ -51,7 +64,19 @@
 				selectedChildOption: { // 当前选中的子项
 					key: '',
 					value: ''
-				}
+				},
+				selectedColor:[ // 色系图标
+					{option: '红',code: '#ffb3b3'},
+					{option: '橙',code: '#ffd3b3'},
+					{option: '黄',code: '#fff9b3'},
+					{option: '绿',code: '#b3ffcc'},
+					{option: '紫',code: '#e3b3ff'},
+					{option: '黑',code: '#b3b3b3'},
+					{option: '白',code: '#f7f7f7'},
+					{option: '灰',code: '#dadada'},
+					{option: '青',code: '#b3fff3'}
+				] 
+
 			}
 		},
 		methods: {
@@ -89,6 +114,12 @@
 					return []
 				}
 			},
+			
+			//匹配色调icon
+			getColorCode(optionName) {
+			    const match = this.selectedColor.find(item => item.option === optionName);
+			    return match ? match.code : '#ffffff'; // 没匹配到就默认白色
+			},
 
 			//选中选项后给父组件传值
 			selectOption(value) {
@@ -122,15 +153,31 @@
 		width: 214rpx;
 		height: 80rpx;
 		margin-bottom: 10rpx;
-		border: 1rpx solid #dedefa;
+		border: 1rpx solid #deb67f;
 		border-radius: 10rpx;
+		background-color: #ffffff;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
-
+	
 	.filter-item.active {
-		border-color: #a6a5f0;
+		border-color: #5a3d2e;
+	}
+	
+	.filter-item.all {
+	  background-color: #deb67f; 
+	}
+	
+	.filter-all{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.filter-all .label {
+	  font-size: 26rpx;
+	  color: #ffffff;
 	}
 
 	.filter-content {
@@ -138,7 +185,6 @@
 		align-items: center;
 		justify-content: center;
 	}
-
 
 	.icon {
 		width: 48rpx;
@@ -182,28 +228,43 @@
 		justify-content: flex-start;
 		gap: 20rpx;
 	}
+	
+	.option-c{
+		display: flex;
+		align-items: center;
+		height: 64rpx;
+		padding: 0 45rpx;
+		border: 2rpx solid #ebebeb;
+		border-radius: 10rpx;
+	}
 
 	.option {
 		display: flex;
 		align-items: center;
-		padding: 16rpx;
-		border: 1rpx solid #dfdfdf;
+		justify-content: center;
+		width: 124rpx;
+		height: 64rpx;
+		border: 2rpx solid #ebebeb;
 		border-radius: 10rpx;
 	}
 
 	.option.selected {
-		border-color: #a6a5f0;
+		border-color: #deb67f;
+	}
+	
+	.option-c.selected {
+		border-color: #deb67f;
 	}
 
-	.icon-small {
+	.icon-color {
 		width: 40rpx;
 		height: 40rpx;
-		margin-right: 12rpx;
+		border-radius: 200rpx;
+		margin-right: 20rpx;
 	}
 
 	.option-text {
 		font-size: 26rpx;
-		color: #333;
 	}
 
 	.mask {

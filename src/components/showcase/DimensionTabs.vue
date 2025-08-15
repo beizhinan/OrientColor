@@ -1,7 +1,9 @@
 <template>
 	<view class="tabs">
 		<view v-for="tab in tabs" :key="tab" :class="['tab', { active: tab === active }]" @tap="changeTab(tab)">
-			{{ tabLabels[tab] }}
+			<view :class="['tab-text', { active: tab === active }]">
+				{{ tabLabels[tab] }}
+			</view>
 		</view>
 	</view>
 </template>
@@ -32,23 +34,34 @@
 	.tabs {
 		display: flex;
 		justify-content: space-around;
+		align-items: center;
 		margin-bottom: 10rpx;
-		border-style: solid;
-		border-width: 2rpx;
-		border-color:#f0f0f0;
-		border-radius: 8px;
+		height: 112rpx;
 	}
 
 	.tab {
-		margin: 8rpx 12rpx 6rpx 12rpx;
-		padding: 12rpx 60rpx;
-		border-radius: 6px;
-		color: #667085;
+		width: 222rpx;
+		height: 112rpx;
+		background: url(/static/showcase/filter-dimUnchoose.png) no-repeat center center;
+		background-size: cover;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.tab.active {
-		background-color: #dedefa;
-		color: #4543ae;
-		font-weight: bold;
+		background-image: url(/static/showcase/filter-dimChoose.png);
+		
+	}
+
+	.tab-text {
+		font-size: 26;
+		color: #979797;
+		font-weight: 500;
+	}
+
+	.tab-text.active {
+		color: #c55b0f;
+		font-weight: 600;
 	}
 </style>

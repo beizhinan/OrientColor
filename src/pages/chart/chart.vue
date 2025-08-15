@@ -6,6 +6,7 @@
 				<canvas 
 					type="webgl2" 
 					id="canvas" 
+					v-if="showCanvas"
 					@touchstart="canvasEventHandler" 
 					@touchmove="canvasEventHandler"
 					@touchcancel="canvasEventHandler" 
@@ -13,24 +14,43 @@
 					@tap="canvasEventHandler"/>
 			</view>
 		</view>
-		<!-- 收藏组件-->
-		<Collection 
-		  @received="hideChart"
+		
+		<!-- 交互规则 -->
+		<view class="rule">
+			<image class="tips-icon" src="/src/static/showcase/collection-info.png"></image>
+			<text class="tips-title">交互规则</text>
+			<text class="tips">双指滑动可对模型进行缩放，点击某一色块可查看细节</text>
+		</view>
+		
+		<!-- 色彩详情组件 -->
+		<detail-card
 		  :color-name="selectedColor.name"
 		  :color-code="selectedColor.code"
-		  :show-detail="showDetail"
-		></Collection> 
+		  :cardStyle="'2d'"
+		  v-if="showDetail">
+		</detail-card>
+		
+		<!-- 收藏组件-->
+		<view class="collection-container">
+			<collection></collection>
+		</view>
+		
+		<!-- 底部导航-->
+		<buttomTabVue></buttomTabVue>
 	</view>
 </template>
 
 <script setup>
-	import {ref} from 'vue'
+	import { ref } from 'vue'
+	import { onShow, onHide, onLoad } from '@dcloudio/uni-app'
 	import * as THREE from 'three';
 	import {adapter} from '@minisheep/three-platform-adapter';
 	import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 	import '@minisheep/mini-program-polyfill-core/wechat-polyfill';
 	import {wechat} from '@minisheep/three-platform-adapter/wechat';
-	import Collection from "@/components/chart/collection.vue";
+	import detailCard from "@/components/chart/detailCard.vue"
+	import collection from "@/components/chart/collection.vue";
+	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
 
 	defineOptions({
 			name: 'ColorCubePage'
@@ -40,43 +60,12 @@
 		  code: ''
 		})
 		const showDetail = ref(false)
-		const colorPoints = [
-			// 示例数据
-			{ x: 2.3, y: -0.1, z: 0.3, name: "暗灰", code: "#373733" },
-			{ x: 7.3, y: 0.5, z: 1.4, name: "黯白", code: "#C6B09A" },
-			{ x: 3.9, y: -0.6, z: 0.6, name: "黯大绿", code: "#565E51" },
-			{ x: 2.7, y: -1.1, z: 1.8, name: "偏黄的大绿", code: "#374323" },
-			{ x: 2.5, y: -0.3, z: -0.4, name: "黯大青", code: "#343E42" },
-			{ x: 4.9, y: -0.5, z: 1.5, name: "偏黄的二绿", code: "#76775B" },
-			{ x: 4.6, y: -1.1, z: 1.1, name: "偏灰的黯二绿", code: "#61715A" },
-			{ x: 3.8, y: -1.0, z: -2.3, name: "偏绿的二青", code: "#1C5F7D" },
-			{ x: 4.5, y: -0.7, z: -0.5, name: "黯二青", code: "#596E73" },
-			{ x: 4.0, y: 3.9, z: 2.3, name: "上好二朱", code: "#9F413C" },
-			{ x: 6.7, y: 1.5, z: 4.4, name: "黯金", code: "#D19652" },
-			{ x: 4.0, y: -2.0, z: -0.7, name: "孔雀蓝", code: "#286869" },
-			{ x: 5.4, y: -1.9, z: -1.2, name: "浅孔雀蓝", code: "#478B95" },
-			{ x: 3.5, y: -1.2, z: -1.0, name: "深孔雀蓝", code: "#2D5861" },
-			{ x: 6.9, y: -1.4, z: 0.9, name: "黯绿华", code: "#94AF98" },
-			{ x: 4.7, y: -0.4, z: 0.5, name: "绿灰", code: "#6C7066" },
-			{ x: 0.7, y: 0.0, z: 0.7, name: "好墨", code: "#191406" },
-			{ x: 8.7, y: 0.2, z: 0.7, name: "黯铅白", code: "#E3D8CD" },
-			{ x: 5.5, y: 2.5, z: 3.3, name: "黯铅丹", code: "#BB724D" },
-			{ x: 5.4, y: -0.7, z: -0.7, name: "黯青华", code: "#6E868E" },
-			{ x: 5.5, y: -0.6, z: 0.0, name: "偏灰的黯青华", code: "#7A8885" },
-			{ x: 5.4, y: -2.9, z: 1.2, name: "上好三绿", code: "#4C8F6D" },
-			{ x: 6.1, y: -0.2, z: 1.1, name: "偏黄的三绿", code: "#97937F" },
-			{ x: 5.4, y: -1.4, z: 1.1, name: "黯三绿", code: "#70876E" },
-			{ x: 4.6, y: -1.1, z: -1.4, name: "偏绿的三青", code: "#437283" },
-			{ x: 4.2, y: 2.7, z: 2.0, name: "鲜三朱", code: "#934F43" },
-			{ x: 4.7, y: 1.3, z: 2.8, name: "深黄", code: "#926742" },
-			{ x: 3.3, y: 0.1, z: 0.8, name: "深灰", code: "#524C41" },
-			{ x: 2.5, y: 1.2, z: 1.4, name: "黯深朱", code: "#513326" },
-			{ x: 2.5, y: 3.5, z: 1.9, name: "鲜深朱", code: "#6E1F20" },
-			{ x: 5.9, y: 1.0, z: 2.3, name: "浅土黄", code: "#AC8766" },
-			{ x: 3.7, y: 1.5, z: 1.5, name: "黯土朱", code: "#754E40" },
-			{ x: 5.1, y: 1.4, z: 1.7, name: "浅土朱", code: "#9A6F5C" },
-
-		]
+		const showCanvas= ref(true)
+		const colorPoints = ref([])
+		
+		onLoad((options) => {
+		  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+		})
 	
 		const canvasEventHandler = ref(() => {});
 		adapter
@@ -136,13 +125,13 @@
 			const cubeList = [];
 			
 			// 添加颜色点
-			colorPoints.forEach((point) => {
+			colorPoints.value.forEach((point) => {
 				const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
 				const material = new THREE.MeshBasicMaterial({
 					color: new THREE.Color(point.code),
 				});
 				const cube = new THREE.Mesh(geometry, material);
-				cube.position.set(point.x, point.y, point.z);
+				cube.position.set(point.L/ 10, point.a/ 10, point.b/ 10);
 				cube.userData = {
 					name: point.name,
 					color: point.code,
@@ -186,23 +175,47 @@
 			animate();
 		}
 		
-		//跳转色彩详情页
-		function goToDetailPage() {
-		  uni.navigateTo({
-		    //url: /pages/colorDetail/colorDetail?name=${selectedColor.value.name}&code=${selectedColor.value.code}
-		  });
+		//控制canvas的显示
+		function handleHideChart(val){
+			showCanvas.value = val
 		}
+		onHide(() => {
+			// 清理事件绑定（如果是自定义事件）
+			if (canvasEventHandler.value && canvasEventHandler.value.dispose) {
+				canvasEventHandler.value.dispose();
+			}
+		})
+		onShow(() => {
+		  showCanvas.value = true
+		  console.log(showCanvas.value)
+		  const canvasEventHandler = ref(() => {});
+		  adapter
+		  	.useCanvas('#canvas')
+		  	.then(({
+		  		canvas,
+		  		requestAnimationFrame,
+		  		eventHandler,
+		  	}) => {
+		  		canvasEventHandler.value = eventHandler;
+		  		initThree(canvas, requestAnimationFrame);
+		  	});
+		})
+		
 	
 	</script>
 
 <style>
 	.container {
 		padding: 70rpx 60rpx 10rpx 60rpx;
+		background-color: #fffbf6;
+		height: 100vh;
+		box-sizing: border-box;
 	}
 
 	.color-cube {
 		width: 100%;
 		height: 802rpx;
+		background-color: #fff;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -241,6 +254,29 @@
 		bottom: 0;
 		right: 0;
 	}
+	
+	.tips-icon {
+		height: 20rpx;
+		width: 20rpx;
+		margin-right: 5rpx;
+	}
+	
+	.tips-title {
+		font-weight: 500;
+		font-size: 20rpx;
+		color: #5a3d2e;
+		font-weight: 700;
+		margin-right: 5rpx;
+	}
+	
+	.tips {
+		font-size: 17.4rpx;
+		color: #7d6e5d;
+	}
+	
+	.collection-container {
+		
+	}
 
-
+	
 </style>

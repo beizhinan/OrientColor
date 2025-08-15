@@ -36,16 +36,16 @@ export default {
         theme: ''
       },
       filters: [
-        { key: 'all', label: '全部', icon: '/static/showcase/filter-icon.png'},
-        { key: 'system', label: '色系', icon: '/static/showcase/filter-icon.png', 
+        { key: 'all', label: '全部'},
+        { key: 'system', label: '色系', icon: '/static/showcase/filter-sexi.png', iconActive: '/static/showcase/filter-sexi-active.png', 
 		options: ['红', '橙', '黄','绿','紫','黑','白','灰','青'] , bottom:'82', left:'30'},
-        { key: 'hue', label: '色调', icon: '/static/showcase/filter-icon.png', 
-		options: ['PCCS', '淡', '浅','灰', '暗', '柔','浊','亮', '强', '深'] , bottom:'82', left:'60'},
-        { key: 'year', label: '年代', icon: '/static/showcase/filter-icon.png', 
+        { key: 'hue', label: '色调', icon: '/static/showcase/filter-sediao.png', iconActive: '/static/showcase/filter-sediao-active.png',
+		options: ['淡', '浅','灰', '暗', '柔','浊','亮', '强', '深'] , bottom:'82', left:'60'},
+        { key: 'year', label: '年代', icon: '/static/showcase/filter-niandai.png', iconActive: '/static/showcase/filter-niandai-active.png',
 		options: ['唐', '宋', '元', '明', '清', '近现代'] , bottom:'175', left:'0'},
-		{ key: 'theme', label: '类别', icon: '/static/showcase/filter-icon.png', 
+		{ key: 'theme', label: '类别', icon: '/static/showcase/filter-leibie.png', iconActive: '/static/showcase/filter-leibie-active.png',
 		options: ['建筑', '陶瓷', '绘画', '丝绸','其他'] , bottom:'175', left:'30'},
-		{ key: 'category', label: '主题', icon: '/static/showcase/filter-icon.png', 
+		{ key: 'category', label: '主题', icon: '/static/showcase/filter-zhuti.png', iconActive: '/static/showcase/filter-zhuti-active.png',
 		options: ['开化寺色谱', '永乐宫色谱', '乾隆色谱', '《营造法式》彩画色谱'] , bottom:'175', left:'60'}
       ]
     }
@@ -66,6 +66,7 @@ export default {
 <style scoped>
 .page {
   padding: 22rpx 42rpx 30rpx 42rpx;
+  background-color: #fffbf6;
 }
 
 </style>
