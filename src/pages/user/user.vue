@@ -1,4 +1,6 @@
 <template>
+	<!-- 背景 -->
+  <view class="back"></view>
   <view class="user-container">
     <!-- 用户信息区域 -->
     <view class="user-info" @click="handleUserClick">
@@ -16,22 +18,43 @@
 
     <!-- 其他功能区域 -->
     <view class="menu-list">
-      <view
+		<view
         class="menu-item"
         v-for="item in menuList"
         :key="item.id"
         @click="navigateTo(item.path)"
-      >
-        <text class="title">{{ item.title }}</text>
-        <!-- 使用本地图标替换uni-icons -->
-        <image
-          class="arrow-icon"
-          src="/static/arrow-right.png"
-          mode="aspectFit"
-        ></image>
-      </view>
+		>
+			<!-- 功能图标 -->
+			<image
+			class="arrow-icon"
+			:src="item.iconfont"
+			:style="{'margin-right':'30rpx'}"
+			mode="aspectFit"
+			></image>
+			<text class="title">{{ item.title }}</text>
+			<!-- 使用本地图标替换uni-icons -->
+			<image
+			class="arrow-icon"
+			src="/static/user/arrow-right.png"
+			mode="aspectFit"
+			></image>
+		</view>
     </view>
   </view>
+	<!-- 底部文字 -->
+	<view class="words">
+		<!-- 使用图片替代文字 -->
+		<image
+		:style="{width:'215rpx',height:'50rpx'}"
+		src="/static/user/buttomWords1.png"
+		mode="aspectFit"
+		></image>
+		<image
+		:style="{width:'135rpx',height:'30rpx'}"
+		src="/static/user/buttomWords2.png"
+		mode="aspectFit"
+		></image>
+	</view>
 </template>
 
 <script setup>
@@ -45,12 +68,19 @@ const authStore = useAuthStore();
 const defaultAvatar = "../../static/default-avatar.png";
 
 const menuList = ref([
-  { id: 1, title: "我的收藏", icon: "icon-order", path: "/pages/collection/collection" },
+  { 
+	id: 1, 
+	title: "我的收藏", 
+	icon: "icon-order", 
+	path: "/pages/collection/collection" ,
+	iconfont:"/static/user/collections.png"
+  },
   {
     id: 2,
     title: "我的客服",
     icon: "icon-address",
     path: "/pages/address/list",
+	iconfont:"/static/user/service.png"
   },
 ]);
 
@@ -87,15 +117,26 @@ const navigateTo = (path) => {
 </script>
 
 <style scoped>
+.back{
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	background-color: #f1e9d8;
+	z-index: -1;
+}
+
 .user-container {
   padding: 20rpx;
+  background-color: #f1e9d8;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   padding: 30rpx;
-  background-color: #fff;
+  background-color: #f1e9d8;
   border-radius: 16rpx;
   margin-bottom: 20rpx;
 }
@@ -116,10 +157,11 @@ const navigateTo = (path) => {
   font-size: 36rpx;
   font-weight: bold;
   margin-bottom: 10rpx;
+  color:#5a3d2e;
 }
 
 .menu-list {
-  background-color: #fff;
+  background-color: #f1e9d8;
   border-radius: 16rpx;
 }
 
@@ -127,12 +169,13 @@ const navigateTo = (path) => {
   display: flex;
   align-items: center;
   padding: 30rpx;
-  border-bottom: 1rpx solid #f5f5f5;
+ /* border-bottom: 4rpx solid #f5f5f5; */
+  border-bottom: 4rpx solid #ebe4d6;
 }
 
-.menu-item:last-child {
+/* .menu-item:last-child {
   border-bottom: none;
-}
+} */
 
 .iconfont {
   margin-right: 20rpx;
@@ -143,11 +186,22 @@ const navigateTo = (path) => {
 .title {
   flex: 1;
   font-size: 32rpx;
+  color:#5a3d2e;
 }
 
 /* 新增本地图标样式 */
 .arrow-icon {
   width: 32rpx;
   height: 32rpx;
+}
+
+.words{
+	position: fixed;
+	bottom: 100rpx;
+	left:50%;
+	transform: translateX(-50%);
+	width:215rpx;
+	height:70rpx;
+	text-align: center;
 }
 </style>

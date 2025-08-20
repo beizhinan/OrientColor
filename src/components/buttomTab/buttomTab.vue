@@ -1,28 +1,30 @@
 <template>
 	<view>
 		<!-- 自定义 tabBar 容器 -->
-		  <view class="custom-tab-bar">
-		    <!-- 循环渲染 tab 项 -->
-		    <view 
-		      class="tab-item" 
-		      v-for="(item, index) in tabList" 
-		      :key="index"
-		      @click="switchTab(item)"
-		    >
-		      <!-- 图标 -->
-		      <image 
-		        class="tab-icon" 
-		        :src="currentPath === item.pagePath ? item.selectedIconPath : item.iconPath"
-		      ></image>
-		      <!-- 文字 -->
-		      <text 
-		        class="tab-text" 
-		        :style="currentPath === item.pagePath ? {color: selectedColor} : {color: color}"
-		      >
-		        {{ item.text }}
-		      </text>
-		    </view>
-		  </view>
+		<view class="custom-tab-bar">
+			<!-- 循环渲染 tab 项 -->
+			<view 
+				class="tab-item" 
+				v-for="(item, index) in tabList" 
+				:key="index"
+				@click="switchTab(item)"
+			>
+				<!-- 图标 -->
+				<image 
+				class="tab-icon" 
+				:src="currentPath === item.pagePath ? item.selectedIconPath : item.iconPath"
+				></image>
+				<!-- 文字 -->
+				<text 
+				class="tab-text" 
+				:style="currentPath === item.pagePath ? {color: selectedColor} : {color: color}"
+				>
+				{{ item.text }}
+				</text>
+			</view>
+		</view>
+		<!-- 抵消底部导航栏的高度 -->
+		<view class="tab"></view>
 	</view>
 </template>
 
@@ -116,5 +118,9 @@
 	/* 文字样式 */
 	.tab-text {
 	  font-size: 12px;
+	}
+	.tab{
+		height: 125rpx;
+		width: 100%;
 	}
 </style>

@@ -72,6 +72,8 @@
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
 		colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+		
+		
 	})
 
 	//选择坐标
