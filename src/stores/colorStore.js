@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 export const useColorStore = defineStore('color', {
   state: () => ({
-    // 控制显示哪个视图: 'picker-list', 'picker-detail'
+    // 控制显示哪个视图: 'picker-list', 'picker-detail', 'picker-low-chroma'
     currentView: 'picker-list',
     // 当前选中的颜色
     selectedColor: null
@@ -20,6 +20,11 @@ export const useColorStore = defineStore('color', {
       if (color) {
         this.selectedColor = color
       }
+    },
+    
+    showPickerAndLowChroma() {
+      this.currentView = 'picker-low-chroma'
+      this.selectedColor = null
     },
     
     selectColor(color) {

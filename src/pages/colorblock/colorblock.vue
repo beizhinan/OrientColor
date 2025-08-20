@@ -18,10 +18,33 @@
       </view>
 
       <!-- 切换内容区域 -->
-      <view v-if="!showSources">
+      <view v-if="!showSources" class="description-wrapper">
         <!-- 默认显示的颜色信息 -->
-        <view class="color-description">
-          <text>{{ colorData.description }}</text>
+        <view
+          class="description-container-wrapper"
+          :style="{ height: descriptionWrapperHeight }"
+        >
+          <view
+            class="description-container"
+            :class="{ 'expanded-container': descriptionExpanded }"
+          >
+            <!-- 未展开状态下的文本截断显示 -->
+            <view
+              v-if="!descriptionExpanded"
+              class="description-content collapsed"
+            >
+              <rich-text :nodes="formattedDescription"></rich-text>
+            </view>
+
+            <!-- 展开状态下的滚动显示 -->
+            <scroll-view v-else class="description-content expanded" scroll-y>
+              <rich-text :nodes="formattedDescription"></rich-text>
+            </scroll-view>
+
+            <text class="toggle-btn" @click="toggleDescription">
+              {{ descriptionExpanded ? "收起" : "详情" }}
+            </text>
+          </view>
         </view>
 
         <view class="basic-info">
@@ -84,7 +107,7 @@
               <view class="info-item double-width">
                 <text class="info-label">图形来源</text>
                 <text class="info-value link" @click="toggleSources">
-                  点击查看信息来源
+                  点击查看图片来源→
                 </text>
               </view>
             </view>
@@ -128,8 +151,10 @@
               <!-- 左侧：信息项 -->
               <view class="source-info">
                 <view class="info-item">
-                  <text class="info-label">来源：</text>
-                  <text class="info-value">{{ source.name }}</text>
+                  <text class="info-label">来源 ：</text>
+                  <text class="info-value info-value-bold">{{
+                    source.name
+                  }}</text>
                 </view>
                 <view class="info-item">
                   <text class="info-label">取样位置\n</text>
@@ -171,7 +196,7 @@ const colorDatabase = {
   name: "上好大绿",
   value: "#2E8B57",
   description:
-    "来自明清官式建筑彩画标准色谱。单色样块使用的实验颜料来源包括日本中川凤凰堂和国产姜思序堂特级二青等。彩度较高，给人奢华贵重、典雅的视觉感受。",
+    "主要来自永乐宫色谱。\n鲜三绿是永乐宫色彩中彩度较高的三绿。\n鲜三绿见于三清殿、纯阳殿彩画中色彩较为鲜艳的部分，可能是老化、污染较轻的元代彩画色彩，也有可能是后世补绘的色彩。相较于三绿，鲜三绿在视觉上略少几分温润，更有青春活力。\n也可见于开化寺色谱和明清官式建筑彩画色谱。",
   approxColorCode: "45",
   lch: "L69C60H",
   prefix: "上好",
@@ -209,6 +234,10 @@ export default {
       tertiaryColor: "",
       titlePath: "",
       showSources: false,
+      descriptionExpanded: false,
+      originalPosition: null,
+      descriptionWrapperHeight: "auto", // 用于保持占位高度
+      scrollTop: 0, // 页面滚动位置
     };
   },
 
@@ -266,6 +295,34 @@ export default {
     }
   },
 
+  computed: {
+    formattedDescription() {
+      if (!this.colorData.description) return "";
+
+      // 处理换行和缩进
+      let desc = this.colorData.description
+        .replace(/\n/g, "<br>")
+        .replace(/\t/g, "&emsp;&emsp;");
+
+      return `<div style="line-height:1.6;">${desc}</div>`;
+    },
+
+    expandedStyle() {
+      if (!this.originalPosition) return {};
+      return {
+        position: "absolute",
+        top: this.originalPosition.top - this.scrollTop + "px",
+        left: this.originalPosition.left + "px",
+        width: this.originalPosition.width + "px",
+        zIndex: "1000",
+      };
+    },
+  },
+
+  onPageScroll(e) {
+    this.scrollTop = e.scrollTop;
+  },
+
   methods: {
     toggleSources() {
       this.showSources = !this.showSources;
@@ -277,6 +334,30 @@ export default {
         });
       }
     },
+    toggleDescription() {
+      if (!this.descriptionExpanded) {
+        // 获取原始位置信息
+        const query = uni.createSelectorQuery();
+        query.select(".description-container").boundingClientRect();
+        query.exec((res) => {
+          if (res[0]) {
+            this.originalPosition = {
+              top: res[0].top + this.scrollTop, // 加上滚动位置
+              left: res[0].left,
+              width: res[0].width,
+            };
+
+            // 保存展开前的高度，用于占位
+            this.descriptionWrapperHeight = res[0].height + "px";
+            this.descriptionExpanded = true;
+          }
+        });
+      } else {
+        this.descriptionExpanded = false;
+        // 收起时重置高度
+        this.descriptionWrapperHeight = "auto";
+      }
+    },
   },
 };
 </script>
@@ -284,13 +365,14 @@ export default {
 <style scoped>
 .container {
   padding: 20rpx;
+  background-color: #fffbf6;
   min-height: 100vh;
 }
 
 .color-detail {
-  background-color: white;
   border-radius: 16rpx;
   padding: 30rpx;
+  position: relative;
 }
 
 .color-preview-large {
@@ -332,11 +414,91 @@ export default {
   cursor: pointer;
 }
 
+/* 描述容器包装器 - 保持占位 */
+.description-container-wrapper {
+  position: relative;
+  margin-bottom: 30rpx;
+}
+
+/* 描述容器 - 基础样式 */
+.description-container {
+  position: relative;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  background-color: rgba(226, 247, 220, 0.2);
+}
+
+/* 展开状态 */
+.description-container.expanded-container {
+  position: absolute;
+  z-index: 1000;
+  width: calc(100% - 40rpx); /* 减去左右padding */
+  box-sizing: border-box; /* 确保padding不影响宽度计算 */
+}
+
+/* 描述内容 */
+.description-content {
+  padding: 20rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* 收起状态 - 文本截断显示 */
+.description-content.collapsed {
+  height: 140rpx;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+/* 展开状态 - 滚动区域 */
+.description-content.expanded {
+  background-color: #e2f7dc;
+  padding-bottom: 60rpx;
+}
+
+/* 切换按钮 */
+.toggle-btn {
+  display: block;
+  text-align: right;
+  color: #007aff;
+  font-size: 24rpx;
+  padding: 10rpx 20rpx;
+  text-decoration: underline;
+  background-color: inherit;
+}
+
+/* 展开时按钮居中显示 */
+.description-container.expanded-container .toggle-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background-color: #e2f7dc;
+  z-index: 1001;
+}
+
+.basic-info,
+.technical-details,
+.technical-info {
+  position: relative;
+  z-index: 1;
+}
+
 .color-description {
   font-size: 24rpx;
   line-height: 1.5;
   color: #333;
   margin-bottom: 40rpx;
+}
+
+.basic-info {
+  z-index: 100;
+  position: sticky;
+  top: 0;
 }
 
 .section-title {
@@ -548,12 +710,8 @@ export default {
 }
 
 .link {
-  color: #c69c6d;
+  color: #007aff;
   text-decoration: underline;
-}
-
-.link:active {
-  color: #c69c6d;
 }
 
 /* 来源信息区域样式 */
@@ -601,8 +759,11 @@ export default {
   flex-direction: column;
 }
 
-.source-info .info-item {
+.source-info .info-item:not(:first-child) {
   margin-bottom: 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .source-info .info-item:last-child {
@@ -615,17 +776,27 @@ export default {
 }
 
 .source-info .info-label {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: bold;
   margin-bottom: 8rpx;
-  text-align: left;
+  text-align: center;
 }
 
 .source-info .info-value {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #333;
-  text-align: left;
+  text-align: center;
   font-weight: normal;
+}
+
+/* 只对"取样位置"的值应用样式 */
+.source-info .info-item:nth-child(2) .info-value {
+  padding: 0 10rpx;
+  color: #c69c6d;
+}
+
+.source-info .info-value.info-value-bold {
+  font-weight: bold;
 }
 
 .source-image-thumb {
@@ -644,9 +815,9 @@ export default {
 }
 
 .source-image .info-label {
-  font-size: 24rpx;
+  font-size: 28rpx;
   font-weight: bold;
   margin-bottom: 8rpx;
-  text-align: left;
+  text-align: center;
 }
 </style>

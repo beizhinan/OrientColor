@@ -1,12 +1,13 @@
 {
  "pages": [
-    { "path": "pages/index/index", "style": { "navigationBarTitleText": "首页" } },
+    { "path": "pages/ad/ad", "style": { "navigationBarTitleText": "" } },
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "东方色彩" } },
     { "path": "pages/showcase/showcase", "style": { "navigationBarTitleText": "展示" , "disableScroll": true} },
     { "path": "pages/search/search", "style": { "navigationBarTitleText": "检索" } },
     { "path": "pages/user/user", "style": { "navigationBarTitleText": "个人中心" } },
     { "path": "pages/login/login", "style": { "navigationBarTitleText": "登录" } },
     { "path" : "pages/chart/chart", "style" : {"navigationBarTitleText" : "三维色谱", "disableScroll": true} },
-	{ "path" : "pages/chart2D/chart2D", "style" : {"navigationBarTitleText" : "二维色谱", "disableScroll": true} },
+	  { "path" : "pages/chart2D/chart2D", "style" : {"navigationBarTitleText" : "二维色谱", "disableScroll": true} },
     { "path": "pages/collection/collection","style": {"navigationBarTitleText": "收藏"}},
     { "path": "pages/favorites/favorites","style": {"navigationBarTitleText": "收藏"}},
     { "path" : "pages/chromatogarphy/chromatogarphy","style" : {"navigationBarTitleText" : ""}},
@@ -24,13 +25,13 @@
       },
       {
         "pagePath": "pages/showcase/showcase",
-        "text": "展示",
+        "text": "色立体",
         "iconPath": "static/tabs/showcase.png",
         "selectedIconPath": "static/tabs/showcase-active.png"
       },
       {
         "pagePath": "pages/search/search",
-        "text": "检索",
+        "text": "色彩检索",
         "iconPath": "static/tabs/search.png",
         "selectedIconPath": "static/tabs/search-active.png"
       },
@@ -41,18 +42,25 @@
         "selectedIconPath": "static/tabs/user-active.png"
       }
     ],
-    "color": "#999",
-    "selectedColor": "#007AFF"
+      "color": "#999",
+      "selectedColor": "#9F7735",
+      "height": "60px", 
+      "spacing": "10px",
+      "iconWidth": "40px", 
+      "fontSize": "14px",  
+      "padding": "10px 0", 
+      "borderStyle": "white" 
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "uni-app",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8",
-    "navigationBarHeight": "44px",
+    "navigationBarHeight": "50px",
     "titleNView": {
       "titleColor": "#333333",
-      "titleSize": "18px"
+      "titleSize": "18px",
+      "padding": "10px"
     }
   }
 }

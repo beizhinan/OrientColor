@@ -8,15 +8,20 @@
 
         <text class="upload-text">您可以上传图片</text>
         <text class="upload-subtext">系统将解析图像分析其主导色和点缀色</text>
-        <view class="upload-button">
-          <text class="button-text">上传图片</text>
-        </view>
       </view>
+    </view>
+    <view class="upload-button" @click="chooseImage" v-if="!imageSrc">
+      <text class="button-text">上传图片</text>
     </view>
 
     <!-- 预览图片 -->
     <view v-if="imageSrc" class="preview-container">
-      <image :src="imageSrc" class="preview-image" mode="aspectFit"></image>
+      <image
+        :src="imageSrc"
+        class="preview-image"
+        mode="aspectFit"
+        @click="previewImage"
+      ></image>
       <text class="tips">点击图片、色块进行查色</text>
 
       <!-- 修改部分：显示色块 -->
@@ -30,7 +35,15 @@
         ></view>
       </view>
 
-      <button class="change-btn" @click="chooseImage">重新上传图片</button>
+      <view class="upload-button" @click="chooseImage">
+        <text class="button-text">重新上传图片</text>
+      </view>
+
+      <view class="tips" v-if="result && result.length > 0">
+        <text>
+          *请注意彩色库中显示的颜色及数值是由计算机模拟的颜色，不同设备上显示也有所区别，实际生产中请参阅实物色卡确认。</text
+        >
+      </view>
     </view>
   </view>
 </template>
@@ -102,6 +115,36 @@ export default {
           value: "#FF006E",
           titlePath: "识别颜色-洋红",
         },
+        {
+          id: 11,
+          name: "粉色",
+          value: "#FFA7C4",
+          titlePath: "识别颜色-粉色",
+        },
+        {
+          id: 12,
+          name: "玫瑰红",
+          value: "#FF2D55",
+          titlePath: "识别颜色-玫瑰红",
+        },
+        {
+          id: 13,
+          name: "burgundy",
+          value: "#A80023",
+          titlePath: "识别颜色-Burgundy",
+        },
+        {
+          id: 14,
+          name: "深粉",
+          value: "#EB4D5C",
+          titlePath: "识别颜色-深粉",
+        },
+        {
+          id: 15,
+          name: "深粉",
+          value: "#EB4D5C",
+          titlePath: "识别颜色-深粉",
+        },
       ],
     };
   },
@@ -121,7 +164,16 @@ export default {
         },
       });
     },
-    // 跳转到颜色详情页
+
+    // 添加图片预览方法
+    previewImage() {
+      uni.previewImage({
+        urls: [this.imageSrc],
+        current: this.imageSrc,
+        indicator: "default",
+        loop: true,
+      });
+    }, // 跳转到颜色详情页
     goToColorDetail(color) {
       console.log("跳转到颜色详情页", color);
 
@@ -166,7 +218,8 @@ export default {
   background-color: #f9f9f9;
   padding: 20rpx;
   box-sizing: border-box;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3); /* 添加阴影效果 */
+  border-right: 8rpx solid #c69c6d; /* 右边框 */
+  border-bottom: 8rpx solid #c69c6d; /* 下边框 */
 }
 
 .upload-content {
@@ -206,15 +259,21 @@ export default {
 }
 
 .upload-button {
-  background-color: #dedefa;
+  background-color: #9f7735;
+  width: 180rpx;
+  height: 60rpx;
+  margin-top: 50rpx;
   padding: 15rpx 40rpx;
   border-radius: 16rpx;
+  display: flex; /* 添加flex布局 */
+  justify-content: center; /* 水平居中 */
+  align-items: center; /* 垂直居中 */
 }
 
 .button-text {
-  color: #5c59e8;
-  font-size: 28rpx;
-  font-weight: bold;
+  color: white;
+  font-size: 30rpx;
+  text-align: center; /* 文本居中 */
 }
 
 .preview-container {
@@ -227,14 +286,8 @@ export default {
 
 .preview-image {
   width: 100%;
-  height: 300rpx;
+  height: 400rpx;
   border-radius: 10rpx;
-}
-
-.tips {
-  margin-top: 20rpx;
-  font-size: 24rpx;
-  color: #999;
 }
 
 /* 新增样式：色块容器 */
@@ -257,14 +310,22 @@ export default {
 
 .change-btn {
   margin-top: 20rpx;
-  background-color: #eee;
-  border: 0 solid transparent;
+  background-color: #9f7735;
+  color: white;
+  width: 180rpx;
+  height: 60rpx;
   border-radius: 10rpx;
   font-size: 28rpx;
-  outline: none;
 }
 
 .change-btn::after {
   display: none;
+}
+
+.tips {
+  margin-top: 40rpx;
+  font-size: 24rpx;
+  color: #9f7735;
+  letter-spacing: 2rpx;
 }
 </style>

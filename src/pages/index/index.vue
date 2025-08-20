@@ -55,14 +55,14 @@ export default {
       cardList: [
         {
           id: 1,
-          headerText: "最新",
+          headerText: "",
           headerImage: "https://placebear.com/340/340",
           title: "开化寺",
           description: "古老的佛教寺庙，拥有精美的壁画和建筑",
         },
         {
           id: 2,
-          headerText: "热门",
+          headerText: "",
           headerImage: "https://placebear.com/340/240",
           title: "晋祠",
           description: "中国古代建筑艺术的瑰宝，园林景观优美",
@@ -98,18 +98,9 @@ export default {
       this.showPopup = false;
     },
     handleExperience() {
-      uni.showToast({
-        title: "开始体验",
-        icon: "success",
-      });
       this.showPopup = false;
     },
-    handleViewDetails() {
-      uni.showToast({
-        title: "查看介绍",
-        icon: "none",
-      });
-    },
+    handleViewDetails() {},
   },
 };
 </script>
@@ -117,6 +108,9 @@ export default {
 <style>
 .container {
   padding: 20px;
+  height: 100vh;
+  overflow: auto;
+  background-color: #f1e9d8;
 }
 
 .content {
@@ -125,7 +119,8 @@ export default {
 }
 
 .title {
-  font-size: 18px;
+  font-size: 16px;
+  color: #3c2a1d;
   font-weight: bold;
   display: block;
   margin-bottom: 20rpx;

@@ -2,17 +2,11 @@
   <view class="content">
     <view class="title">
       <text class="title-t">图片颜色提取</text>
-      <text class="title-d"
-        >智能提取上传图片的主要色调，匹配最接近的东方色彩</text
-      >
+      <text class="title-d">智能提取上传图片的主要色调</text>
+      <text class="title-d">匹配最接近的东方色彩</text>
     </view>
     <view class="image-uploader">
       <image-uploader @imageUploaded="handleImageUploaded"></image-uploader>
-    </view>
-    <view class="tips">
-      <text>
-        请注意彩色库中显示的颜色及数值是由计算机模拟的颜色，不同设备上显示也有所区别，实际生产中请参阅实物色卡确认。</text
-      >
     </view>
   </view>
 </template>
@@ -38,6 +32,7 @@ export default {
 <style>
 .content {
   padding: 30px;
+  background-color: #f1e9d8;
 }
 
 .title {
@@ -60,12 +55,5 @@ export default {
 
 .image-uploader {
   margin-top: 60rpx;
-}
-
-.tips {
-  margin-top: 40rpx;
-  font-size: 28rpx;
-  color: #999;
-  letter-spacing: 2rpx;
 }
 </style>

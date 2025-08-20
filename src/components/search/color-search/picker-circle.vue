@@ -1131,6 +1131,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  background-color: #f1e9d8;
 }
 
 .gesture-container {

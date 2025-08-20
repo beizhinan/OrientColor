@@ -1,6 +1,6 @@
 <!-- src/components/search/color-search/color-search.vue -->
 <template>
-  <view class="page-container">
+  <view class="container">
     <!-- 色彩总谱说明弹窗 -->
     <color-spectrum-modal
       v-if="showSpectrumModal"
@@ -18,7 +18,13 @@
     <!-- 页面内容（只有在弹窗关闭后才显示） -->
     <view v-if="!showSpectrumModal">
       <view class="content">
-        <view class="tip" v-if="colorStore.currentView === 'picker-list'">
+        <view
+          class="tip"
+          v-if="
+            colorStore.currentView === 'picker-list' ||
+            colorStore.currentView === 'picker-low-chroma'
+          "
+        >
           <image
             class="icon"
             src="/static/color-picker.png"
@@ -29,7 +35,6 @@
           </text>
         </view>
       </view>
-
       <!-- 根据状态显示不同组件 -->
       <view
         class="list-wrapper"
@@ -41,7 +46,10 @@
 
       <view
         class="detail-wrapper"
-        v-else-if="colorStore.currentView === 'picker-detail'"
+        v-if="
+          colorStore.currentView === 'picker-detail' ||
+          colorStore.currentView === 'picker-low-chroma'
+        "
       >
         <color-detail></color-detail>
       </view>
@@ -49,7 +57,10 @@
       <!-- 只在需要显示色盘时才显示 -->
       <view
         class="picker-wrapper"
-        v-if="colorStore.currentView === 'picker-list'"
+        v-if="
+          colorStore.currentView === 'picker-list' ||
+          colorStore.currentView === 'picker-low-chroma'
+        "
         :class="{ 'blur-background': showSecondGuide }"
       >
         <color-picker @low-chroma-toggle="handleLowChromaToggle"></color-picker>
@@ -104,8 +115,8 @@ export default {
 
     handleLowChromaToggle(isLowChroma) {
       if (isLowChroma) {
-        // 切换到低艳色时，显示detail组件，但仍保留色盘和列表
-        this.colorStore.showPickerAndDetail();
+        // 切换到低艳色时，显示色盘和详情组件
+        this.colorStore.showPickerAndLowChroma();
       } else {
         // 切换回主色盘时，显示list组件和色盘
         this.colorStore.showPickerAndList();
@@ -172,29 +183,30 @@ export default {
 };
 </script>
 
-<style>
-.page-container {
+<style scoped>
+.container {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background-color: #f1e9d8;
 }
 
 .content {
   padding: 0 20rpx 0 20rpx;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .list-wrapper,
 .detail-wrapper {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .picker-wrapper {
-  padding: 20rpx;
-  background-color: #fff;
+  flex-shrink: 0;
 }
 
 .tip {
@@ -215,7 +227,6 @@ export default {
 .description {
   font-size: 18rpx;
   color: #5a4a32;
-  flex: 1;
 }
 
 /* 模糊背景效果 */

@@ -288,7 +288,7 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 0 30rpx 0 30rpx;
-  height: 700rpx;
+  height: 600rpx;
   position: relative;
 }
 

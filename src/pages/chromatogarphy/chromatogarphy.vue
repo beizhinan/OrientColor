@@ -6,19 +6,14 @@
         class="info"
         :style="{ backgroundImage: 'url(' + colorData.imgurl + ')' }"
       >
-        <!-- 添加收藏按钮 -->
-        <view class="favorite-button" @click="toggleFavorite">
-          <text>收藏</text>
-        </view>
-
         <view class="description-overlay">
-          <text class="title">{{ colorData.name }}：</text>
+          <text class="title">{{ colorData.name }}：\n</text>
           <text class="description-text">{{ colorData.description }}</text>
         </view>
       </view>
 
-      <!-- 主要内容区域 - 水平布局部分 -->
-      <view class="horizontal-layout">
+      <!-- 主要内容区域 -->
+      <view class="main-content">
         <!-- 左侧色系选择tab -->
         <view class="color-tabs">
           <view
@@ -32,8 +27,8 @@
           </view>
         </view>
 
-        <!-- 右侧颜色展示区域 -->
-        <view class="right-content">
+        <!-- 右侧内容区域 -->
+        <view class="right-section">
           <!-- 子颜色标签 -->
           <view class="color-tags">
             <view
@@ -47,21 +42,59 @@
             </view>
           </view>
 
-          <!-- 颜色分组展示 -->
-          <view class="color-groups">
+          <!-- 可展开的描述区域 -->
+          <view class="expandable-area">
             <view
-              v-for="subColor in filteredColorGroups"
+              v-for="(subColor, index) in filteredColorGroups"
               :key="subColor.name"
-              class="color-group"
+              class="description-container"
+              :class="{ 'expanded-container': expandedIndex === index }"
             >
-              <text class="group-description">{{ subColor.description }}</text>
+              <!-- 未展开状态下的文本截断显示 -->
+              <view
+                v-if="expandedIndex !== index"
+                class="description-content collapsed"
+              >
+                <text
+                  v-for="(paragraph, idx) in formatDescription(
+                    subColor.description
+                  )"
+                  :key="idx"
+                >
+                  <text v-if="paragraph.isEmptyLine">\n</text>
+                  <text v-else-if="paragraph.isTitle" class="section-title">{{
+                    paragraph.text + "\n"
+                  }}</text>
+                  <text v-else>{{ paragraph.text + "\n" }}</text>
+                </text>
+              </view>
+
+              <!-- 展开状态下的滚动显示 -->
+              <scroll-view v-else class="description-content expanded" scroll-y>
+                <text
+                  v-for="(paragraph, idx) in formatDescription(
+                    subColor.description
+                  )"
+                  :key="idx"
+                >
+                  <text v-if="paragraph.isEmptyLine">\n</text>
+                  <text v-else-if="paragraph.isTitle" class="section-title">{{
+                    paragraph.text + "\n"
+                  }}</text>
+                  <text v-else>{{ paragraph.text + "\n" }}</text>
+                </text>
+              </scroll-view>
+
+              <text class="toggle-btn" @click="toggleExpand(index)">
+                {{ expandedIndex === index ? "收起" : "详情" }}
+              </text>
             </view>
           </view>
         </view>
       </view>
 
-      <!-- 三级分类内容 - 单独放在底部 -->
-      <view class="third-level-container">
+      <!-- 三级分类区域 -->
+      <view class="third-level">
         <view
           v-for="subColor in filteredColorGroups"
           :key="'filtered-' + subColor.name"
@@ -69,21 +102,21 @@
           <view
             v-for="thirdLevel in subColor.children"
             :key="thirdLevel.name"
-            class="third-level-group"
+            class="color-family"
           >
-            <view class="third-level-title">{{ thirdLevel.name }}</view>
-            <view class="color-items">
+            <view class="family-title">{{ thirdLevel.name }}</view>
+            <view class="color-palette">
               <view
                 v-for="color in thirdLevel.children"
                 :key="color.name"
-                class="color-preview-container"
+                class="color-item"
               >
                 <view
-                  class="color-preview"
+                  class="color-swatch"
                   :style="{ backgroundColor: color.value }"
                   @click="goToColorDetail(color)"
                 >
-                  <text class="color-name-label">{{ color.name }}</text>
+                  <text class="color-label">{{ color.name }}</text>
                 </view>
               </view>
             </view>
@@ -107,7 +140,7 @@ const colorDataMap = {
       {
         name: "石绿",
         description:
-          '《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。"\n石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。',
+          '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画。',
         children: [
           {
             name: "大绿",
@@ -203,6 +236,7 @@ export default {
       allColorData: colorDataMap,
       colorData: colorDataMap[defaultColor],
       isFavorite: false,
+      expandedIndex: -1,
     };
   },
   computed: {
@@ -257,27 +291,26 @@ export default {
       this.selectedColor = color;
       this.selectedTag = this.allColorData[color].subColors[0].name;
       this.colorData = this.allColorData[color];
+      this.expandedIndex = -1;
     },
 
     // 选择标签
     selectTag(tag) {
       this.selectedTag = tag;
+      this.expandedIndex = -1;
     },
 
     // 添加收藏切换方法
     toggleFavorite() {
       this.isFavorite = !this.isFavorite;
-      // 这里可以添加实际的收藏逻辑，比如保存到本地存储或发送到服务器
       console.log(`收藏状态: ${this.isFavorite ? "已收藏" : "取消收藏"}`);
     },
 
     // 跳转到颜色详情页面
     goToColorDetail(color) {
-      // 查找当前颜色的父级和祖父级信息
       let parentGroup = null;
       let grandParentGroup = null;
 
-      // 遍历当前颜色数据找到父级和祖父级
       for (let subColor of this.colorData.subColors) {
         for (let child of subColor.children) {
           const foundColor = child.children.find(
@@ -292,7 +325,6 @@ export default {
         if (parentGroup) break;
       }
 
-      // 构建完整路径标题
       let titlePath = this.selectedColor;
       if (grandParentGroup) {
         titlePath += "-" + grandParentGroup.name;
@@ -317,6 +349,51 @@ export default {
           `titlePath=${encodeURIComponent(titlePath)}`,
       });
     },
+
+    formatDescription(description) {
+      if (!description) return [];
+
+      // 按换行符分割文本
+      const paragraphs = description.split("\n");
+      const result = [];
+
+      console.log(paragraphs);
+      console.log(result);
+
+      paragraphs.forEach((para) => {
+        // 不再过滤空行，而是标记为空行
+        if (!para.trim()) {
+          result.push({
+            text: "", // 空文本表示换行
+            isEmptyLine: true,
+            isTitle: false,
+          });
+          return;
+        }
+
+        // 判断是否是标题段落
+        const isTitle =
+          para.includes("色名释义") ||
+          para.includes("历史文化背景") ||
+          para.trim().endsWith("：");
+
+        // 处理制表符
+        const processedText = para.replace(/\t/g, "  ");
+
+        result.push({
+          text: processedText,
+          isTitle,
+          isEmptyLine: false,
+        });
+      });
+
+      return result;
+    },
+
+    // 切换展开/收起方法
+    toggleExpand(index) {
+      this.expandedIndex = this.expandedIndex === index ? -1 : index;
+    },
   },
 };
 </script>
@@ -324,7 +401,7 @@ export default {
 <style scoped>
 .container {
   padding: 20rpx;
-  background-color: #f8f8f8;
+  background-color: #fffbf6;
   min-height: 100vh;
 }
 
@@ -339,23 +416,6 @@ export default {
   background-position: center;
   margin-bottom: 20rpx;
   position: relative;
-  overflow: hidden;
-}
-
-.favorite-button {
-  position: absolute;
-  top: 20rpx;
-  right: 20rpx;
-  width: 150rpx;
-  height: 60rpx;
-  background-color: rgba(222, 182, 127, 0.8); 
-  color: white;
-  border-radius: 30rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .description-overlay {
@@ -364,176 +424,226 @@ export default {
   left: 0;
   right: 0;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-  padding: 30rpx;
+  padding: 30rpx 20rpx;
   color: white;
 }
 
 .title {
   font-size: 32rpx;
   font-weight: bold;
-  display: block;
+  letter-spacing: 3rpx;
 }
 
 .description-text {
-  font-size: 24rpx;
+  font-size: 22rpx;
 }
 
-/* 水平布局部分 */
-.horizontal-layout {
+/* 主内容区域 */
+.main-content {
   display: flex;
-  flex-direction: row;
-  margin-top: 20rpx;
-  align-items: stretch; /* 确保子元素拉伸到相同高度 */
+  margin-bottom: 20rpx;
 }
 
-/* 左侧色系选择tab */
+/* 左侧tab */
 .color-tabs {
-  width: 100rpx;
+  width: 120rpx;
   margin-right: 20rpx;
   background-color: white;
   border-radius: 12rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .tab-item {
   padding: 18rpx 12rpx;
   text-align: center;
-  background-color: transparent;
-  margin-bottom: 10rpx;
-  border-radius: 8rpx;
   font-size: 28rpx;
   color: #333;
-  transition: all 0.1s;
 }
 
 .tab-item.active {
   background-color: #40c860;
   color: white;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  margin: 10rpx;
 }
 
-/* 右侧内容区域 */
-.right-content {
+/* 右侧内容 */
+.right-section {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   border-radius: 16rpx;
-  padding: 20rpx;
-  min-height: 100%;
+  position: relative;
 }
 
-/* 颜色标签 */
 .color-tags {
   display: flex;
   flex-wrap: wrap;
-  margin-bottom: 20rpx;
 }
 
 .tag-item {
   padding: 12rpx 28rpx;
   background-color: #f0f0f0;
+  color: #8e8e93;
   border-radius: 30rpx;
   margin-right: 15rpx;
   margin-bottom: 15rpx;
   font-size: 28rpx;
-  color: #333;
-  transition: all 0.3s;
 }
 
 .tag-item.active {
   background-color: white;
   color: #40c860;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 可展开区域 */
+.expandable-area {
+  position: relative;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
-/* 颜色分组 */
-.color-groups {
-  flex: 1;
-  border-radius: 12rpx;
-  padding: 10rpx;
-  overflow-y: auto;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-}
-
-.color-group {
+.description-container {
   margin-bottom: 20rpx;
+  position: relative;
 }
 
-.group-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  margin-bottom: 15rpx;
-  color: #333;
+.description-container.expanded-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 
-.group-description {
-  font-size: 20rpx;
+.description-content {
+  font-size: 22rpx;
   color: #666;
-  margin-bottom: 10rpx;
-  display: block;
   line-height: 1.5;
-}
-
-/* 三级分类容器 - 放在底部 */
-.third-level-container {
-  margin-top: 30rpx;
   background-color: white;
-  border-radius: 16rpx;
-  padding: 20rpx;
+  padding: 10rpx 20rpx;
+  border-radius: 8rpx;
+  position: relative;
 }
 
-.third-level-group {
-  margin-top: 30rpx;
+.description-content .section-title {
+  font-size: 24rpx;
+  color: #333;
+  margin: 15rpx 0 8rpx 0;
+  display: block;
 }
 
-.third-level-title {
+/* 未展开状态下的样式 - 文本截断并显示省略号 */
+.description-content.collapsed {
+  height: 220rpx;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  white-space: pre-wrap;
+  background-color: rgba(226, 247, 220, 0.2); /* #e2f7dc 透明度0.2 */
+}
+
+/* 展开状态下的样式 */
+.description-content.expanded {
+  height: 520rpx;
+  width: 92%;
+  white-space: pre-wrap;
+  background-color: #e2f7dc;
+  padding-bottom: 50rpx;
+}
+
+.toggle-btn {
+  display: block;
+  text-align: right;
+  color: #007aff;
+  font-size: 24rpx;
+  font-weight: bold;
+  padding: 10rpx 0;
+  text-decoration: underline;
+  background-color: rgba(226, 247, 220, 0.2); /* #e2f7dc 透明度0.2 */
+  border-radius: 0 0 8rpx 8rpx;
+  position: relative;
+  z-index: 101;
+}
+
+/* 当展开时，调整按钮位置 */
+.description-container.expanded-container .toggle-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center; /* 居中对齐 */
+  margin-top: 0;
+  background-color: #e2f7dc;
+  padding: 10rpx 0;
+  border-radius: 0 0 8rpx 8rpx;
+}
+
+/* 三级分类容器 */
+.third-level {
+  flex-direction: column;
+  clip-path: polygon(
+    6px 0,
+    calc(100% - 6px) 0,
+    100% 6px,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    6px 100%,
+    0 calc(100% - 6px),
+    0 6px
+  );
+  background: linear-gradient(-45deg, #deb67f 4px, white 0) bottom right,
+    linear-gradient(45deg, #deb67f 4px, white 0) bottom left,
+    linear-gradient(135deg, #deb67f 4px, white 0) top left,
+    linear-gradient(-135deg, #deb67f 4px, white 0) top right;
+  background-size: 50% 51%;
+  background-repeat: no-repeat;
+  border: solid 2px #deb67f;
+  display: flex;
+  position: relative;
+  z-index: 1;
+  padding: 20rpx 30rpx;
+}
+
+.color-family {
+  margin-bottom: 10rpx;
+}
+
+.family-title {
   font-size: 30rpx;
   font-weight: 600;
-  margin-bottom: 10rpx;
-  color: #444;
 }
 
-.third-level-description {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 15rpx;
-  display: block;
-  line-height: 1.5;
-}
-
-.color-items {
+.color-palette {
   display: flex;
   flex-wrap: wrap;
   margin-top: 20rpx;
 }
 
-.color-preview-container {
+.color-item {
   width: 30%;
   margin-right: 3%;
-  margin-bottom: 30rpx;
+  margin-bottom: 20rpx;
 }
 
-.color-preview-container:nth-child(3n) {
+.color-item:nth-child(3n) {
   margin-right: 0;
 }
 
-.color-preview {
+.color-swatch {
   height: 80rpx;
   border-radius: 8rpx;
   position: relative;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: flex-end;
-  overflow: hidden;
 }
 
-.color-name-label {
+.color-label {
   color: white;
   padding: 6rpx 10rpx;
   font-size: 22rpx;
   width: 100%;
-  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 </style>

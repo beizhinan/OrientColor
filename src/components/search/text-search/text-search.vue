@@ -84,27 +84,27 @@ export default {
     },
     // 跳转到颜色详情页
     goToColorDetail(color) {
-      console.log('跳转到颜色详情页', color);
-      
+      console.log("跳转到颜色详情页", color);
+
       // 构造跳转参数
       const params = {
         name: encodeURIComponent(color.name),
         value: encodeURIComponent(color.code),
         id: color.id || null,
-        titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null
+        titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null,
       };
-      
+
       // 过滤掉空值参数并构建查询字符串
       const queryString = Object.keys(params)
-        .filter(key => params[key] !== null && params[key] !== undefined)
-        .map(key => `${key}=${params[key]}`)
-        .join('&');
-      
+        .filter((key) => params[key] !== null && params[key] !== undefined)
+        .map((key) => `${key}=${params[key]}`)
+        .join("&");
+
       // 跳转到详情页
       uni.navigateTo({
-        url: `/pages/colorblock/colorblock?${queryString}`
+        url: `/pages/colorblock/colorblock?${queryString}`,
       });
-    }
+    },
   },
 };
 </script>
@@ -113,6 +113,7 @@ export default {
 .content {
   display: flex;
   flex-direction: column;
+  background-color: #f1e9d8;
 }
 
 .head {
@@ -128,7 +129,7 @@ export default {
   border-radius: 20rpx;
   padding: 16rpx 25rpx;
   transition: all 0.3s ease;
-  border: 2rpx solid #bababa;
+  border: 3rpx solid #bababa;
 }
 
 .search-box:focus-within {
@@ -137,17 +138,17 @@ export default {
 }
 
 .search-icon {
-  width: 30rpx;
-  height: 30rpx;
+  width: 40rpx;
+  height: 40rpx;
   margin-right: 16rpx;
   opacity: 0.6;
 }
 
 .search-input {
   flex: 1;
-  font-size: 28rpx;
+  font-size: 32rpx;
   color: #333;
-  height: 30rpx;
+  height: 40rpx;
   line-height: 48rpx;
 }
 

@@ -1,9 +1,6 @@
 <template>
   <view class="content">
     <view class="head">
-      <view class="image">
-        <image src="https://placebear.com/840/340"></image>
-      </view>
       <view class="tab-container">
         <view class="tab">
           <view
@@ -96,7 +93,7 @@ export default {
 
 <style>
 .content {
-  max-height: 600rpx;
+  background-color: #f1e9d8;
 }
 
 .head {
@@ -104,15 +101,12 @@ export default {
   flex-direction: column;
 }
 
-.image image {
-  width: 100%;
-  height: 200rpx;
-}
 
 .tab-container {
   display: flex;
   justify-content: center;
   width: 100%;
+  margin-top: 50rpx;
 }
 
 .tab {
@@ -156,7 +150,7 @@ export default {
 .page {
   padding: 40rpx 0;
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 /* 添加滑动动画样式 */

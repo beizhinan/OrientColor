@@ -97,14 +97,14 @@ export default {
 
 .content-title {
   display: block;
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 24rpx;
+  margin-top: 10rpx;
   margin-bottom: 10rpx;
 }
 
 .content-desc {
   display: block;
-  font-size: 24rpx;
+  font-size: 18rpx;
   color: #666;
 }
 </style>
