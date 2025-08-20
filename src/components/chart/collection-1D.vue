@@ -15,7 +15,7 @@
 			>
 				{{ item }}
 			</view>
-			<view class="selection active" v-if="cardStyle==='1dPolar'">H</view>
+			<view class="selectionH" v-if="cardStyle==='1dPolar'">H</view>
 		</view>
 	</view>
 	
@@ -56,9 +56,6 @@
 			<button class="save-btn add-btn" @click="createFolder">完成</button>
 		</view>
 	</view>
-	
-	<!-- 抵消底部导航栏的高度 -->
-	<view class="tab"></view>
 </template>
 
 <script>
@@ -159,14 +156,21 @@
 	.rule{
 		box-sizing: border-box;
 		background-color: #fdf1e8;
-		height: 185rpx;
-		width:650rpx;
-		margin-top: 40rpx;
-		padding-top: 30rpx;
+		height: 160rpx;
+		width:660rpx;
+		clip-path: polygon(
+			2% 0, 98% 0, 
+			100% 10%, 100% 90%, 
+			98% 100%, 2% 100%, 
+			0 90%, 0 10%
+		);
+		margin: 33rpx auto 0;
+		padding-top: 20rpx;
+		border:5rpx solid #eed5b3;
 	}
 	.tips-icon {
 		display: inline-block;
-		margin-left: 20rpx;
+		margin-left: 25rpx;
 		height: 20rpx;
 		width: 20rpx;
 		vertical-align: middle; 
@@ -196,6 +200,19 @@
 		background-color: white;
 		color:#007aff;
 		border: 5rpx solid #007aff;
+		border-radius: 10rpx;
+		text-align: center;
+		line-height: 70rpx;
+	}
+	.selectionH{
+		box-sizing: border-box;
+		width: 130rpx;
+		height: 70rpx;
+		margin-left: 80rpx;
+		background-color: white;
+		color:#ed6e00;
+		border: 5rpx solid #f4e7db;
+		background-color: #ffffff;
 		border-radius: 10rpx;
 		text-align: center;
 		line-height: 70rpx;
@@ -365,8 +382,5 @@
 		margin-bottom: 120rpx;
 	}
 	
-	.tab{
-		height: 125rpx;
-		width: 100%;
-	}
+	
 </style>
