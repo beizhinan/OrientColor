@@ -13,8 +13,27 @@
 				    <text class="label">{{ item.label }}</text>
 				</view>
 				<view v-else class="filter-content">
-					<image class="icon" :src="item.key === selectedParentKey ? item.iconActive : item.icon"></image>
-					<text class="lable">{{ item.label }}</text>
+					<!-- 如果是 system 且有选中子项，用子项色块替换父 icon -->
+					<template v-if="item.key === 'system' && selectedChildOption.key === 'system'">
+						<view 
+							class="icon-color"
+							:style="{ backgroundColor: getColorCode(selectedChildOption.value) }">
+						</view>
+						<text class="lable">{{ selectedChildOption.value }}</text>
+					</template>
+					
+					<!-- 如果不是 system 或 system 未选择子项 -->
+					<template v-else>
+						<image 
+							class="icon" 
+							:src="item.key === selectedParentKey ? item.iconActive : item.icon">
+						</image>
+						<!-- 有子项就替换文字，否则显示父类文字 -->
+						<text class="lable">
+							{{ selectedChildOption.key === item.key ? selectedChildOption.value : item.label }}
+						</text>
+					</template>
+					
 					<image v-if="item.key !== 'all'" class="arrow" :class="{ open: item.key === activeKey }"
 						src="/static/showcase/filter-arrows.png">
 					</image>

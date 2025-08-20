@@ -49,7 +49,7 @@
 		left:320rpx;
 		height: 70rpx;
 		width: 55rpx;
-		background-image: url(@/static/1Dchart/trangle.png);
+		/*background-image: url(@/static/1Dchart/trangle.png);*/
 	}
 	
 	.content{
