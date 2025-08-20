@@ -1,5 +1,7 @@
 <template>
 	<view>
+		<!-- 背景 -->
+		<view class="back"></view>
 		<view class="title">{{data.name}}</view>
 		<view class="frame" v-show="this.flag">
 			<view class="content"
@@ -11,8 +13,16 @@
 					<view class="order">{{item.name}}</view>
 					<view class="brief">#{{item.form}}</view>
 				</view>
-				<button class="btn" style="margin-bottom: 8rpx;" @click="deleteData(index)">删除</button>
-				<view class="box">
+				<view class="btnBox">
+					<button class="btn" style="margin-bottom: 8rpx; border-color: #dbc1a4; color:#dbc1a4" @click="deleteData(index)">删除</button>
+					<button class="btn" 
+					style="border-color: #98867c; color: #98867c;" 
+					@click="showDetail(index)" 
+					v-show="!detailFlag || index!==order"
+					>详情</button>
+				</view>
+				
+				<view class="box" v-show="detailFlag && index === order">
 					<view class="colorSolid" @click="goToColorblock(item)">查看色立体</view>
 					<view class="entry" @click="goToShowcase(item)">查看词条</view>
 				</view>
@@ -32,7 +42,9 @@
 				flag:true,//判断是否删除了所有内容
 				//测试数据
 				//每种颜色都有自己的id
-				data:{}
+				data:{},
+				detailFlag:false,
+				order:-1,//确认序号
 			}
 		},
 		onLoad(options){
@@ -93,6 +105,10 @@
 				});
 				// 去除最后一个逗号和空格
 				return `linear-gradient(${gradient.slice(0, -2)})`
+			},
+			showDetail(index){
+				this.detailFlag=true
+				this.order=index
 			}
 		},
 		components:{
@@ -102,8 +118,14 @@
 </script>
 
 <style>
-	body{
-		background-color: #f4f3f6;
+	.back{
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		background-color: #fdfaf5;
+		z-index: -1;
 	}
 	.title{
 		margin: 45rpx 48rpx;
@@ -158,10 +180,15 @@
 		font-size: 16rpx;
 		color:#cdcdcd;
 	}
-	.btn{
+	.btnBox{
 		position: absolute;
 		top: 25rpx;
 		right: 20rpx;
+		width: 80rpx;
+		height: 110rpx;
+		padding: 0;
+	}
+	.btn{
 		width: 80rpx;
 		height: 50rpx;
 		padding: 0;
@@ -169,7 +196,7 @@
 		text-align: center;
 		line-height: 48rpx;
 		font-size: 16rpx;
-		border:1rpx #b9b9b9 solid;
+		border:2rpx #b9b9b9 solid;
 	}
 	.box{
 		box-sizing: border-box;

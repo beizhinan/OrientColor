@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view style="width: 100%;">
 		<!-- 背景 -->
 		<view class="back"></view>
 		<!--搜索框-->
@@ -11,22 +11,23 @@
 		<!--收藏夹-->
 		<view class="box">
 			<view class="collection">收藏夹</view>
-			<view class='mamage' :class="{'blue-color':managerFlag}"
+			<view class='mamage' :class="{'select-color':managerFlag}"
 			@click="changeManager">管理</view>
 		</view>
 		<!--具体内容-->
 		<view class="content">
 			<view class="favorites" :url="`/pages/favorites/favorites?name=${item.name}`" open-type="navigate"
-				v-for="(item) in dataList"
-				:key="item.id"
-				@click="goToDetail(item,index)"
-				:class="{'actives':selectedIds.includes(item.id)}"
-				>
+			v-for="(item) in dataList"
+			:key="item.id"
+			@click="selectOrGoto(item,index)"
+			:class="{'actives':selectedIds.includes(item.id)}"
+			>
 				<view class="header"></view>
 				<view class="name">{{item.name}}</view>
 				<view class="number">{{item.colorCard.length}} 项</view>
 				<!-- .stop阻止事件冒泡,筛选中 -->
-				<view class="selected" v-show="this.managerFlag" 
+				<view class="selected" 
+				v-show="this.managerFlag" 
 				@click.stop="select(item, index)"
 				:class="{'icon-seleted':selectedIds.includes(item.id),
 				'iconfont':selectedIds.includes(item.id),
@@ -38,12 +39,14 @@
 				<view class="iconfont icon-tianjiajiahaowubiankuang iconAdd"></view>
 			</view>
 			
+			<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
+			<view class="block" v-show="dataListLength%3===2||!managerFlag"></view>
+		</view>
+		
+		<view style="margin: 60rpx auto 0; width: 142rpx;">
 			<modelButtonVue class="delete" v-show="managerFlag"
 			@tap="judge"
 			>删除</modelButtonVue>
-			
-			<!--用于补全一整行，使每个块对齐，避免一行两个块的时候，中间产生空位-->
-			<view class="block" v-show="dataListLength%3===2||!managerFlag"></view>
 		</view>
 		
 		<!--确认框-->
@@ -61,6 +64,7 @@
 </template>
 
 <script>
+	//import '@fontsource/noto-serif-sc'
 	import buttomTabVue from '../../components/buttomTab/buttomTab.vue'
 	import modelButtonVue from '../../components/collect/modelButton.vue'
 	export default{
@@ -176,7 +180,7 @@
 							},
 							{
 								cardId:2,
-								color:['red'],
+								color:['red','white'],
 								name:'开化寺色谱',
 								form:'红色系,淡调,唐代,建筑',
 								colorId:11
@@ -318,6 +322,13 @@
 				else{
 					this.msg = "是否确认删除所选文件夹"
 				}
+			},
+			selectOrGoto(item,index){
+				if(!this.managerFlag){
+					this.goToDetail(item)
+				}else{
+					this.select(item,index)
+				}
 			}
 		},
 		components:{
@@ -334,7 +345,7 @@
 		left: 0;
 		height: 100%;
 		width: 100%;
-		background-color: #f4f3f6;
+		background-color: #fdfaf5;
 		z-index: -1;
 	}
 	
@@ -363,7 +374,7 @@
 		width:80rpx;
 		border-radius: 40rpx;
 		color: white;
-		background-color: #007aff;
+		background-color: #c69c6d;
 		font-size: 30rpx;
 		text-align: center;
 		line-height: 80rpx;
@@ -380,8 +391,10 @@
 		line-height: 140rpx;
 	}
 	.collection{
+		font-style: "STSong",serif;
 		font-size: 36rpx;
 		font-weight: bold;
+		color:#9f7735;
 	}
 	.mamage{
 		font-size: 26rpx;
@@ -389,8 +402,8 @@
 		cursor: pointer;
 	}
 	/* 新增蓝色样式类 */
-	.blue-color {
-	    color: #007aff;
+	.select-color {
+	    color: #d78410;
 	}
 	
 	/*内容*/
@@ -452,15 +465,17 @@
 		background-color: white;
 		font-size: 16rpx;
 		font-weight: bold;
-		color:#5c59e8;
+		color:#deb680;
 	}
 	.actives{
-		border:3rpx solid #5c59e8;
+		border:4rpx solid #deb680;
 	}
 	.delete{
-		position:absolute;
+		/* display: block; */
+		/* position:absolute;
 		right: 0rpx;
-		bottom: -140rpx;
+		bottom: -140rpx; */
+		/* margin: 60rpx auto 0; */
 	}
 	.iconAdd{
 		height: 200rpx;

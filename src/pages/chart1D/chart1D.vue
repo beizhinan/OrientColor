@@ -1,46 +1,18 @@
 <template>
 	<view class="chart-1d">
-		<!-- 标题 -->
-		<view class="title">
-			<text v-if="selectedButton==='button1'" class="title-content">带状一维模型</text>
-			<text v-if="selectedButton==='button2'" class="title-content">环状一维模型</text>
-		</view>
-		
-		<!-- 图表 -->
-		<view class="container">
-			<!-- 左侧图表 -->
-			<view class="chart">
-				
-			</view>
-
-			<!-- 右侧详情面板 -->
-			<view class="detail-panel">
-				<view class="arrow"></view>
-				<detail-card
-					:color-name="currentColor.name"
-					:color-code="currentColor.code"
-					:cardStyle="handleCardStyle">
-				</detail-card>
-
-				<!-- 右下定位环 -->
-				<view class="mini-chart">
-					
+		<view class="one">
+				<view>
+					<Band v-if="handleCardStyle==='1dRect'"></Band>
+					<Ring v-if="handleCardStyle==='1dPolar'"></Ring>
+					<!-- 收藏组件-->
+					<Collection1D 
+					  @received="hideChart"
+					  :color-name="currentColor.name"
+					  :color-code="currentColor.code"
+					  :show-detail="showDetail"
+					  :cardStyle="handleCardStyle"
+					  ></Collection1D> 
 				</view>
-			</view>
-		</view>
-		
-		<!-- 选择框组件 -->
-		<view class="center">
-			<InteractionTip
-			  :button="selectedButton"
-			  :dimension="'1D'"
-			  @select1D="handleSelect1D">
-			</InteractionTip>
-		</view>
-		
-		<!-- 收藏组件-->
-		<view class="c-container">
-			<Collection></Collection> 
 		</view>
 		
 		<!-- 底部导航-->
@@ -56,6 +28,9 @@
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
 	import Collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
+	import Ring from '@/components/chart/ring-1D.vue'
+	import Band from '@/components/chart/band-1D.vue'
+	import Collection1D from '@/components/chart/collection-1D.vue'
 
 	const chartRef = ref(null)
 	const miniChartRef = ref(null)
@@ -68,6 +43,8 @@
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
 		colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+		
+		
 	})
 	
 	//选择坐标
