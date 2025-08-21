@@ -28,12 +28,12 @@ export default {
       activeDimension: '3D',
 	  activeButton: 'button1',
       selectedFilters: {
-        category: '全部',
-        colorSeries: '',
-        tone: '',
-        era: '',
-        type: '',
-        theme: ''
+        all: '全部',
+        system: '',
+        hue: '',
+        year: '',
+        theme: '',
+        category: ''
       },
       filters: [
         { key: 'all', label: '全部'},
@@ -54,10 +54,23 @@ export default {
     onDimensionChange(newDimension) {
       this.activeDimension = newDimension
     },
-    onFilterChange(key, value) {
-      this.selectedFilters[key] = value
-	  console.log(key)
-	  console.log(value)
+    onFilterChange(selectedParentKeyArray) {
+        const keyMap = {
+            system: 'system',
+            hue: 'hue',
+            year: 'year',
+            theme: 'theme',
+            category: 'category'
+        };
+    
+        selectedParentKeyArray.forEach(item => {
+            const field = keyMap[item.key];
+            if (field) {
+                this.selectedFilters[field] = item.value;
+            }
+        });
+    
+        console.log(this.selectedFilters);
     }
   }
 }

@@ -42,7 +42,7 @@
 
 <script setup>
 	import { ref } from 'vue'
-	import { onShow, onHide, onLoad } from '@dcloudio/uni-app'
+	import { onShow, onHide, onLoad, onUnload } from '@dcloudio/uni-app'
 	import * as THREE from 'three';
 	import {adapter} from '@minisheep/three-platform-adapter';
 	import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
@@ -62,9 +62,19 @@
 		const showDetail = ref(false)
 		const showCanvas= ref(true)
 		const colorPoints = ref([])
+		const selectedFilters = ref('三维色谱')
 		
 		onLoad((options) => {
 		  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+		  selectedFilters.value = options.selectedFilters
+		  uni.setNavigationBarTitle({
+		      title: selectedFilters.value
+			})
+			console.log(selectedFilters.value)
+		})
+		
+		onUnload(() => {
+			selectedFilters.value = '三维色谱'
 		})
 	
 		const canvasEventHandler = ref(() => {});

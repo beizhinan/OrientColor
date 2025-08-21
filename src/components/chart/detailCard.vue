@@ -178,7 +178,9 @@
 	}
 	
 	.polar{
-		height: 324rpx;
+		height: 400rpx;
+		width:calc(300rpx - 48rpx);
+		border-radius: 24rpx 24rpx 0 0;
 	}
 
 	.detail-flex {
@@ -215,7 +217,8 @@
 	}
 	
 	.polar-c{
-		height: 180rpx;
+		width: 260rpx;
+		height: 200rpx;
 		margin-bottom: 10rpx;
 	}
 
@@ -234,6 +237,7 @@
 	}
 	
 	.polar-n{
+		margin-top: 10rpx;
 		margin-bottom: 4rpx;
 	}
 

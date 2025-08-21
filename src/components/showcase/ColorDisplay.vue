@@ -129,22 +129,27 @@
 						key: buttonKey
 					})
 				},
+				
 				goToDetail() {
 					const selectedButton = this.selectedButton;
 					const colorPointsStr = encodeURIComponent(JSON.stringify(this.colorPoints));
-
+					const selectedFilters = ['system', 'hue', 'theme', 'category']
+						.map(field => this.filterData[field] || '')
+						.filter(Boolean) // 去掉空值
+						.join('-');
+				
 					let url = '';
 					switch (this.dimension) {
 						case '1D':
 							url =
-								`/pages/chart1D/chart1D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}`;
+								`/pages/chart1D/chart1D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}`;
 							break;
 						case '2D':
 							url =
-								`/pages/chart2D/chart2D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}`;
+								`/pages/chart2D/chart2D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}`;
 							break;
 						case '3D':
-							url = `/pages/chart/chart?colorPoints=${colorPointsStr}`;
+							url = `/pages/chart/chart?colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}`;
 							break;
 					}
 
