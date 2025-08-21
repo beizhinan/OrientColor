@@ -10,17 +10,22 @@
 		<view class="container">
 			<!-- 左侧图表 -->
 			<view class="chart">
-				<l-echart class="chart-content" ref="chartRef" @finished="init"></l-echart>
-				<ring1d v-if="selectedButton==='button2'"></ring1d>
+				<l-echart v-if="selectedButton==='button1'" class="chart-content" ref="chartRef" @finished="init"></l-echart>
+				<ring1d 
+					v-if="selectedButton==='button2'"
+					:color-points="colorPoints"
+					@selectColor="handleSelectColor">
+				</ring1d>
 			</view>
 
 			<!-- 右侧详情面板 -->
-			<view class="detail-panel">
-				<view v-if="selectedButton==='button2'" class="arrow"></view>
-				<detail-card :color-name="currentColor.name" :color-code="currentColor.code"
-					:cardStyle="handleCardStyle" v-if="showDetail">
+			<view class="detail-panel" :class="selectedButton">
+				<detail-card 
+					:color-name="currentColor.name" 
+					:color-code="currentColor.code"
+					:cardStyle="handleCardStyle" 
+					v-if="showDetail">
 				</detail-card>
-
 			</view>
 		</view>
 
@@ -48,7 +53,7 @@
 		watch
 	} from 'vue'
 	import {
-		onLoad
+		onLoad, onUnload
 	} from '@dcloudio/uni-app'
 	const echarts = require('../../uni_modules/lime-echart/static/echarts.min')
 	import detailCard from "@/components/chart/detailCard.vue"
@@ -67,13 +72,21 @@
 	const selectedDim1D = ref('L')
 	const colorPoints = ref([])
 	const showDetail = ref(false)
+	const selectedFilters = ref('一维色谱')
 
 	//从showcase接受值
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
 		colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-		
-		
+		selectedFilters.value = options.selectedFilters
+		uni.setNavigationBarTitle({
+		    title: selectedFilters.value
+		})
+		console.log(selectedFilters.value)
+	})
+	
+	onUnload(() => {
+		selectedFilters.value = '一维色谱'
 	})
 
 	//选择坐标
@@ -90,7 +103,17 @@
 		}
 		return ''
 	})
+	
+	// -------环状图组件相关处理-------
+	const handleSelectColor = (colorArray) => {
+		currentColor.value = {
+			name: colorArray[0],
+			code: colorArray[1]
+		}
+		showDetail.value = true
+	}
 
+	// -------带状图-------
 	// 根据数据量决定分段数
 	const getStepCount = (dataCount) => {
 		// 至少和数据量一样多
@@ -269,19 +292,18 @@
 	}
 
 	.detail-panel {
-		margin-left: 40rpx;
-		margin-top: 80rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
+		position: absolute;
+		right: 40rpx;
 	}
-
-	.arrow {
-		width: 0;
-		height: 0;
-		border-left: 10px solid #dcbf9a;
-		border-top: 10px solid transparent;
-		border-bottom: 10px solid transparent;
+	
+	/* button1 时的样式 */
+	.detail-panel.button1 {
+		top: 200rpx;
+	}
+	
+	/* button2 时的样式 */
+	.detail-panel.button2 {
+		top: 140rpx;
 	}
 
 	.color-box {

@@ -43,7 +43,7 @@
 
 <script setup>
 	import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
-	import { onLoad } from '@dcloudio/uni-app'
+	import { onLoad, onUnload } from '@dcloudio/uni-app'
 	const echarts = require('../../uni_modules/lime-echart/static/echarts.min')
 	import detailCard from "@/components/chart/detailCard.vue"
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
@@ -60,11 +60,21 @@
 	const selectedDim2DPolar = ref('CH')
 	const myChartRef = ref(null) // 存放 echarts 实例
 	const selectedCellIndex = ref(null) // 极坐标当前选中格子的索引
+	const selectedFilters = ref('二维色谱')
 	
 	//从showcase接受值
 	onLoad((options) => {
 	  selectedButton.value = options.selectedButton
 	  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+	  selectedFilters.value = options.selectedFilters
+	  uni.setNavigationBarTitle({
+	      title: selectedFilters.value
+	  })
+	  console.log(selectedFilters.value)
+	})
+	
+	onUnload(() => {
+		selectedFilters.value = '二维色谱'
 	})
 	
 	//选择坐标
