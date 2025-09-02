@@ -11,7 +11,9 @@
     { "path": "pages/collection/collection","style": {"navigationBarTitleText": "收藏"}},
     { "path": "pages/favorites/favorites","style": {"navigationBarTitleText": "收藏"}},
     { "path" : "pages/chromatogarphy/chromatogarphy","style" : {"navigationBarTitleText" : ""}},
+    { "path" : "pages/allcolor/allcolor","style" : {"navigationBarTitleText" : "东方传统色总谱"}},
     { "path" : "pages/colorblock/colorblock","style" : {"navigationBarTitleText" : ""}},
+    { "path" : "pages/group/group","style" : {"navigationBarTitleText" : ""}},
     { "path" : "pages/chart1D/chart1D","style" : {"navigationBarTitleText" : "一维色谱", "disableScroll": true}}
     
     ],

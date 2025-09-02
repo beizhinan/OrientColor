@@ -52,32 +52,38 @@
           <view class="info-grid-wrapper">
             <view class="info-grid with-dividers">
               <view class="info-item">
-                <text class="info-label">近似色编号</text>
-                <text class="info-value">{{
-                  colorData.approxColorCode || "-"
-                }}</text>
-              </view>
-              <view class="info-item">
                 <text class="info-label">LCH</text>
-                <text class="info-value">{{ colorData.lch || "-" }}</text>
+                <text
+                  class="info-value"
+                  @click="navigateToGroup('LCH', colorData.lch)"
+                  >{{ colorData.lch || "-" }}</text
+                >
               </view>
               <view class="info-item">
                 <text class="info-label">前缀名</text>
-                <text class="info-value">{{ colorData.prefix || "-" }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('前缀名', colorData.prefix)"
+                  >{{ colorData.prefix || "-" }}</text
+                >
               </view>
               <view class="info-item">
                 <text class="info-label">色调</text>
-                <text class="info-value">{{ colorData.tone || "-" }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('色调', colorData.tone)"
+                  >{{ colorData.tone || "-" }}</text
+                >
               </view>
               <view class="info-item">
                 <text class="info-label">色相</text>
-                <text class="info-value">{{ colorData.hue || "-" }}</text>
-              </view>
-              <view class="info-item">
-                <text class="info-label">英文色相名</text>
-                <text class="info-value">{{
-                  colorData.englishHue || "-"
-                }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('色相', colorData.hue)"
+                >
+                  {{ colorData.hue
+                  }}{{ colorData.englishHue ? " " + colorData.englishHue : "" }}
+                </text>
               </view>
             </view>
           </view>
@@ -88,21 +94,35 @@
             <view class="info-grid with-dividers">
               <view class="info-item">
                 <text class="info-label">彩度分列</text>
-                <text class="info-value">{{ colorData.chroma || "-" }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('彩度分列', colorData.chroma)"
+                  >{{ colorData.chroma || "-" }}</text
+                >
               </view>
               <view class="info-item">
                 <text class="info-label">色谱分列</text>
-                <text class="info-value">{{ colorData.graphy || "-" }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('色谱分列', colorData.graphy)"
+                  >{{ colorData.graphy || "-" }}</text
+                >
               </view>
               <view class="info-item">
                 <text class="info-label">明度级序</text>
-                <text class="info-value">{{ colorData.lightness || "-" }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('明度级序', colorData.lightness)"
+                  >{{ colorData.lightness || "-" }}</text
+                >
               </view>
               <view class="info-item">
                 <text class="info-label">色彩来源类型</text>
-                <text class="info-value">{{
-                  colorData.sourcetype || "-"
-                }}</text>
+                <text
+                  class="info-value link"
+                  @click="navigateToGroup('色彩来源类型', colorData.sourcetype)"
+                  >{{ colorData.sourcetype || "-" }}</text
+                >
               </view>
               <view class="info-item double-width">
                 <text class="info-label">图形来源</text>
@@ -119,11 +139,15 @@
             <text class="title-text">颜色模型</text>
             <view class="info-content info-grid">
               <view class="info-row">
-                <text class="info-label">Labch值</text>
-                <text class="info-value">{{ colorData.labch || "-" }}</text>
+                <text class="info-label">CMYK</text>
+                <text class="info-value">{{ colorData.cmyk || "-" }}</text>
               </view>
               <view class="info-row">
-                <text class="info-label">RGB值</text>
+                <text class="info-label">CIE-Lab</text>
+                <text class="info-value">{{ colorData.cielab || "-" }}</text>
+              </view>
+              <view class="info-row">
+                <text class="info-label">RGB</text>
                 <text class="info-value">{{ colorData.rgb || "-" }}</text>
               </view>
             </view>
@@ -198,16 +222,18 @@ const colorDatabase = {
   description:
     "主要来自永乐宫色谱。\n鲜三绿是永乐宫色彩中彩度较高的三绿。\n鲜三绿见于三清殿、纯阳殿彩画中色彩较为鲜艳的部分，可能是老化、污染较轻的元代彩画色彩，也有可能是后世补绘的色彩。相较于三绿，鲜三绿在视觉上略少几分温润，更有青春活力。\n也可见于开化寺色谱和明清官式建筑彩画色谱。",
   approxColorCode: "45",
-  lch: "L69C60H",
+  lch: "L69C60H258",
   prefix: "上好",
-  tone: "暗",
+  tone: "浊",
   hue: "绿色",
   englishHue: "G",
-  chroma: "45",
-  graphy: "L69C60H",
-  lightness: "上好",
-  sourcetype: "暗",
-  labch: "L69C60H",
+  chroma: "2",
+  graphy: "12",
+  lightness: "10",
+  sourcetype: "文物样本",
+
+  cmyk: "(65, 5, 58, 26)",
+  cielab: "(54, -29, 12, 32, 158)",
   rgb: "(44, 108, 76)",
   sources: [
     {
@@ -273,6 +299,7 @@ export default {
           labch: options.labch || "",
           rgb: options.rgb || "",
           sources: options.sources || [],
+          cmyk: options.cmyk || "",
         };
       }
 
@@ -356,6 +383,15 @@ export default {
         this.descriptionExpanded = false;
         // 收起时重置高度
         this.descriptionWrapperHeight = "auto";
+      }
+    },
+    navigateToGroup(label, value) {
+      if (value && value !== "-") {
+        uni.navigateTo({
+          url: `/pages/group/group?label=${encodeURIComponent(
+            label
+          )}&value=${encodeURIComponent(value)}`,
+        });
       }
     },
   },
@@ -512,7 +548,8 @@ export default {
 
 .section-title-horizontal {
   display: flex;
-  margin: 30rpx 0;
+  align-items: center;
+  margin: 20rpx 0;
 }
 
 .title-text {
@@ -526,7 +563,7 @@ export default {
 
 .info-content {
   flex: 1;
-  padding: 20rpx;
+  padding: 15rpx;
 }
 
 .info-content.info-grid {
@@ -554,7 +591,7 @@ export default {
 
 .info-content.info-grid .info-row {
   position: relative;
-  padding: 15rpx 10rpx;
+  padding: 10rpx 5rpx;
   display: flex;
   width: 100%;
   z-index: 1;
@@ -575,19 +612,23 @@ export default {
   position: relative;
   width: 50%;
   text-align: center;
+  font-size: 22rpx;
+  margin: 5rpx 0;
 }
 
 .info-content.info-grid .info-row .info-value {
   position: relative;
   width: 50%;
   text-align: center;
+  font-size: 22rpx;
+  margin: 5rpx 0;
 }
 
 .info-content.info-grid::before {
   content: "";
   position: absolute;
-  top: 20%;
-  bottom: 20%;
+  top: 15%;
+  bottom: 15%;
   left: 50%;
   transform: translateX(-50%);
   width: 1px;
@@ -642,8 +683,28 @@ export default {
   width: 66.66%;
 }
 
+/* 基本信息区域的特殊样式 - 每行两个项目 */
+.basic-info .info-grid.with-dividers .info-item {
+  width: 50%;
+}
+
+.basic-info .info-grid.with-dividers .info-item.double-width {
+  width: 100%;
+}
+
 /* 垂直分割线 */
 .info-grid.with-dividers .info-item:not(:nth-child(3n))::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 70%;
+  width: 1px;
+  background-color: #e8e1d7;
+}
+
+/* 基本信息区域的垂直分割线 */
+.basic-info .info-grid.with-dividers .info-item:not(:nth-child(2n))::before {
   content: "";
   position: absolute;
   right: 0;
@@ -660,6 +721,17 @@ export default {
 
 /* 水平分割线 - 前三项 */
 .info-grid.with-dividers .info-item:nth-child(-n + 3)::after {
+  content: "";
+  position: absolute;
+  bottom: -15rpx;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e8e1d7;
+}
+
+/* 基本信息区域的水平分割线 */
+.basic-info .info-grid.with-dividers .info-item:nth-child(-n + 2)::after {
   content: "";
   position: absolute;
   bottom: -15rpx;

@@ -1,5 +1,5 @@
 // 基础路径，根据实际项目配置
-const BASE_URL = 'https://your-api-domain.com/api' // 替换为你的后端API地址
+const BASE_URL = 'https://localhost:5050/api/v1' // 替换为你的后端API地址
 
 /**
  * 网络请求封装

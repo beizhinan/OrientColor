@@ -164,18 +164,66 @@
               </text>
             </view>
 
-            <view class="color-palette">
+            <view class="color-palette-container">
+              <!-- 修改颜色展示布局 -->
               <view
-                v-for="color in thirdLevel.children"
-                :key="color.name"
-                class="color-item"
+                v-for="(row, rowIndex) in getColorRows(thirdLevel.children)"
+                :key="rowIndex"
+                class="color-row"
               >
-                <view
-                  class="color-swatch"
-                  :style="{ backgroundColor: color.value }"
-                  @click="goToColorDetail(color)"
-                >
-                  <text class="color-label">{{ color.name }}</text>
+                <view class="color-col special-col">
+                  <view
+                    v-if="row['上好']"
+                    class="color-swatch"
+                    :style="{ backgroundColor: row['上好'].value }"
+                    @click="goToColorDetail(row['上好'])"
+                  >
+                    <view class="color-label">
+                      <text class="prefix-line">{{
+                        getPrefix(row["上好"].name)
+                      }}</text>
+                      <text class="suffix-line">{{
+                        getSuffix(row["上好"].name)
+                      }}</text>
+                    </view>
+                  </view>
+                </view>
+
+                <view class="color-col special-col">
+                  <view
+                    v-if="row['常使']"
+                    class="color-swatch"
+                    :style="{ backgroundColor: row['常使'].value }"
+                    @click="goToColorDetail(row['常使'])"
+                  >
+                    <view class="color-label">
+                      <text class="prefix-line">{{
+                        getPrefix(row["常使"].name)
+                      }}</text>
+                      <text class="suffix-line">{{
+                        getSuffix(row["常使"].name)
+                      }}</text>
+                    </view>
+                  </view>
+                </view>
+
+                <view class="color-col normal-col">
+                  <view
+                    v-for="color in row.other"
+                    :key="color.name"
+                    class="color-swatch"
+                    :style="{ backgroundColor: color.value }"
+                    @click="goToColorDetail(color)"
+                  >
+                    <view class="color-label">
+                      <text class="prefix-line">{{
+                        getPrefix(color.name)
+                      }}</text>
+                      <text class="suffix-line">{{
+                        getSuffix(color.name)
+                      }}</text>
+                    </view>
+                  </view>
                 </view>
               </view>
             </view>
@@ -202,8 +250,8 @@
 </template>
 
 <script>
-// 颜色数据定义
-const colorDataMap = {
+// 四级颜色数据结构定义
+const levelOneData = {
   绿色: {
     name: "绿色",
     imgurl: "https://placebear.com/350/160",
@@ -213,65 +261,15 @@ const colorDataMap = {
       {
         title: "在东方文化中的象征意义",
         content:
-          '在中国服饰色彩观念中，一直认为绿色是象征地位卑微的颜色。西汉时期，绿头巾是宫廷厨房奴仆们的头饰。晋朝李轨曾注疏西汉杨雄《杨子法言》言："绿衣虽有三百领，杂色不可入宗庙"。服饰色彩的这种观念也延续到了军事管理制度中。清朝为满人所统，满清政府为确立民族身份的等级差序，规定招募汉人组织的军队一律用绿旗，称为绿旗兵，兵营名叫绿营。',
+          '在中国服饰色彩观念中，一直认为绿色是象征地位卑微的颜色。西汉时期，绿头巾是宫廷厨房奴仆们的头饰。晋朝李轨曾注疏西汉杨雄《杨子法言》言："绿衣虽有三百领，杂色不可入宗庙"。服饰色彩的这种观念也延续到了军事管理制度中。清朝为满人所统，满清政府为确立民族身份的等级差序，规定招募汉人组织的军队一律用绿旗，称为绿旗兵，兵营名叫绿营.',
       },
       {
         title: "与五行的关系",
         content:
-          '绿，为五间色之一，位于青色与黄色之间，可归属东方间色。绿色也曾列入青色，象征生机。《说文》曰："帛青黄色也"。《释名》曰："绿，浏也。荆泉之水于上视之，浏然绿色，此似之也"。可见绿是蓝与黄的结合，最早用在丝绸上，亦是浏水之色。',
+          '绿，为五间色之一，位于青色与黄色之间，可归属东方间色。绿色也曾列入青色，象征生机。《说文》曰："帛青黄色也"。《释名》曰："绿，浏也。荆泉之水于上视之，浏然绿色，此似之也"。可见绿是蓝与黄的结合，最早用在丝绸上，亦是浏水之色.',
       },
     ],
     categories: ["绿色", "白色", "黄色", "红色", "青色"],
-    subColors: [
-      {
-        name: "石绿",
-        description:
-          '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画。',
-        children: [
-          {
-            name: "大绿",
-            description:
-              '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画。',
-            children: [
-              { id: 1, name: "上好大绿", value: "#2E8B57" },
-              { id: 2, name: "偏黄的大绿", value: "#3CB371" },
-              { id: 3, name: "黯大绿", value: "#228B22" },
-              { id: 4, name: "带使大绿", value: "#006400" },
-            ],
-          },
-          {
-            name: "二绿",
-            description: "二绿是石绿的另一种分类，颜色相对较淡",
-            children: [
-              { name: "头青二绿", value: "#66CDAA" },
-              { name: "豆青二绿", value: "#3CB371" },
-            ],
-          },
-        ],
-      },
-      {
-        name: "巴黎绿",
-        description: "巴黎绿是一种人工合成的绿色颜料，色泽鲜艳",
-        children: [
-          {
-            name: "翠绿巴黎绿",
-            description: "色泽翠绿的巴黎绿品种",
-            children: [
-              { name: "浅翠巴黎绿", value: "#00FF7F" },
-              { name: "深翠巴黎绿", value: "#008080" },
-            ],
-          },
-          {
-            name: "深巴黎绿",
-            description: "颜色较深的巴黎绿品种",
-            children: [
-              { name: "墨巴黎绿", value: "#006400" },
-              { name: "浓巴黎绿", value: "#008000" },
-            ],
-          },
-        ],
-      },
-    ],
   },
   白色: {
     name: "白色",
@@ -291,49 +289,125 @@ const colorDataMap = {
       },
     ],
     categories: ["绿色", "白色", "黄色", "红色", "青色"],
-    subColors: [
-      {
-        name: "铅粉",
-        description:
-          "古代常用的白色颜料，主要成分为碱式碳酸铅。《本草纲目》载：'铅粉，即铅华也，出于铅，成于粉。'",
-        children: [
-          {
-            name: "胡粉",
-            description: "铅粉的别称，因产自胡地而得名",
-            children: [
-              { name: "上等胡粉", value: "#F8F8F8" },
-              { name: "普通胡粉", value: "#F0F0F0" },
-            ],
-          },
-          {
-            name: "铅华",
-            description: "铅粉的雅称，常用于化妆品",
-            children: [
-              { name: "脂铅华", value: "#F5F5F5" },
-              { name: "粉铅华", value: "#FAFAFA" },
-            ],
-          },
-        ],
-      },
-    ],
   },
   黄色: {},
   红色: {},
   青色: {},
 };
 
+const levelTwoData = {
+  绿色: [
+    {
+      id: "sl-绿色",
+      name: "石绿",
+      description:
+        '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画.',
+    },
+    {
+      id: "bl-绿色",
+      name: "巴黎绿",
+      description: "巴黎绿是一种人工合成的绿色颜料，色泽鲜艳",
+    },
+  ],
+  白色: [
+    {
+      id: "qf-白色",
+      name: "铅粉",
+      description:
+        "古代常用的白色颜料，主要成分为碱式碳酸铅。《本草纲目》载：'铅粉，即铅华也，出于铅，成于粉。'",
+    },
+  ],
+};
+
+const levelThreeData = {
+  "sl-绿色": [
+    {
+      id: "sl-dl-绿色",
+      name: "大绿",
+      description:
+        '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画.',
+    },
+    {
+      id: "sl-el-绿色",
+      name: "二绿",
+      description: "二绿是石绿的另一种分类，颜色相对较淡",
+    },
+  ],
+  "bl-绿色": [
+    {
+      id: "bl-clbl-绿色",
+      name: "翠绿巴黎绿",
+      description: "色泽翠绿的巴黎绿品种",
+    },
+    {
+      id: "bl-sbl-绿色",
+      name: "深巴黎绿",
+      description: "颜色较深的巴黎绿品种",
+    },
+  ],
+  "qf-白色": [
+    {
+      id: "qf-hf-白色",
+      name: "胡粉",
+      description: "铅粉的别称，因产自胡地而得名",
+    },
+    {
+      id: "qf-lh-白色",
+      name: "铅华",
+      description: "铅粉的雅称，常用于化妆品",
+    },
+  ],
+};
+
+const levelFourData = {
+  "sl-dl-绿色": [
+    { id: 1, name: "上好大绿", value: "#2E8B57" },
+    { id: 2, name: "偏黄的大绿", value: "#3CB371" },
+    { id: 3, name: "黯大绿", value: "#228B22" },
+    { id: 4, name: "带使大绿", value: "#006400" },
+    { id: 5, name: "偏淡的大绿", value: "#006400" },
+    { id: 6, name: "偏淡的大绿", value: "#006400" },
+    { id: 7, name: "偏淡的大绿", value: "#006400" },
+  ],
+  "sl-el-绿色": [
+    { name: "头青二绿", value: "#66CDAA" },
+    { name: "豆青二绿", value: "#3CB371" },
+  ],
+  "bl-clbl-绿色": [
+    { name: "浅翠巴黎绿", value: "#00FF7F" },
+    { name: "深翠巴黎绿", value: "#008080" },
+  ],
+  "bl-sbl-绿色": [
+    { name: "墨巴黎绿", value: "#006400" },
+    { name: "浓巴黎绿", value: "#008000" },
+  ],
+  "qf-hf-白色": [
+    { name: "上等胡粉", value: "#F8F8F8" },
+    { name: "普通胡粉", value: "#F0F0F0" },
+  ],
+  "qf-lh-白色": [
+    { name: "脂铅华", value: "#F5F5F5" },
+    { name: "粉铅华", value: "#FAFAFA" },
+  ],
+};
+
 export default {
   data() {
-    const colorList = Object.keys(colorDataMap);
+    const colorList = Object.keys(levelOneData);
     const defaultColor = colorList[0];
     return {
       id: null,
       title: "",
       colorList: colorList,
       selectedColor: defaultColor,
-      selectedTag: colorDataMap[defaultColor].subColors[0].name,
-      allColorData: colorDataMap,
-      colorData: colorDataMap[defaultColor],
+      selectedTag: levelTwoData[defaultColor]
+        ? levelTwoData[defaultColor][0].name
+        : "",
+      levelOneData: levelOneData,
+      levelTwoData: levelTwoData,
+      levelThreeData: levelThreeData,
+      levelFourData: levelFourData,
+      colorData: levelOneData[defaultColor],
       isFavorite: false,
       expandedIndex: -1,
       isInfoExpanded: false, // 添加控制信息展开状态的变量
@@ -351,26 +425,34 @@ export default {
   computed: {
     // 当前选中色系的所有标签
     currentColorTags() {
-      return this.colorData.subColors?.map((subColor) => subColor.name) || [];
+      const colorKey = this.selectedColor;
+      return (
+        this.levelTwoData[colorKey]?.map((subColor) => subColor.name) || []
+      );
     },
 
     // 根据筛选条件过滤后的颜色分组
     filteredColorGroups() {
-      if (!this.colorData.subColors) return [];
+      const colorKey = this.selectedColor;
+      const levelTwos = this.levelTwoData[colorKey] || [];
 
-      const selectedGroup = this.colorData.subColors.find(
+      const selectedGroup = levelTwos.find(
         (subColor) => subColor.name === this.selectedTag
       );
 
-      return selectedGroup
-        ? [
-            {
-              name: selectedGroup.name,
-              description: selectedGroup.description,
-              children: selectedGroup.children,
-            },
-          ]
-        : [];
+      if (!selectedGroup) return [];
+
+      return [
+        {
+          name: selectedGroup.name,
+          description: selectedGroup.description,
+          children:
+            this.levelThreeData[selectedGroup.id]?.map((thirdLevel) => ({
+              ...thirdLevel,
+              children: this.levelFourData[thirdLevel.id] || [],
+            })) || [],
+        },
+      ];
     },
 
     // 获取当前选中颜色的主题色
@@ -525,6 +607,106 @@ export default {
         // Vue 3中可以直接设置属性
         this.thirdLevelExpandMap[index] = true;
       }
+    },
+
+    getColorRows(colors) {
+      if (!colors || !colors.length) return [];
+
+      const rows = [];
+      let currentRow = { 上好: null, 常使: null, other: [] };
+
+      // 先筛选出"上好"和"常使"前缀的颜色
+      const specialColors = {
+        上好: colors.find((color) => color.name.startsWith("上好")),
+        常使: colors.find(
+          (color) => color.name.includes("使") && !color.name.startsWith("上好")
+        ),
+      };
+
+      // 筛选出其他颜色
+      const otherColors = colors.filter(
+        (color) =>
+          !color.name.startsWith("上好") &&
+          !(color.name.includes("使") && !color.name.startsWith("上好"))
+      );
+
+      // 如果有特殊颜色，添加第一行
+      if (specialColors["上好"] || specialColors["常使"]) {
+        currentRow["上好"] = specialColors["上好"];
+        currentRow["常使"] = specialColors["常使"];
+
+        // 填充其他颜色到第一行（最多3个）
+        currentRow.other = otherColors.slice(0, 3);
+        rows.push(currentRow);
+
+        // 处理剩余的其他颜色（每行3个）
+        const remainingColors = otherColors.slice(3);
+        for (let i = 0; i < remainingColors.length; i += 3) {
+          rows.push({
+            上好: null,
+            常使: null,
+            other: remainingColors.slice(i, i + 3),
+          });
+        }
+      } else {
+        // 没有特殊颜色，直接按每行5个排列
+        for (let i = 0; i < otherColors.length; i += 5) {
+          rows.push({
+            上好: null,
+            常使: null,
+            other: otherColors.slice(i, i + 5),
+          });
+        }
+      }
+
+      return rows;
+    },
+
+    // 获取颜色名称的前缀（如"上好"、"偏黄的"）
+    getPrefix(colorName) {
+      // 常见前缀列表
+      const prefixes = [
+        "上好",
+        "偏黄的",
+        "偏淡的",
+        "黯",
+        "带使",
+        "头青",
+        "豆青",
+        "浅翠",
+        "深翠",
+        "墨",
+        "浓",
+        "上等",
+        "普通",
+        "脂",
+        "粉",
+      ];
+
+      for (const prefix of prefixes) {
+        if (colorName.startsWith(prefix)) {
+          return prefix;
+        }
+      }
+
+      // 对于包含"使"字但不以"上好"开头的情况
+      if (colorName.includes("使") && !colorName.startsWith("上好")) {
+        // 找到"使"字的位置并返回前面的部分+使
+        const shiIndex = colorName.indexOf("使");
+        return colorName.substring(0, shiIndex + 1);
+      }
+
+      // 如果没有找到匹配的前缀，返回空字符串
+      return "";
+    },
+
+    // 获取颜色名称的后缀（如"大绿"）
+    getSuffix(colorName) {
+      const prefix = this.getPrefix(colorName);
+      if (prefix) {
+        return colorName.substring(prefix.length);
+      }
+      return colorName;
     },
   },
 };
@@ -917,36 +1099,62 @@ export default {
   line-height: 1.5;
 }
 
-.color-palette {
-  display: flex;
-  flex-wrap: wrap;
+/* 颜色展示容器 */
+.color-palette-container {
   margin-top: 20rpx;
 }
 
-.color-item {
-  width: 30%;
-  margin-right: 3%;
+/* 颜色行 */
+.color-row {
+  display: flex;
   margin-bottom: 20rpx;
 }
 
-.color-item:nth-child(3n) {
+/* 颜色列 */
+.color-col {
+  display: flex;
+}
+
+/* 特殊列（上好、常使） */
+.special-col {
+  width: 20%;
+  margin-right: 2%;
+}
+
+/* 普通列（其他颜色） */
+.normal-col {
+  width: 66%;
+}
+
+.normal-col .color-swatch {
+  width: 30%;
+  margin-right: 4%;
+  margin-bottom: 20rpx;
+}
+
+.normal-col .color-swatch:nth-child(3n) {
   margin-right: 0;
 }
 
 .color-swatch {
-  height: 80rpx;
-  border-radius: 8rpx;
+  height: 120rpx;
   position: relative;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: flex-end;
+  /* 确保色块占满容器 */
+  width: 100%;
 }
 
 .color-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   color: white;
   padding: 6rpx 10rpx;
-  font-size: 22rpx;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.3);
+  font-size: 18rpx;
+  line-height: 1.2;
 }
 </style>
