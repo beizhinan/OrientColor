@@ -378,27 +378,27 @@ export default {
       return this.colorMap[this.selectedColor] || "#40c860"; // 默认使用绿色
     },
   },
-  // onLoad(options) {
-  //   if (options.id && options.title) {
-  //     this.id = options.id;
-  //     this.title = decodeURIComponent(options.title);
-  //     // 确保传入的 title 在 colorList 中存在
-  //     if (this.colorList.includes(this.title)) {
-  //       this.selectedColor = this.title;
-  //       this.colorData = this.allColorData[this.title] || this.colorData;
-  //       this.selectedTag = this.colorData.subColors[0].name;
-  //     }
-  //   }
+  onLoad(options) {
+    if (options.id && options.title) {
+      this.id = options.id;
+      this.title = decodeURIComponent(options.title);
+      // 确保传入的 title 在 colorList 中存在
+      if (this.colorList.includes(this.title)) {
+        this.selectedColor = this.title;
+        this.colorData = this.allColorData[this.title] || this.colorData;
+        this.selectedTag = this.colorData.subColors[0].name;
+      }
+    }
 
-  //   uni.setNavigationBarTitle({
-  //     title: (this.title || this.selectedColor) + "色谱",
-  //   });
+    uni.setNavigationBarTitle({
+      title: (this.title || this.selectedColor) + "色谱",
+    });
 
-  //   uni.setNavigationBarColor({
-  //     frontColor: "#000000",
-  //     backgroundColor: "#F8F8F8",
-  //   });
-  // },
+    uni.setNavigationBarColor({
+      frontColor: "#000000",
+      backgroundColor: "#F8F8F8",
+    });
+  },
   methods: {
     // 选择色系
     selectColor(color) {

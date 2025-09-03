@@ -17,6 +17,20 @@
         </view>
       </view>
 
+      <!-- 用于生成图片的canvas -->
+      <canvas
+        canvas-id="colorCanvas"
+        id="colorCanvas"
+        style="
+          position: absolute;
+          left: -1000px;
+          top: -1000px;
+          width: 500px;
+          height: 500px;
+        "
+      >
+      </canvas>
+
       <!-- 切换内容区域 -->
       <view v-if="!showSources" class="description-wrapper">
         <!-- 默认显示的颜色信息 -->
@@ -210,10 +224,20 @@
         </view>
       </view>
     </view>
+
+    <!-- 保存成功弹窗 -->
+    <SaveSuccessModal
+      :visible="showSaveSuccessModal"
+      title="保存色块壁纸成功！"
+      description="请到系统相册中查看详情"
+      iconSrc="/static/image.png"
+      @confirm="showSaveSuccessModal = false"
+    />
   </view>
 </template>
 
 <script>
+import SaveSuccessModal from "../../components/colorblock/SaveSuccessModal.vue";
 const colorDatabase = {
   id: 1,
   no: "B-1-12",
@@ -252,6 +276,9 @@ const colorDatabase = {
 };
 
 export default {
+  components: {
+    SaveSuccessModal,
+  },
   data() {
     return {
       colorData: {},
@@ -264,6 +291,7 @@ export default {
       originalPosition: null,
       descriptionWrapperHeight: "auto", // 用于保持占位高度
       scrollTop: 0, // 页面滚动位置
+      showSaveSuccessModal: false, // 控制保存成功弹窗显示
     };
   },
 
@@ -303,21 +331,9 @@ export default {
         };
       }
 
-      this.parentColor = options.parentColor
-        ? decodeURIComponent(options.parentColor)
-        : "";
-      this.secondaryColor = options.secondaryColor
-        ? decodeURIComponent(options.secondaryColor)
-        : "";
-      this.tertiaryColor = options.tertiaryColor
-        ? decodeURIComponent(options.tertiaryColor)
-        : "";
-      this.titlePath = options.titlePath
-        ? decodeURIComponent(options.titlePath)
-        : colorName;
-
+      // 使用 colorData 中的 title 字段作为页面标题
       uni.setNavigationBarTitle({
-        title: this.titlePath,
+        title: this.colorData.title || this.colorData.name,
       });
     }
   },
@@ -393,6 +409,122 @@ export default {
           )}&value=${encodeURIComponent(value)}`,
         });
       }
+    },
+    toggleFavorite() {
+      console.log("toggleFavorite");
+      // 生成纯色背景图片并保存到相册
+      this.generateAndSaveImage();
+    },
+
+    // 生成纯色背景图片并保存到相册
+    generateAndSaveImage() {
+      // 创建画布上下文
+      const ctx = uni.createCanvasContext("colorCanvas", this);
+
+      // 设置画布大小
+      const width = 500;
+      const height = 500;
+
+      // 绘制纯色背景
+      ctx.setFillStyle(this.colorData.value);
+      ctx.fillRect(0, 0, width, height);
+
+      // 绘制颜色名称
+      ctx.setFontSize(30);
+      ctx.setFillStyle("#FFFFFF");
+      ctx.setTextAlign("center");
+      ctx.setTextBaseline("middle");
+      ctx.fillText(this.colorData.name, width / 2, height / 2 - 20);
+
+      // 绘制颜色值
+      ctx.setFontSize(24);
+      ctx.setFillStyle("rgba(255, 255, 255, 0.8)");
+      ctx.fillText(this.colorData.value, width / 2, height / 2 + 20);
+
+      // 绘制完成，导出图片并保存到相册
+      ctx.draw(false, () => {
+        // 延迟一会儿确保绘制完成
+        setTimeout(() => {
+          uni.canvasToTempFilePath(
+            {
+              canvasId: "colorCanvas",
+              success: (res) => {
+                // 保存到相册
+                this.saveImageToPhotosAlbum(res.tempFilePath);
+              },
+              fail: (err) => {
+                console.error("导出图片失败:", err);
+                uni.showToast({
+                  title: "图片生成失败",
+                  icon: "none",
+                });
+              },
+            },
+            this
+          );
+        }, 100);
+      });
+    },
+
+    // 保存图片到相册
+    saveImageToPhotosAlbum(tempFilePath) {
+      // 检查是否授权相册权限
+      uni.getSetting({
+        success: (res) => {
+          if (!res.authSetting["scope.writePhotosAlbum"]) {
+            // 请求授权
+            uni.authorize({
+              scope: "scope.writePhotosAlbum",
+              success: () => {
+                // 授权成功，保存图片
+                this.doSaveImage(tempFilePath);
+              },
+              fail: () => {
+                // 用户拒绝授权，引导用户手动授权
+                uni.showModal({
+                  title: "保存图片需要授权",
+                  content: "请在设置中手动授权相册权限",
+                  confirmText: "去设置",
+                  success: (modalRes) => {
+                    if (modalRes.confirm) {
+                      uni.openSetting();
+                    }
+                  },
+                });
+              },
+            });
+          } else {
+            // 已有授权，直接保存图片
+            this.doSaveImage(tempFilePath);
+          }
+        },
+      });
+    },
+
+    // 执行保存图片操作
+    doSaveImage(tempFilePath) {
+      uni.saveImageToPhotosAlbum({
+        filePath: tempFilePath,
+        success: () => {
+          console.log("图片保存成功，准备显示弹窗");
+          // 使用 setTimeout 确保状态更新
+          setTimeout(() => {
+            console.log("设置showSaveSuccessModal为true");
+            this.showSaveSuccessModal = true;
+            console.log(
+              "当前showSaveSuccessModal值:",
+              this.showSaveSuccessModal
+            );
+          }, 0);
+        },
+        fail: (err) => {
+          console.error("保存图片失败:", err);
+          uni.showToast({
+            title: "保存失败",
+            icon: "none",
+          });
+        },
+      });
     },
   },
 };

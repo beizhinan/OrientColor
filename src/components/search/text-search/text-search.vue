@@ -54,19 +54,29 @@ export default {
   data() {
     return {
       searchValue: "",
-      colorTagList: ["全部", "红", "黄", "蓝", "白", "灰", "绿", "紫", "黑"],
+      colorTagList: [
+        "全部",
+        "青",
+        "绿",
+        "朱",
+        "黄",
+        "金",
+        "白",
+        "灰",
+        "孔雀蓝",
+      ],
       selectedTag: "全部", // 默认选中"全部"标签
       // 添加颜色数据
       colorList: [
-        { id: 1, name: "肉红", code: "#DBC2B6", titlePath: "红-一红-二红" },
-        { name: "珠子褐", code: "#BBA89C" },
-        { name: "鹰背褐", code: "#8D6B62" },
-        { name: "麝香褐", code: "#67493A" },
-        { name: "丁香褐", code: "#BD9482" },
-        { name: "棠梨褐", code: "#975B42" },
-        { name: "粉色", code: "#975B42" },
-        { name: "青色", code: "#00FFFF" },
-        { name: "棕色", code: "#A52A2A" },
+        { id: 1, name: "蛤粉", code: "#EAE9DF" },
+        { id: 2, name: "洋红", code: "#8A2026" },
+        { id: 3, name: "浅黄香色", code: "#E1A871" },
+        { id: 4, name: "浅绿华", code: "#4D7C7C" },
+        { id: 5, name: "黯深朱", code: "#573224" },
+        { id: 6, name: "常使群青", code: "#2A6086" },
+        { id: 7, name: "偏黄的大青", code: "#4D7C7C" },
+        { id: 8, name: "粉四青", code: "#9CBACE" },
+        { id: 9, name: "偏黄的四绿", code: "#9DA279" },
       ],
     };
   },
@@ -91,7 +101,6 @@ export default {
         name: encodeURIComponent(color.name),
         value: encodeURIComponent(color.code),
         id: color.id || null,
-        titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null,
       };
 
       // 过滤掉空值参数并构建查询字符串

@@ -45,9 +45,13 @@ export default {
 
     performAction() {
       console.log("执行色谱卡片点击后的操作");
+      console.log("当前ID：", this.id);
+      console.log("当前标题：", this.title);
       // 跳转到色谱详情页，携带ID和标题
       uni.navigateTo({
-        url: `/pages/chromatogarphy/chromatogarphy?id=${this.id}&title=${encodeURIComponent(this.title)}`
+        url: `/pages/chromatogarphy/chromatogarphy?id=${
+          this.id
+        }&title=${encodeURIComponent(this.title)}`,
       });
     },
   },

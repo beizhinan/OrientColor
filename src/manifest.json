@@ -54,12 +54,16 @@
         "permission" : {
             "scope.userInfo" : {
                 "desc" : "获取你的用户信息"
+            },
+            "scope.writePhotosAlbum" : {
+                "desc" : "保存颜色图片到相册"
             }
         },
         "setting" : {
             "urlCheck" : false
         },
-        "usingComponents" : true
+        "usingComponents" : true,
+        "requiredPrivateInfos": ["saveImageToPhotosAlbum"]
     },
     "mp-alipay" : {
         "usingComponents" : true
