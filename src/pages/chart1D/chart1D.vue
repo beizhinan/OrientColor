@@ -2,24 +2,23 @@
 	<view class="chart-1d">
 		<!-- 标题 -->
 		<view class="title">
-			<text v-if="selectedButton==='button1'" class="title-content">带状一维模型</text>
-			<text v-if="selectedButton==='button2'" class="title-content">环状一维模型</text>
+			<text class="title-content">{{ getTitle(selectedDim1D) }}</text>
 		</view>
 
 		<!-- 图表 -->
 		<view class="container">
 			<!-- 左侧图表 -->
 			<view class="chart">
-				<l-echart v-if="selectedButton==='button1'" class="chart-content" ref="chartRef" @finished="init"></l-echart>
+				<l-echart v-if="chartChange==='rect'" class="chart-content" ref="chartRef" @finished="init"></l-echart>
 				<ring1d 
-					v-if="selectedButton==='button2'"
+					v-if="chartChange==='polar'"
 					:color-points="colorPoints"
 					@selectColor="handleSelectColor">
 				</ring1d>
 			</view>
 
 			<!-- 右侧详情面板 -->
-			<view class="detail-panel" :class="selectedButton">
+			<view class="detail-panel" :class="chartChange">
 				<detail-card 
 					:color-name="currentColor.name" 
 					:color-code="currentColor.code"
@@ -31,7 +30,11 @@
 
 		<!-- 选择框组件 -->
 		<view class="center">
-			<InteractionTip :button="selectedButton" :dimension="'1D'" @select1D="handleSelect1D">
+			<InteractionTip 
+				:button="selectedButton" 
+				:dimension="'1D'" 
+				@select1D="handleSelect1D"
+				@changeChart="handleChartChange">
 			</InteractionTip>
 		</view>
 
@@ -73,12 +76,13 @@
 	const colorPoints = ref([])
 	const showDetail = ref(false)
 	const selectedFilters = ref('一维色谱')
+	const chartChange = ref('')
 
 	//从showcase接受值
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
 		colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-		selectedFilters.value = options.selectedFilters
+		selectedFilters.value = options.selectedFilters === 'all' ? '一维色谱' : options.selectedFilters
 		uni.setNavigationBarTitle({
 		    title: selectedFilters.value
 		})
@@ -93,12 +97,31 @@
 	const handleSelect1D = (dim) => {
 		selectedDim1D.value = dim
 	}
+	const handleChartChange = (dim) => {
+		chartChange.value = dim
+	}
+	
+	// 标题映射
+	const getTitle = (dim) => {
+		if(chartChange.value == 'polar'){
+			return '色相H'
+		} else{
+			switch (dim) {
+				case 'L': return '明度L';
+				case 'a': return '通道a';
+				case 'b': return '通道b';
+				case 'C': return '彩度C';
+				case 'H': return '色相H';
+				default: return '一维模型';
+			}
+		}
+	}
 
 	//判断色彩详情样式
 	const handleCardStyle = computed(() => {
-		if (selectedButton.value === 'button1') {
+		if (chartChange.value === 'rect') {
 			return '1dRect'
-		} else if (selectedButton.value === 'button2') {
+		} else if (chartChange.value === 'polar') {
 			return '1dPolar'
 		}
 		return ''
@@ -135,7 +158,7 @@
 		const minVal = Math.min(...values)
 		const maxVal = Math.max(...values)
 
-		// 分段数（比如 10 段，可以根据数据多少自适应）
+		// 分段数
 		const stepCount = getStepCount(colorPoints.value.length)
 		const step = (maxVal - minVal) / stepCount
 
@@ -158,7 +181,7 @@
 			tooltip: {show: false},
 			grid: {
 				left: 40,
-				right: 10,
+				right: 40,
 				top: 10,
 				bottom: 10
 			},
@@ -167,36 +190,54 @@
 				min: 0,
 				max: 1
 			},
+			dataZoom: [
+				{
+					type: 'inside',
+					orient: 'vertical',
+					yAxisIndex: 0,
+					// 一开始显示多少范围（例如前 30%）
+					start: 0,
+					end: Math.min(100, (30 / stepCount) * 100)
+				},
+				{
+					type: 'slider',
+					orient: 'vertical',
+					yAxisIndex: 0,
+					right: 15,   // 滚动条在右边
+					width: 5,
+					start: 0,
+					end: Math.min(100, (30 / stepCount) * 100),
+					// 滚动条样式
+					backgroundColor: 'rgba(220, 220, 220, 0.4)', // 背景
+					fillerColor: '#deb67f',                      // 选中区域颜色
+					borderColor: 'rgba(0,0,0,0)',
+					handleSize: 10,
+					handleStyle: {
+						color: '#deb67f',
+						borderColor: '#9f7735'
+					}
+			    }
+			],
 			yAxis: {
 				type: 'value',
 				min: minVal,
 				max: maxVal,
 				splitNumber: 10,
 				axisLine: {
-					show: true,
-					lineStyle: {
-						color: '#9f7735',
-						width: 2
-					}
+				    show: true,
+				    lineStyle: { color: '#9f7735', width: 2 }
 				},
-				axisTick: {
-					show: true,
-					lineStyle: {
-						color: '#9f7735'
-					}
-				},
+				axisTick: { show: true, lineStyle: { color: '#9f7735' } },
 				axisLabel: {
 					show: true,
-					lineStyle: {
-						color: '#9f7735'
-					}
+					lineStyle: { color: '#9f7735' }
 				},
 			},
 			series: [{
 				type: 'custom',
 				renderItem: (params, api) => {
 					const item = blocks[params.dataIndex]
-					const gap = 24
+					const gap = 15
 					const x0 = api.coord([0, 0])[0] + gap
 					const x1 = api.coord([1, 0])[0] + gap
 
@@ -259,6 +300,12 @@
 		setTimeout(() => {
 			init()
 		}, 300)
+		
+		if (selectedButton.value === 'button1') {
+		    chartChange.value = 'rect'
+		} else if (selectedButton.value === 'button2') {
+		    chartChange.value = 'polar'
+		}
 	})
 </script>
 
@@ -287,7 +334,7 @@
 	}
 
 	.chart {
-		width: 160px;
+		width: 170px;
 		height: 450px;
 	}
 
@@ -296,13 +343,13 @@
 		right: 40rpx;
 	}
 	
-	/* button1 时的样式 */
-	.detail-panel.button1 {
+	/* rect 时的样式 */
+	.detail-panel.rect {
 		top: 200rpx;
 	}
 	
-	/* button2 时的样式 */
-	.detail-panel.button2 {
+	/* polar 时的样式 */
+	.detail-panel.polar {
 		top: 140rpx;
 	}
 

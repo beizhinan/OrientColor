@@ -7,7 +7,7 @@
 					all: item.key === 'all'  
 				}" @tap="toggleDropdown(item.key)">
 
-				<view v-if="item.key === 'all'" class="filter-all">
+				<view v-if="item.key === 'all'" class="filter-all" @tap="[activeKey='all', selectOption('all')]">
 					<text class="label"> {{ item.label }}</text>
 				</view>
 				<view v-else class="filter-content">
@@ -53,7 +53,7 @@
 		<view v-if="activeKey && activeKey !== 'all'" class="dropdown-panel"
 			:style="{ top: dropdownPosition.top + 'rpx', left: dropdownPosition.left + 'rpx' }">
 			<view class="option-grid">
-				<view v-for="opt in getActiveOptions()" :key="opt" :class="[activeKey === 'category' ? 'option-c' : 'option', 
+				<view v-for="opt in getActiveOptions()" :key="opt" :class="[activeKey === 'theme' ? 'option-c' : 'option', 
 				         { selected: selectedParentKeyArray && selectedParentKeyArray.find(i => i.key === activeKey) && selectedParentKeyArray.find(i => i.key === activeKey).value === opt  }]"
 					@tap="selectOption(opt)">
 					<!-- 只有色系有icon -->
@@ -173,6 +173,26 @@
 
 			//选中选项后给父组件传值
 			selectOption(value) {
+				// 如果点击的是 all
+				if (this.activeKey === 'all') {
+					this.selectedParentKeyArray = [
+						{ key: 'all', value: 'all' }
+					];
+					this.selectedParentKey = ['all'];
+				
+					// 通知父组件
+					this.$emit('filter-change', this.selectedParentKeyArray);
+					this.activeKey = '';
+					return;
+				}
+				
+				// 如果之前点过 all，这里点击其它选项时要清空 all
+				if (this.selectedParentKeyArray?.some(item => item.key === 'all')) {
+					this.selectedParentKeyArray = [];
+					this.selectedParentKey = [];
+				}
+				
+				// 正常选项逻辑
 				this.selectedChildOption = {
 					key: this.activeKey,
 					value: value
@@ -216,7 +236,7 @@
 	.filters {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: space-between;
+		justify-content: flex-start;
 		margin-bottom: 20rpx;
 	}
 
@@ -224,6 +244,7 @@
 		width: 214rpx;
 		height: 80rpx;
 		margin-bottom: 10rpx;
+		margin-right: 5rpx;
 		border: 1rpx solid #deb67f;
 		border-radius: 10rpx;
 		background-color: #ffffff;

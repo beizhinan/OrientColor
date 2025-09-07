@@ -28,10 +28,9 @@ export default {
       activeDimension: '3D',
 	  activeButton: 'button1',
       selectedFilters: {
-        all: '全部',
+        all: '',
         system: '',
         hue: '',
-        year: '',
         theme: '',
         category: ''
       },
@@ -41,12 +40,10 @@ export default {
 		options: ['红', '橙', '黄','绿','紫','黑','白','灰','青'] , bottom:'82', left:'30'},
         { key: 'hue', label: '色调', icon: '/static/showcase/filter-sediao.png', iconActive: '/static/showcase/filter-sediao-active.png',
 		options: ['淡', '浅','灰', '暗', '柔','浊','亮', '强', '深'] , bottom:'82', left:'60'},
-        { key: 'year', label: '年代', icon: '/static/showcase/filter-niandai.png', iconActive: '/static/showcase/filter-niandai-active.png',
-		options: ['唐', '宋', '元', '明', '清', '近现代'] , bottom:'175', left:'0'},
-		{ key: 'theme', label: '类别', icon: '/static/showcase/filter-leibie.png', iconActive: '/static/showcase/filter-leibie-active.png',
-		options: ['建筑', '陶瓷', '绘画', '丝绸','其他'] , bottom:'175', left:'30'},
-		{ key: 'category', label: '主题', icon: '/static/showcase/filter-zhuti.png', iconActive: '/static/showcase/filter-zhuti-active.png',
-		options: ['开化寺色谱', '永乐宫色谱', '乾隆色谱', '《营造法式》彩画色谱'] , bottom:'175', left:'60'}
+		{ key: 'category', label: '类别', icon: '/static/showcase/filter-leibie.png', iconActive: '/static/showcase/filter-leibie-active.png',
+		options: ['建筑', '陶瓷', '绘画', '丝绸','其他'] , bottom:'175', left:'0'},
+		{ key: 'theme', label: '主题', icon: '/static/showcase/filter-zhuti.png', iconActive: '/static/showcase/filter-zhuti-active.png',
+		options: ['开化寺色谱', '永乐宫色谱', '乾隆色谱', '《营造法式》彩画色谱'] , bottom:'175', left:'30'}
       ]
     }
   },
@@ -56,21 +53,32 @@ export default {
     },
     onFilterChange(selectedParentKeyArray) {
         const keyMap = {
+			all: 'all',
             system: 'system',
             hue: 'hue',
-            year: 'year',
-            theme: 'theme',
-            category: 'category'
+            category: 'category',
+			theme: 'theme'
         };
     
-        selectedParentKeyArray.forEach(item => {
-            const field = keyMap[item.key];
-            if (field) {
-                this.selectedFilters[field] = item.value;
-            }
-        });
+        // 判断 selectedParentKeyArray 中是否有 all 且其 value 有值
+        const hasAll = selectedParentKeyArray.some(item => item.key === 'all' && item.value);
+        
+        if (hasAll) {
+            // all 有值时，将 selectedFilters 全部清空
+            Object.keys(this.selectedFilters).forEach(key => {
+                this.selectedFilters[key] = '';
+            });
+        } else {
+            // all 没有值时，按原逻辑赋值
+            selectedParentKeyArray.forEach(item => {
+                const field = keyMap[item.key];
+                if (field) {
+                    this.selectedFilters[field] = item.value;
+                }
+            });
+        }
     
-        console.log(this.selectedFilters);
+        console.log('筛选结果',this.selectedFilters);
     }
   }
 }
