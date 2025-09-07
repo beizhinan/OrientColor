@@ -2,8 +2,8 @@
 	<view class="container">
 		<!-- 标题 -->
 		<view class="title">
-			<text v-if="selectedButton==='button1'" class="title-content">直角坐标二维模型</text>
-			<text v-if="selectedButton==='button2'" class="title-content">极坐标二维模型</text>
+			<text v-if="chartChange=='rect'" class="title-content">{{ getTitle(selectedDim2DRect) }}</text>
+			<text v-if="chartChange=='polar'" class="title-content">{{ getTitle(selectedDim2DPolar) }}</text>
 		</view>
 		
 		<!-- 图表 -->
@@ -27,7 +27,8 @@
 			  :button="selectedButton"
 			  :dimension="'2D'"
 			  @select2DRect="handleSelect2DRect"
-			  @select2DPolar="handleSelect2DPolar">
+			  @select2DPolar="handleSelect2DPolar"
+			  @changeChart="handleChartChange">
 			</InteractionTip>
 		</view>
 		
@@ -51,13 +52,14 @@
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
 	
 	const selectedButton = ref('')
+	const chartChange = ref('')
 	const colorPoints = ref([])
 	const chartRef = ref(null)
 	const dimension = ref('LC')
 	const selectedColor = ref({name: '', code: ''})
 	const showDetail = ref(false)
 	const selectedDim2DRect = ref('LC')
-	const selectedDim2DPolar = ref('CH')
+	const selectedDim2DPolar = ref('LH')
 	const myChartRef = ref(null) // 存放 echarts 实例
 	const selectedCellIndex = ref(null) // 极坐标当前选中格子的索引
 	const selectedFilters = ref('二维色谱')
@@ -66,7 +68,7 @@
 	onLoad((options) => {
 	  selectedButton.value = options.selectedButton
 	  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-	  selectedFilters.value = options.selectedFilters
+	  selectedFilters.value = options.selectedFilters === 'all' ? '二维色谱' : options.selectedFilters
 	  uni.setNavigationBarTitle({
 	      title: selectedFilters.value
 	  })
@@ -83,6 +85,21 @@
 	}
 	const handleSelect2DPolar = (dim) => {
 		selectedDim2DPolar.value = dim
+	}
+	const handleChartChange = (dim) => {
+		chartChange.value = dim
+	}
+	
+	// 标题映射
+	const getTitle = (dim) => {
+	  switch (dim) {
+	    case 'LC': return '明度L-彩度C';
+	    case 'La': return '明度L-红绿轴a';
+	    case 'Lb': return '明度L-黄蓝轴b';
+	    case 'LH': return '明度L-色相H';
+	    case 'CH(ab)': return '彩度C-色相H';
+	    default: return '二维模型';
+	  }
 	}
 
 	// ------- 直角坐标图 -------
@@ -130,7 +147,7 @@
 	
 	// ------- 极坐标图 -------
 	function getPolarOption() {
-		const isCH = selectedDim2DPolar.value === 'CH'
+		const isCH = selectedDim2DPolar.value === 'CH(ab)'
 		const radiusKey = isCH ? 'C' : 'L'
 		const angleKey = 'H'
 	
@@ -243,7 +260,7 @@
 		chartInstance.on('click', (params) => {
 			if (params.data) {
 				selectedCellIndex.value = params.dataIndex
-				if (selectedButton.value === 'button1') {
+				if (chartChange.value === 'rect') {
 				    selectedColor.value = {
 						name: params.data[3], 
 						code: params.data[2]
@@ -265,26 +282,26 @@
 		const chartInstance = await chartRef.value.init(echarts)
 		myChartRef.value = chartInstance // 保存实例
 		const option =
-				selectedButton.value === 'button1'
+				chartChange.value === 'rect' 
 					? getScatterOption()
 					: getPolarOption()
 			chartInstance.setOption(option)
 		bindChartEvents(chartInstance)
-		console.log(selectedColor.value)
 	}
 
 	// 监听坐标变化，重新渲染
-	watch([selectedDim2DRect, selectedDim2DPolar, selectedButton], () => {
+	watch([selectedDim2DRect, selectedDim2DPolar, selectedButton, chartChange], () => {
 		if (!chartRef.value) return
 		// 容器可能被销毁，重新 init
 		chartRef.value.init(echarts).then(chartInstance => {
 			myChartRef.value = chartInstance
 			const option =
-				selectedButton.value === 'button1'
+				chartChange.value == 'rect'
 					? getScatterOption()
 					: getPolarOption()
 			chartInstance.setOption(option, true)
 			bindChartEvents(chartInstance)
+			console.log(chartChange.value)
 		})
 	})
 
@@ -292,6 +309,12 @@
 		setTimeout(() => {
 			init()
 		}, 300)
+		
+		if (selectedButton.value === 'button1') {
+		    chartChange.value = 'rect'
+		} else if (selectedButton.value === 'button2') {
+		    chartChange.value = 'polar'
+		}
 	})
 	
 </script>

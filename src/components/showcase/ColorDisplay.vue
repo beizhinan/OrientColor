@@ -42,6 +42,7 @@
 </template>
 
 <script>
+	import { getColorPoints } from '@/api/auth.js'
 	export default {
 		props: {
 			dimension: String,
@@ -87,22 +88,11 @@
 					{ L: 51, a: 14, b: 17, C: 21, H: 51, name: "浅土朱", code: "#9A6F5C" },
 
 					],
-				display: [{
-						dimension: '3D',
-						text: '三维模型——色立体'
-					},
-					{
-						dimension: '2D',
-						text: '二维模型——色彩坐标',
-						button1: '直角坐标',
-						button2: '极坐标'
-					},
-					{
-						dimension: '1D',
-						text: '一维模型——色彩坐标',
-						button1: '带状',
-						button2: '环状'
-					}]
+				display: [
+					{ dimension: '3D', text: '三维模型——色立体' },
+					{ dimension: '2D', text: '二维模型——色彩坐标', button1: '直角坐标', button2: '极坐标' },
+					{ dimension: '1D', text: '一维模型——色彩坐标', button1: '带状', button2: '环状' }
+					]
 				}
 			},
 			computed: {
@@ -120,8 +110,31 @@
 			    if (this.dimension === '3D') {
 			      this.showPopup = true
 			    }
+				
+				//页面加载时请求 colorPoints
+				//this.fetchColorPoints()
 			},
 			methods: {
+				/*async fetchColorPoints() {
+					try {
+						const params = {
+							system: this.filterData.system || '',
+							hue: this.filterData.hue || '',
+							theme: this.filterData.theme || '',
+							category: this.filterData.category || ''
+						}
+						const res = await getColorPoints(params)
+						this.colorPoints = res.data || []
+						console.log('colorPoints fetched:', this.colorPoints)
+				    } catch (err) {
+						console.error('Failed to fetch colorPoints:', err)
+						uni.showToast({
+							title: '获取色彩数据失败',
+							icon: 'none'
+						})
+				    }
+				},*/
+				
 				selectButton(buttonKey) {
 					this.selectedButton = buttonKey
 					this.$emit('button-change', {
@@ -133,10 +146,14 @@
 				goToDetail() {
 					const selectedButton = this.selectedButton;
 					const colorPointsStr = encodeURIComponent(JSON.stringify(this.colorPoints));
-					const selectedFilters = ['system', 'hue', 'theme', 'category']
-						.map(field => this.filterData[field] || '')
-						.filter(Boolean) // 去掉空值
-						.join('-');
+					const selectedFilters = (() => {
+					  const str = ['system', 'hue', 'theme', 'category']
+					    .map(field => this.filterData[field] || '')
+					    .filter(Boolean) // 去掉空值
+					    .join('-');
+					
+					  return str || 'all';
+					})();
 				
 					let url = '';
 					switch (this.dimension) {

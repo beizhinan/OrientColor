@@ -105,10 +105,11 @@
 			};
 		},
 		created() {
-			this.initRingData();
+			//this.initRingData();     //有空缺
+			this.initOrderedRingData() //无空缺
 		},
 		methods: {
-			// 初始化环形数据
+			// 初始化环形数据(按度数位置显示)
 			initRingData() {
 				if (!this.colorPoints.length) return;
 
@@ -157,6 +158,41 @@
 				// 初始指向第一个块的 H 值
 				this.originDeg = this.ringData[0].H;
 				this.rotateH = this.originDeg;
+			},
+			
+			// 按 H 值顺序生成环形数据
+			initOrderedRingData() {
+				if (!this.colorPoints.length) return;
+			
+				// 按 H 值排序
+				const sortedPoints = [...this.colorPoints].sort((a, b) => a.H - b.H);
+			
+				const total = sortedPoints.length;
+				const step = 360 / total;
+			
+				const ranges = [];
+				for (let i = 0; i < total; i++) {
+					const start = i * step;
+					const end = (i + 1) * step;
+					const point = sortedPoints[i];
+			
+					ranges.push({
+						name: point.name,
+						color: point.code,
+						start,
+						end,
+						H: Math.round(point.H),
+						origin: point
+					});
+				}
+			
+				this.ringData = ranges;
+			
+				// 初始指向第一个色块
+				this.originDeg = this.ringData[0].H;
+				this.rotateH = this.originDeg;
+				this.currentColor = this.ringData[0].origin.code;
+				this.currentColorName = this.ringData[0].origin.name;
 			},
 
 			// 触摸开始：记录初始位置

@@ -66,7 +66,7 @@
 		
 		onLoad((options) => {
 		  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-		  selectedFilters.value = options.selectedFilters
+		  selectedFilters.value = options.selectedFilters === 'all' ? '三维色谱' : options.selectedFilters
 		  uni.setNavigationBarTitle({
 		      title: selectedFilters.value
 			})
@@ -148,6 +148,12 @@
 				};
 				cubeList.push(cube);
 				group.add(cube)
+				
+				const edges = new THREE.EdgesGeometry(geometry); // 提取边
+				  const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }); // 黑色描边
+				  const line = new THREE.LineSegments(edges, lineMaterial);
+				  line.position.copy(cube.position); // 和立方体对齐
+				  group.add(line);
 			})
 			
 			//使用group控制模型
