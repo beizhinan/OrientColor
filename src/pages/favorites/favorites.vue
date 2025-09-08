@@ -14,7 +14,7 @@
 					<view class="brief">#{{item.form}}</view>
 				</view>
 				<view class="btnBox">
-					<button class="btn" style="margin-bottom: 8rpx; border-color: #dbc1a4; color:#dbc1a4" @click="deleteData(index)">删除</button>
+					<button class="btn" style="margin-bottom: 8rpx; border-color: #c69c6d; color:#c69c6d" @click="deleteData(index)">删除</button>
 					<button class="btn" 
 					style="border-color: #98867c; color: #98867c;" 
 					@click="showDetail(index)" 
