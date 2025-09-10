@@ -62,8 +62,7 @@
         "setting" : {
             "urlCheck" : false
         },
-        "usingComponents" : true,
-        "requiredPrivateInfos": ["saveImageToPhotosAlbum"]
+        "usingComponents" : true
     },
     "mp-alipay" : {
         "usingComponents" : true

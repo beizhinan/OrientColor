@@ -5,7 +5,9 @@
       <view class="title-bar">
         <text class="title">推荐色谱</text>
         <view class="spacer"></view>
-        <button class="total-spectrum-btn" @click="navigateToAllColor">总谱</button>
+        <button class="total-spectrum-btn" @click="navigateToAllColor">
+          总谱
+        </button>
       </view>
       <view class="waterfall">
         <!-- 第一列 -->
@@ -37,13 +39,6 @@
         <button class="load-more-btn" @click="loadMore">加载更多</button>
       </view>
     </view>
-
-    <!-- 弹窗组件 -->
-    <premium-popup
-      :show="showPopup"
-      @close="handleClosePopup"
-      @experience="handleExperience"
-    />
   </view>
 </template>
 
@@ -93,18 +88,20 @@ export default {
           headerImage: `https://placebear.com/340/${300 + (i % 10) * 10}`,
           title: `景点${i + 5}`,
           description: `这是景点${i + 5}的描述信息，用于展示分页加载功能`,
-        }))
+        })),
       ],
     };
   },
   computed: {
     // 将卡片分配到左右两列
     leftColumnCards() {
-      return this.cardList.filter((_, index) => index % 2 === 0)
+      return this.cardList
+        .filter((_, index) => index % 2 === 0)
         .slice(0, Math.ceil(this.displayCount / 2));
     },
     rightColumnCards() {
-      return this.cardList.filter((_, index) => index % 2 === 1)
+      return this.cardList
+        .filter((_, index) => index % 2 === 1)
         .slice(0, Math.floor(this.displayCount / 2));
     },
   },
@@ -118,39 +115,39 @@ export default {
     handleViewDetails() {},
     navigateToAllColor() {
       uni.navigateTo({
-        url: '/pages/allcolor/allcolor'
+        url: "/pages/allcolor/allcolor",
       });
     },
     loadMore() {
       this.displayCount += 20;
     },
-    
+
     // 获取推荐色谱数据
     async fetchRecommendedColors() {
       try {
-        const response = await request.get('/home/recommended');
-        if (response.status === 'success') {
+        const response = await request.get("/home/recommended");
+        if (response.status === "success") {
           this.cardList = response.data;
         } else {
           uni.showToast({
-            title: '获取数据失败',
-            icon: 'none'
+            title: "获取数据失败",
+            icon: "none",
           });
         }
       } catch (error) {
         uni.showToast({
-          title: '网络请求失败',
-          icon: 'none'
+          title: "网络请求失败",
+          icon: "none",
         });
-        console.error('获取推荐色谱失败:', error);
+        console.error("获取推荐色谱失败:", error);
       }
-    }
+    },
   },
-  
+
   // 页面加载时获取数据
   onLoad() {
     // this.fetchRecommendedColors();
-  }
+  },
 };
 </script>
 

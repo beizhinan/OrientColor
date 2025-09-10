@@ -947,6 +947,5 @@ export default {
   padding: 6rpx 10rpx;
   font-size: 22rpx;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
 }
 </style>

@@ -59,91 +59,76 @@ export default {
           id: 1,
           name: "活力红",
           value: "#FF6B6B",
-          titlePath: "红-大红-活力红",
         },
         {
           id: 2,
           name: "清新青",
           value: "#4ECDC4",
-          titlePath: "识别颜色-清新青",
         },
         {
           id: 3,
           name: "天空蓝",
           value: "#45B7D1",
-          titlePath: "识别颜色-天空蓝",
         },
         {
           id: 4,
           name: "明亮黄",
           value: "#FFBE0B",
-          titlePath: "识别颜色-明亮黄",
         },
         {
           id: 5,
           name: "活力橙",
           value: "#FB5607",
-          titlePath: "识别颜色-活力橙",
         },
         {
           id: 6,
           name: "优雅紫",
           value: "#8338EC",
-          titlePath: "识别颜色-优雅紫",
         },
         {
           id: 7,
           name: "宝石蓝",
           value: "#3A86FF",
-          titlePath: "识别颜色-宝石蓝",
         },
         {
           id: 8,
           name: "翠绿",
           value: "#38B000",
-          titlePath: "识别颜色-翠绿",
         },
         {
           id: 9,
           name: "紫罗兰",
           value: "#9D4EDD",
-          titlePath: "识别颜色-紫罗兰",
         },
         {
           id: 10,
           name: "洋红",
           value: "#FF006E",
-          titlePath: "识别颜色-洋红",
         },
         {
           id: 11,
           name: "粉色",
           value: "#FFA7C4",
-          titlePath: "识别颜色-粉色",
         },
         {
           id: 12,
           name: "玫瑰红",
           value: "#FF2D55",
-          titlePath: "识别颜色-玫瑰红",
         },
         {
           id: 13,
           name: "burgundy",
           value: "#A80023",
-          titlePath: "识别颜色-Burgundy",
         },
         {
           id: 14,
           name: "深粉",
           value: "#EB4D5C",
-          titlePath: "识别颜色-深粉",
         },
         {
           id: 15,
           name: "深粉",
           value: "#EB4D5C",
-          titlePath: "识别颜色-深粉",
         },
       ],
     };
@@ -182,7 +167,6 @@ export default {
         name: encodeURIComponent(color.name),
         value: encodeURIComponent(color.code),
         id: color.id || null,
-        titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null,
       };
 
       // 过滤掉空值参数并构建查询字符串

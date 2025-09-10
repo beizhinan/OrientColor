@@ -32,7 +32,7 @@
       <!-- 使用卡片组件展示颜色数据 -->
       <view class="color-list">
         <color-card
-          v-for="(color, index) in colorList"
+          v-for="(color, index) in filteredColorList"
           :key="index"
           :color-name="color.name"
           :color-code="color.code"
@@ -63,22 +63,29 @@ export default {
         "金",
         "白",
         "灰",
-        "孔雀蓝",
       ],
       selectedTag: "全部", // 默认选中"全部"标签
       // 添加颜色数据
       colorList: [
-        { id: 1, name: "蛤粉", code: "#EAE9DF" },
-        { id: 2, name: "洋红", code: "#8A2026" },
-        { id: 3, name: "浅黄香色", code: "#E1A871" },
-        { id: 4, name: "浅绿华", code: "#4D7C7C" },
-        { id: 5, name: "黯深朱", code: "#573224" },
-        { id: 6, name: "常使群青", code: "#2A6086" },
-        { id: 7, name: "偏黄的大青", code: "#4D7C7C" },
-        { id: 8, name: "粉四青", code: "#9CBACE" },
-        { id: 9, name: "偏黄的四绿", code: "#9DA279" },
+        { id: 1, name: "蛤粉", code: "#EAE9DF", type: "朱" },
+        { id: 2, name: "洋红", code: "#8A2026", type: "朱" },
+        { id: 3, name: "浅黄香色", code: "#E1A871", type: "黄" },
+        { id: 4, name: "浅绿华", code: "#4D7C7C", type: "青" },
+        { id: 5, name: "黯深朱", code: "#573224", type: "朱" },
+        { id: 6, name: "常使群青", code: "#2A6086", type: "青" },
+        { id: 7, name: "偏黄的大青", code: "#4D7C7C", type: "青" },
+        { id: 8, name: "粉四青", code: "#9CBACE", type: "青" },
+        { id: 9, name: "偏黄的四绿", code: "#9DA279", type: "绿" },
       ],
     };
+  },
+  computed: {
+    filteredColorList() {
+      if (this.selectedTag === "全部") {
+        return this.colorList;
+      }
+      return this.colorList.filter(color => color.type === this.selectedTag);
+    }
   },
   methods: {
     onSearchInput(event) {
