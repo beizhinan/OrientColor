@@ -3,6 +3,9 @@
     <view class="title">
       <text class="title-content">xx色系</text>
     </view>
+    <view class="return-link-wrapper" v-if="colorStore.currentView !== 'picker-low-chroma'">
+      <text class="return-link" @click="goBack">返回上一级</text>
+    </view>
     <scroll-view scroll-y class="color-list">
       <view class="color-grid">
         <view
@@ -58,7 +61,13 @@
 </template>
 
 <script>
+import { useColorStore } from "@/stores/colorStore";
+
 export default {
+  setup() {
+    const colorStore = useColorStore();
+    return { colorStore };
+  },
   data() {
     return {
       colorList: [
@@ -162,6 +171,11 @@ export default {
     };
   },
   methods: {
+    // 返回上一页
+    goBack() {
+      uni.navigateBack();
+    },
+
     // 根据背景色计算文字颜色
     getTextColor(hex) {
       const rgb = this.hexToRgb(hex);
@@ -192,6 +206,12 @@ export default {
         url: `/pages/colorblock/colorblock`,
       });
     },
+
+    // 返回上一级
+    goBack() {
+      // 触发事件让父组件处理返回逻辑
+      this.$emit("go-back");
+    },
   },
 };
 </script>
@@ -211,6 +231,21 @@ export default {
   font-size: 34rpx;
   font-weight: 900;
   color: #9f7735;
+}
+
+.return-link-wrapper {
+  text-align: right;
+  margin-bottom: 20rpx;
+}
+
+.return-link {
+  color: #999;
+  text-decoration: underline;
+  font-size: 28rpx;
+}
+
+.return-link:active {
+  color: #1e6b30;
 }
 
 .color-list {
