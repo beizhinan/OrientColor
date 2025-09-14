@@ -16,17 +16,19 @@
 		<!-- 图表 -->
 		<view class="chart-cube">
 			<view class="chart" v-if="dimension == '3D'">
-				<image></image>
+				<image mode="aspectFit" class="gif" src="/src/static/showcase/display-3d.gif"></image>
 				<view v-if="showPopup" class="popup">
 					<text class="text poptext">点击色立体图像查看三维模型，可以自动显示色谱在三维空间中的分视图，用户可以自主通过点击、捏合、滑动实现对模型的操作。</text>
 					<text class="text know" @tap.stop="showPopup = false">✔明白了</text>
 				</view>
 			</view>
 			<view class="chart" v-if="dimension == '2D'">
-				<image></image>
+				<image class="gif" v-if="selectedButton === 'button1'" mode="aspectFit" src="/src/static/showcase/display-2drect.gif"></image>
+				<image class="gif" v-if="selectedButton === 'button2'" mode="aspectFit" src="/src/static/showcase/display-2dpolar.gif"></image>
 			</view>
 			<view class="chart" v-if="dimension == '1D'">
-				<image></image>
+				<image class="gif" v-if="selectedButton === 'button1'" mode="aspectFit" src="/src/static/showcase/display-1drect.gif"></image>
+				<image class="gif" v-if="selectedButton === 'button2'" mode="aspectFit" src="/src/static/showcase/display-1dpolar.gif"></image>
 			</view>
 		</view>
 		<!-- 文字栏 -->
@@ -228,7 +230,7 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		background-color: #f4f4f4;
+		background-color: #fff;
 		border-radius: 32rpx 32rpx 0 0;
 	}
 
@@ -237,6 +239,15 @@
 		height: 80%;
 		width: 100%;
 		z-index: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;   
+	}
+	
+	.gif {
+	    width: 100%;      
+	    height: 100%;     
+	    object-fit: contain;
 	}
 	
 	.text{

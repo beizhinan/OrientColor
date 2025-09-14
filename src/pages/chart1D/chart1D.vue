@@ -108,8 +108,8 @@
 		} else{
 			switch (dim) {
 				case 'L': return '明度L';
-				case 'a': return '通道a';
-				case 'b': return '通道b';
+				case 'a': return '红绿轴';
+				case 'b': return '黄蓝轴';
 				case 'C': return '彩度C';
 				case 'H': return '色相H';
 				default: return '一维模型';
