@@ -436,7 +436,8 @@
 		width: 84rpx;
 		height: 84rpx;
 		border-radius: 42rpx;
-		background-color: #ebf5ff;
+		background-color: #007aff;
+		opacity: 0.1;
 	}
 	.name{
 		margin-bottom: 8rpx;
@@ -483,7 +484,7 @@
 		border-radius: 20rpx;
 		line-height: 200rpx;
 		font-size: 60rpx;
-		color:#799fce;
+		color:#6b95c9;
 		cursor: pointer;
 	}
 	/*确认框*/

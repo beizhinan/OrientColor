@@ -25,14 +25,6 @@
             colorStore.currentView === 'picker-low-chroma'
           "
         >
-          <image
-            class="icon"
-            src="/static/color-picker.png"
-            mode="aspectFit"
-          ></image>
-          <text class="description">
-            您可通过在取色器上选取颜色，获取相应的色彩和名称
-          </text>
         </view>
       </view>
       <!-- 根据状态显示不同组件 -->
@@ -51,7 +43,7 @@
           colorStore.currentView === 'picker-low-chroma'
         "
       >
-        <color-detail></color-detail>
+        <color-detail @go-back="handleGoBack"></color-detail>
       </view>
 
       <!-- 只在需要显示色盘时才显示 -->
@@ -126,6 +118,17 @@ export default {
     handleColorSelect(color) {
       // 点击颜色列表中的颜色时，只显示detail组件，隐藏色盘和列表
       this.colorStore.showPickerAndDetail(color);
+    },
+
+    // 处理返回事件
+    handleGoBack() {
+      // 如果当前是低艳度模式，返回低艳度模式视图
+      if (this.colorStore.currentView === "picker-low-chroma") {
+        this.colorStore.showPickerAndLowChroma();
+      } else {
+        // 否则返回到主色盘和列表视图
+        this.colorStore.showPickerAndList();
+      }
     },
 
     // 处理弹窗确认事件

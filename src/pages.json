@@ -1,7 +1,7 @@
 {
  "pages": [
     { "path": "pages/ad/ad", "style": { "navigationBarTitleText": "" } },
-    { "path": "pages/index/index", "style": { "navigationBarTitleText": "东方色彩" } },
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "东方传统色" } },
     { "path": "pages/showcase/showcase", "style": { "navigationBarTitleText": "展示" , "disableScroll": true} },
     { "path": "pages/search/search", "style": { "navigationBarTitleText": "检索" } },
     { "path": "pages/user/user", "style": { "navigationBarTitleText": "个人中心" } },
