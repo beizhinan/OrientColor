@@ -6,16 +6,16 @@ export function getLevelOneColors() {
 }
 
 // 获取二级颜色数据
-export function getLevelTwoColors(themeId, parentId) {
-  return request.get(`/colors/level-two/${themeId}/${parentId}`)
+export function getLevelTwoColors(parentId) {
+  return request.get(`/colors/level-two/${parentId}`)
 }
 
 // 获取三级颜色数据
-export function getLevelThreeColors(themeId, parentId) {
-  return request.get(`/colors/level-three/${themeId}/${parentId}`)
+export function getLevelThreeColors(parentId) {
+  return request.get(`/colors/level-three/${parentId}`)
 }
 
 // 获取四级颜色数据
-export function getLevelFourColors(themeId, parentId) {
-  return request.get(`/colors/level-four/${themeId}/${parentId}`)
+export function getLevelFourColors(parentId) {
+  return request.get(`/colors/level-four/${parentId}`)
 }

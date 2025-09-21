@@ -48,7 +48,11 @@
               :key="tag.id"
               class="tag-item"
               :class="{ active: selectedTag && selectedTag.id === tag.id }"
-              :style="selectedTag && selectedTag.id === tag.id ? { color: currentColorTheme } : {}"
+              :style="
+                selectedTag && selectedTag.id === tag.id
+                  ? { color: currentColorTheme }
+                  : {}
+              "
               @click="selectTag(tag)"
             >
               {{ tag.name }}
@@ -250,7 +254,12 @@
 </template>
 
 <script>
-import { getLevelOneColors, getLevelTwoColors, getLevelThreeColors, getLevelFourColors } from '@/api/allcolor'
+import {
+  getLevelOneColors,
+  getLevelTwoColors,
+  getLevelThreeColors,
+  getLevelFourColors,
+} from "@/api/allcolor";
 
 export default {
   data() {
@@ -289,7 +298,7 @@ export default {
     // 根据筛选条件过滤后的颜色分组
     filteredColorGroups() {
       if (!this.selectedColor || !this.selectedTag) return [];
-      
+
       const levelTwos = this.levelTwoData[this.selectedColor.id] || [];
       const selectedGroup = levelTwos.find(
         (subColor) => subColor.id === this.selectedTag.id
@@ -325,7 +334,7 @@ export default {
     async loadLevelOneColors() {
       try {
         const res = await getLevelOneColors();
-        if (res.status === 'success') {
+        if (res.status === "success") {
           this.colorList = res.data;
           if (res.data.length > 0) {
             this.selectedColor = res.data[0];
@@ -335,15 +344,15 @@ export default {
           }
         }
       } catch (error) {
-        console.error('获取一级颜色数据失败:', error);
+        console.error("获取一级颜色数据失败:", error);
       }
     },
-    
+
     // 加载二级颜色数据
     async loadLevelTwoColors(parentId) {
       try {
-        const res = await getLevelTwoColors('default', parentId);
-        if (res.status === 'success') {
+        const res = await getLevelTwoColors(parentId);
+        if (res.status === "success") {
           // 使用Vue的$set方法确保响应式更新
           this.$set(this.levelTwoData, parentId, res.data);
           if (res.data.length > 0) {
@@ -353,36 +362,36 @@ export default {
           }
         }
       } catch (error) {
-        console.error('获取二级颜色数据失败:', error);
+        console.error("获取二级颜色数据失败:", error);
       }
     },
-    
+
     // 加载三级颜色数据
     async loadLevelThreeColors(parentId) {
       try {
-        const res = await getLevelThreeColors('default', parentId);
-        if (res.status === 'success') {
+        const res = await getLevelThreeColors(parentId);
+        if (res.status === "success") {
           this.$set(this.levelThreeData, parentId, res.data);
-          
+
           // 加载四级颜色数据
           for (const item of res.data) {
             this.loadLevelFourColors(item.id);
           }
         }
       } catch (error) {
-        console.error('获取三级颜色数据失败:', error);
+        console.error("获取三级颜色数据失败:", error);
       }
     },
-    
+
     // 加载四级颜色数据
     async loadLevelFourColors(parentId) {
       try {
-        const res = await getLevelFourColors('default', parentId);
-        if (res.status === 'success') {
+        const res = await getLevelFourColors(parentId);
+        if (res.status === "success") {
           this.$set(this.levelFourData, parentId, res.data);
         }
       } catch (error) {
-        console.error('获取四级颜色数据失败:', error);
+        console.error("获取四级颜色数据失败:", error);
       }
     },
 
@@ -391,7 +400,7 @@ export default {
       this.selectedColor = color;
       this.colorData = color;
       this.expandedIndex = -1;
-      
+
       // 如果该颜色的二级数据尚未加载，则加载
       if (!this.levelTwoData[color.id]) {
         this.loadLevelTwoColors(color.id);
@@ -404,7 +413,7 @@ export default {
     selectTag(tag) {
       this.selectedTag = tag;
       this.expandedIndex = -1;
-      
+
       // 如果该标签的三级数据尚未加载，则加载
       if (!this.levelThreeData[tag.id]) {
         this.loadLevelThreeColors(tag.id);
@@ -441,7 +450,7 @@ export default {
         }
       }
 
-      let titlePath = this.selectedColor ? this.selectedColor.name : '';
+      let titlePath = this.selectedColor ? this.selectedColor.name : "";
       if (grandParentGroup) {
         titlePath += "-" + grandParentGroup.name;
       }

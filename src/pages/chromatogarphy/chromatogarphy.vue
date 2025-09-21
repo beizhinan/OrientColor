@@ -225,11 +225,11 @@ export default {
       thirdLevelExpandMap: {},
       // 颜色映射表，用于设置不同颜色类别的主题色
       colorMap: {
-        绿色: "#40c860",
-        白色: "#8e8e93",
-        黄色: "#FFD700",
-        红色: "#FF6B6B",
-        青色: "#48C9B0",
+        黑: "#000000",
+        白: "#FFFFFF",
+        黄: "#FFD700",
+        绿: "#40c860",
+        青: "#48C9B0",
       },
     };
   },
@@ -307,15 +307,45 @@ export default {
         const res = await getChromatographyDetail(this.id, this.title);
         if (res.status === "success") {
           // 设置获取到的数据
-          this.allColorData = res.data;
+          // 转换新数据结构为旧结构以适配UI
+          const convertedData = {};
+          res.data.colorOne.forEach(color => {
+            convertedData[color.name] = {
+              name: color.name,
+              imgurl: color.imgurl,
+              description: color.description,
+              culturalInfo: color.culturalInfo,
+              subColors: color.colorTwo.map(subColor => ({
+                name: subColor.name,
+                description: subColor.description,
+                children: subColor.colorThree.map(thirdLevel => ({
+                  name: thirdLevel.name,
+                  description: thirdLevel.description,
+                  children: thirdLevel.colorFour
+                }))
+              }))
+            };
+          });
+
+          this.allColorData = convertedData;
 
           // 初始化颜色列表
-          this.colorList = Object.keys(res.data);
+          this.colorList = res.data.categories;
 
           // 设置默认选中颜色
           if (this.colorList.length > 0) {
             this.selectedColor = this.colorList[0];
-            this.colorData = res.data[this.selectedColor];
+            this.colorData = convertedData[this.selectedColor];
+
+            // 更新页面标题和背景图
+            uni.setNavigationBarTitle({
+              title: res.data.title + "色谱"
+            });
+            
+            // 设置顶部信息
+            this.colorData.name = res.data.title;
+            this.colorData.description = res.data.description;
+            this.colorData.imgurl = res.data.headerImage;
 
             // 设置默认选中的标签
             if (
@@ -346,7 +376,7 @@ export default {
       this.selectedColor = color;
       this.colorData = this.allColorData[color];
       // 确保数据存在再访问
-      if (this.colorData.subColors && this.colorData.subColors.length > 0) {
+      if (this.colorData && this.colorData.subColors && this.colorData.subColors.length > 0) {
         this.selectedTag = this.colorData.subColors[0].name;
       }
       this.expandedIndex = -1;
