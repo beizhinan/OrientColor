@@ -22,20 +22,20 @@
         <view class="color-tabs">
           <view
             v-for="color in colorList"
-            :key="color"
+            :key="color.id"
             class="tab-item"
-            :class="{ active: selectedColor === color }"
+            :class="{ active: selectedColor && selectedColor.id === color.id }"
             :style="
-              selectedColor === color
+              selectedColor && selectedColor.id === color.id
                 ? {
-                    backgroundColor: colorMap[color] || '#40c860',
+                    backgroundColor: colorMap[color.name] || '#40c860',
                     color: 'white',
                   }
                 : {}
             "
             @click="selectColor(color)"
           >
-            {{ color }}
+            {{ color.name }}
           </view>
         </view>
 
@@ -45,13 +45,13 @@
           <view class="color-tags">
             <view
               v-for="tag in currentColorTags"
-              :key="tag"
+              :key="tag.id"
               class="tag-item"
-              :class="{ active: selectedTag === tag }"
-              :style="selectedTag === tag ? { color: currentColorTheme } : {}"
+              :class="{ active: selectedTag && selectedTag.id === tag.id }"
+              :style="selectedTag && selectedTag.id === tag.id ? { color: currentColorTheme } : {}"
               @click="selectTag(tag)"
             >
-              {{ tag }}
+              {{ tag.name }}
             </view>
           </view>
 
@@ -250,164 +250,21 @@
 </template>
 
 <script>
-// 四级颜色数据结构定义
-const levelOneData = {
-  绿色: {
-    name: "绿色",
-    imgurl: "https://placebear.com/350/160",
-    description:
-      "绿，为五间色之一，近于青色与黄色之间，可见属东方间色。绿色也常列入青色，象征生机。《说文》曰：'用青黄色也。'《释经》曰：'绿，树也。'荆秦之水干上视之，观察绿色，此似之也。可见绿是蓝与黄的结合，最早用在丝绸上，亦是'小'色。",
-    culturalInfo: [
-      {
-        title: "在东方文化中的象征意义",
-        content:
-          '在中国服饰色彩观念中，一直认为绿色是象征地位卑微的颜色。西汉时期，绿头巾是宫廷厨房奴仆们的头饰。晋朝李轨曾注疏西汉杨雄《杨子法言》言："绿衣虽有三百领，杂色不可入宗庙"。服饰色彩的这种观念也延续到了军事管理制度中。清朝为满人所统，满清政府为确立民族身份的等级差序，规定招募汉人组织的军队一律用绿旗，称为绿旗兵，兵营名叫绿营.',
-      },
-      {
-        title: "与五行的关系",
-        content:
-          '绿，为五间色之一，位于青色与黄色之间，可归属东方间色。绿色也曾列入青色，象征生机。《说文》曰："帛青黄色也"。《释名》曰："绿，浏也。荆泉之水于上视之，浏然绿色，此似之也"。可见绿是蓝与黄的结合，最早用在丝绸上，亦是浏水之色.',
-      },
-    ],
-    categories: ["绿色", "白色", "黄色", "红色", "青色"],
-  },
-  白色: {
-    name: "白色",
-    imgurl: "https://placebear.com/350/161",
-    description:
-      "白，为五正色之一，象征纯洁与光明。《说文》曰：'白，西方色也。阴用事，物色白。'白色在东方文化中常代表洁净、朴素与空灵。",
-    culturalInfo: [
-      {
-        title: "白色的文化象征",
-        content:
-          "白色在中国传统文化中具有复杂的象征意义。一方面，白色象征着纯洁、光明和正直；另一方面，在某些语境中，白色也与死亡、丧事相关联。白色在五行中对应西方和秋季，是金属元素的颜色。",
-      },
-      {
-        title: "白色在传统服饰中的应用",
-        content:
-          "在古代中国，白色是平民百姓常用的服装颜色，也是官员在特定场合穿着的颜色。例如，未得功名的读书人通常穿白色长衫，而官员在居丧期间也需穿白色服饰以示哀悼。",
-      },
-    ],
-    categories: ["绿色", "白色", "黄色", "红色", "青色"],
-  },
-  黄色: {},
-  红色: {},
-  青色: {},
-};
-
-const levelTwoData = {
-  绿色: [
-    {
-      id: "sl-绿色",
-      name: "石绿",
-      description:
-        '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画.',
-    },
-    {
-      id: "bl-绿色",
-      name: "巴黎绿",
-      description: "巴黎绿是一种人工合成的绿色颜料，色泽鲜艳",
-    },
-  ],
-  白色: [
-    {
-      id: "qf-白色",
-      name: "铅粉",
-      description:
-        "古代常用的白色颜料，主要成分为碱式碳酸铅。《本草纲目》载：'铅粉，即铅华也，出于铅，成于粉。'",
-    },
-  ],
-};
-
-const levelThreeData = {
-  "sl-绿色": [
-    {
-      id: "sl-dl-绿色",
-      name: "大绿",
-      description:
-        '色名释义\n\t\t《本草纲目》载："石绿，阴石也。生铜坑中，乃铜之祖气也。铜得紫阳之气而生绿，绿久成石，谓之石绿。" \n\t\t石绿，即孔雀石，产自铜矿，常与蓝铜矿共生。孔雀石则因其颜色和特有得同心圆状花纹，犹如孔雀羽毛而得名。近现代学者惯用"石绿"统称以天然孔雀石（Malachite）研制而成的绿色颜料，其主要化学成分为碱式碳酸铜（Cu2CO3(OH)2），与石青成分一致。\n\t\t下细分为"鲜石绿"和"黯石绿"两大类。"鲜石绿"代表以石绿颜料调和胶料所绘之物的初始色貌，色泽鲜丽，色彩载体来源于文献；"黯石绿"代表以石绿颜料调和胶料所绘之物留存至今的历史色貌，色泽黯然，色彩载体来源于现存建筑实体。\n\n历史文化背景\n\t\t石绿颜料在中国的应用可以追溯到战国时期。作为矿物颜料使用的石绿在中国历代文献记载中同样拥有其它别称，如"绿青"、"青琅俞"等等。它与石青相同，是最为重要的传统彩绘颜料之一，被广泛运用于绘画、建筑、雕塑、器物等不同形式的艺术门类。在国画中，它与"石青"并称"青绿"，"青绿山水"这一重要表现技法就于唐代则正式创立。\n\t\t石绿以云南会泽、东川、贡山出产为最好，广西南丹、宾阳次之。受矿源、矿层、加工工艺等因素影响，石绿可呈现为不同色调的绿色。一般而言原矿石越黑，研磨后的颜料越绿，上品孔雀石为黛黑色，称作狮头绿、虾蟆背，稍次孔雀石称为蜻蜓翅。它可按粉体粒径大小将石绿区分为3-4级不同的色阶使用，《营造法式》即将它分为大绿、二绿、三绿、绿华4种色阶用以绘制建筑彩画.',
-    },
-    {
-      id: "sl-el-绿色",
-      name: "二绿",
-      description: "二绿是石绿的另一种分类，颜色相对较淡",
-    },
-  ],
-  "bl-绿色": [
-    {
-      id: "bl-clbl-绿色",
-      name: "翠绿巴黎绿",
-      description: "色泽翠绿的巴黎绿品种",
-    },
-    {
-      id: "bl-sbl-绿色",
-      name: "深巴黎绿",
-      description: "颜色较深的巴黎绿品种",
-    },
-  ],
-  "qf-白色": [
-    {
-      id: "qf-hf-白色",
-      name: "胡粉",
-      description: "铅粉的别称，因产自胡地而得名",
-    },
-    {
-      id: "qf-lh-白色",
-      name: "铅华",
-      description: "铅粉的雅称，常用于化妆品",
-    },
-  ],
-};
-
-const levelFourData = {
-  "sl-dl-绿色": [
-    { id: 1, name: "上好大绿", value: "#2E8B57" },
-    { id: 2, name: "偏黄的大绿", value: "#3CB371" },
-    { id: 3, name: "黯大绿", value: "#228B22" },
-    { id: 4, name: "带使大绿", value: "#006400" },
-    { id: 5, name: "偏淡的大绿", value: "#006400" },
-    { id: 6, name: "偏淡的大绿", value: "#006400" },
-    { id: 7, name: "偏淡的大绿", value: "#006400" },
-  ],
-  "sl-el-绿色": [
-    { name: "头青二绿", value: "#66CDAA" },
-    { name: "豆青二绿", value: "#3CB371" },
-  ],
-  "bl-clbl-绿色": [
-    { name: "浅翠巴黎绿", value: "#00FF7F" },
-    { name: "深翠巴黎绿", value: "#008080" },
-  ],
-  "bl-sbl-绿色": [
-    { name: "墨巴黎绿", value: "#006400" },
-    { name: "浓巴黎绿", value: "#008000" },
-  ],
-  "qf-hf-白色": [
-    { name: "上等胡粉", value: "#F8F8F8" },
-    { name: "普通胡粉", value: "#F0F0F0" },
-  ],
-  "qf-lh-白色": [
-    { name: "脂铅华", value: "#F5F5F5" },
-    { name: "粉铅华", value: "#FAFAFA" },
-  ],
-};
+import { getLevelOneColors, getLevelTwoColors, getLevelThreeColors, getLevelFourColors } from '@/api/allcolor'
 
 export default {
   data() {
-    const colorList = Object.keys(levelOneData);
-    const defaultColor = colorList[0];
     return {
       id: null,
       title: "",
-      colorList: colorList,
-      selectedColor: defaultColor,
-      selectedTag: levelTwoData[defaultColor]
-        ? levelTwoData[defaultColor][0].name
-        : "",
-      levelOneData: levelOneData,
-      levelTwoData: levelTwoData,
-      levelThreeData: levelThreeData,
-      levelFourData: levelFourData,
-      colorData: levelOneData[defaultColor],
+      colorList: [],
+      selectedColor: null,
+      selectedTag: null,
+      levelOneData: {},
+      levelTwoData: {},
+      levelThreeData: {},
+      levelFourData: {},
+      colorData: {},
       isFavorite: false,
       expandedIndex: -1,
       isInfoExpanded: false, // 添加控制信息展开状态的变量
@@ -425,19 +282,17 @@ export default {
   computed: {
     // 当前选中色系的所有标签
     currentColorTags() {
-      const colorKey = this.selectedColor;
-      return (
-        this.levelTwoData[colorKey]?.map((subColor) => subColor.name) || []
-      );
+      if (!this.selectedColor) return [];
+      return this.levelTwoData[this.selectedColor.id] || [];
     },
 
     // 根据筛选条件过滤后的颜色分组
     filteredColorGroups() {
-      const colorKey = this.selectedColor;
-      const levelTwos = this.levelTwoData[colorKey] || [];
-
+      if (!this.selectedColor || !this.selectedTag) return [];
+      
+      const levelTwos = this.levelTwoData[this.selectedColor.id] || [];
       const selectedGroup = levelTwos.find(
-        (subColor) => subColor.name === this.selectedTag
+        (subColor) => subColor.id === this.selectedTag.id
       );
 
       if (!selectedGroup) return [];
@@ -457,43 +312,103 @@ export default {
 
     // 获取当前选中颜色的主题色
     currentColorTheme() {
-      return this.colorMap[this.selectedColor] || "#40c860"; // 默认使用绿色
+      if (!this.selectedColor) return "#40c860";
+      return this.colorMap[this.selectedColor.name] || "#40c860"; // 默认使用绿色
     },
   },
-  // onLoad(options) {
-  //   if (options.id && options.title) {
-  //     this.id = options.id;
-  //     this.title = decodeURIComponent(options.title);
-  //     // 确保传入的 title 在 colorList 中存在
-  //     if (this.colorList.includes(this.title)) {
-  //       this.selectedColor = this.title;
-  //       this.colorData = this.allColorData[this.title] || this.colorData;
-  //       this.selectedTag = this.colorData.subColors[0].name;
-  //     }
-  //   }
-
-  //   uni.setNavigationBarTitle({
-  //     title: (this.title || this.selectedColor) + "色谱",
-  //   });
-
-  //   uni.setNavigationBarColor({
-  //     frontColor: "#000000",
-  //     backgroundColor: "#F8F8F8",
-  //   });
-  // },
+  onLoad(options) {
+    // 初始化加载一级颜色数据
+    this.loadLevelOneColors();
+  },
   methods: {
+    // 加载一级颜色数据
+    async loadLevelOneColors() {
+      try {
+        const res = await getLevelOneColors();
+        if (res.status === 'success') {
+          this.colorList = res.data;
+          if (res.data.length > 0) {
+            this.selectedColor = res.data[0];
+            this.colorData = res.data[0];
+            // 加载二级颜色数据
+            this.loadLevelTwoColors(this.selectedColor.id);
+          }
+        }
+      } catch (error) {
+        console.error('获取一级颜色数据失败:', error);
+      }
+    },
+    
+    // 加载二级颜色数据
+    async loadLevelTwoColors(parentId) {
+      try {
+        const res = await getLevelTwoColors('default', parentId);
+        if (res.status === 'success') {
+          // 使用Vue的$set方法确保响应式更新
+          this.$set(this.levelTwoData, parentId, res.data);
+          if (res.data.length > 0) {
+            this.selectedTag = res.data[0];
+            // 加载三级颜色数据
+            this.loadLevelThreeColors(res.data[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('获取二级颜色数据失败:', error);
+      }
+    },
+    
+    // 加载三级颜色数据
+    async loadLevelThreeColors(parentId) {
+      try {
+        const res = await getLevelThreeColors('default', parentId);
+        if (res.status === 'success') {
+          this.$set(this.levelThreeData, parentId, res.data);
+          
+          // 加载四级颜色数据
+          for (const item of res.data) {
+            this.loadLevelFourColors(item.id);
+          }
+        }
+      } catch (error) {
+        console.error('获取三级颜色数据失败:', error);
+      }
+    },
+    
+    // 加载四级颜色数据
+    async loadLevelFourColors(parentId) {
+      try {
+        const res = await getLevelFourColors('default', parentId);
+        if (res.status === 'success') {
+          this.$set(this.levelFourData, parentId, res.data);
+        }
+      } catch (error) {
+        console.error('获取四级颜色数据失败:', error);
+      }
+    },
+
     // 选择色系
     selectColor(color) {
       this.selectedColor = color;
-      this.selectedTag = this.allColorData[color].subColors[0].name;
-      this.colorData = this.allColorData[color];
+      this.colorData = color;
       this.expandedIndex = -1;
+      
+      // 如果该颜色的二级数据尚未加载，则加载
+      if (!this.levelTwoData[color.id]) {
+        this.loadLevelTwoColors(color.id);
+      } else if (this.levelTwoData[color.id].length > 0) {
+        this.selectedTag = this.levelTwoData[color.id][0];
+      }
     },
 
     // 选择标签
     selectTag(tag) {
       this.selectedTag = tag;
       this.expandedIndex = -1;
+      
+      // 如果该标签的三级数据尚未加载，则加载
+      if (!this.levelThreeData[tag.id]) {
+        this.loadLevelThreeColors(tag.id);
+      }
     },
 
     // 添加收藏切换方法
@@ -511,21 +426,22 @@ export default {
       let parentGroup = null;
       let grandParentGroup = null;
 
-      for (let subColor of this.colorData.subColors) {
-        for (let child of subColor.children) {
+      // 查找当前颜色的父级和祖父级分组
+      if (this.filteredColorGroups && this.filteredColorGroups.length > 0) {
+        const currentGroup = this.filteredColorGroups[0];
+        for (let child of currentGroup.children) {
           const foundColor = child.children.find(
             (c) => c.name === color.name && c.value === color.value
           );
           if (foundColor) {
             parentGroup = child;
-            grandParentGroup = subColor;
+            grandParentGroup = currentGroup;
             break;
           }
         }
-        if (parentGroup) break;
       }
 
-      let titlePath = this.selectedColor;
+      let titlePath = this.selectedColor ? this.selectedColor.name : '';
       if (grandParentGroup) {
         titlePath += "-" + grandParentGroup.name;
       }
@@ -539,7 +455,7 @@ export default {
           `name=${encodeURIComponent(color.name)}&` +
           `value=${encodeURIComponent(color.value)}&` +
           `id=${color.id || ""}&` +
-          `parentColor=${encodeURIComponent(this.selectedColor)}&` +
+          `parentColor=${encodeURIComponent(this.selectedColor?.name || "")}&` +
           `secondaryColor=${
             grandParentGroup ? encodeURIComponent(grandParentGroup.name) : ""
           }&` +
