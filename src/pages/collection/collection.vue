@@ -67,6 +67,11 @@
 	//import '@fontsource/noto-serif-sc'
 	import buttomTabVue from '../../components/buttomTab/buttomTab.vue'
 	import modelButtonVue from '../../components/collect/modelButton.vue'
+	import { getCollection } from '../../api/collection.js'
+	import { useCollectedStore } from '@/stores/collectionStore.js'
+	
+	const collectionStore = useCollectedStore()
+	
 	export default{
 		data(){
 			return{
@@ -78,142 +83,27 @@
 				selectedIds: [], // 存储选中项的 ID（避免索引变化问题）
 				msg:'',//用于输出部分消息
 				deletes:false,
-				//原始数据
-				data:[
-					{
-						id:1,
-						name:'收藏夹1',
-						colorCard:[
-							{
-								cardId:1,
-								color:['#f9f9f9','#f1f1f1','#e6e6e6','#d9d9d9'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:1
-							},
-							{
-								cardId:2,
-								color:['blue','white','yellow','orange'],
-								name:'xxxxx色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:2
-							}
-						]
-					},
-					{
-						id:2,
-						name:'收藏夹2',
-						colorCard:[
-							{
-								cardId:1,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:3
-							},
-							{
-								cardId:2,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:4
-							},
-							{
-								cardId:3,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:5
-							}
-						]
-					},
-					{
-						id:3,
-						name:'收藏夹3',
-						colorCard:[
-							{
-								cardId:1,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:6
-							},
-							{
-								cardId:2,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:7
-							}
-						]
-					},
-					{
-						id:4,
-						name:'收藏夹4',
-						colorCard:[
-							{
-								cardId:1,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:8
-							},
-							{
-								cardId:2,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:9
-							}
-						]
-					},
-					{
-						id:5,
-						name:'收藏夹5',
-						colorCard:[
-							{
-								cardId:1,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:10
-							},
-							{
-								cardId:2,
-								color:['red','white'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:11
-							}
-						]
-					},
-					{
-						id:6,
-						name:'收藏夹6',
-						colorCard:[
-							{
-								cardId:1,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:12
-							},
-							{
-								cardId:2,
-								color:['red'],
-								name:'开化寺色谱',
-								form:'红色系,淡调,唐代,建筑',
-								colorId:13
-							}
-						]
-					},
-				]
 			}
 		},
-		onLoad(){
-			//初始化dataList
-			this.dataList = this.data
-			this.dataListLength=this.dataList.length
+		async onLoad(){
+			await collectionStore.initList()
+			this.dataList = [...collectionStore.collection]
+			this.dataListLength = this.dataList.length
+			//console.log(collectionStore.collection)
+		},
+		onShow(){
+			if (Array.isArray(collectionStore.collection)) {
+			    this.dataList = [...collectionStore.collection]
+			    this.dataListLength = this.dataList.length
+			    //console.log(this.dataList)
+			} else {
+			    this.dataList = []
+			    this.dataListLength = 0
+			    console.log('collection 不是数组，已初始化为空数组')
+			}
+		},
+		onUnload(){
+			this.handlePageUnload()
 		},
 		methods:{
 			// 手动实现导航逻辑
@@ -239,7 +129,7 @@
 				this.dataList = []
 				if(!value){
 					//重置dataList
-					this.dataList = this.data
+					this.dataList = collectionStore.collection
 					this.dataListLength=this.dataList.length
 					return
 				}
@@ -258,9 +148,8 @@
 				    uni.showToast({ title: '请输入名称', icon: 'none' });
 				    return;
 				}
-				    
 				// 生成新id（确保唯一，取现有最大id+1）
-				const maxId = this.data.length > 0 ? Math.max(...this.data.map(item => item.id)) : 0;
+				const maxId = collectionStore.collection.length > 0 ? Math.max(...collectionStore.collection.map(item => item.id)) : 0;
 				// 新增数据对象
 				 const newItem = {
 				  id: maxId + 1,
@@ -269,26 +158,29 @@
 				};
 				    
 				// 添加到数据源
-				this.data.push(newItem)
+				collectionStore.collection.push(newItem)
 				// 清空输入框
 				this.newName = ''
 				// 提示成功
 				uni.showToast({ title: '添加成功', icon: 'success' })
+				collectionStore.modify = true
 				this.findData()
 			},
 			deleteData(){
 				if(this.selectedIds.length!==0){
-					this.data = this.data.filter(item => {
+					collectionStore.collection = collectionStore.collection.filter(item => {
 					    // 检查当前项的id是否不在选中数组中
 					    return !this.selectedIds.includes(item.id);
 					});
+					//给store赋值
+					collectionStore.modify = true
 					// 更新列表长度
-					this.dataList = this.data
+					this.dataList = [...collectionStore.collection]
 					this.dataListLength = this.dataList.length;
 					// 清空选中状态（删除后重置选择）
 					this.selectedIds = []
 				}else{
-					this.dataList = this.data
+					this.dataList = [...collectionStore.collection]
 					this.dataListLength=this.dataList.length
 				}
 				this.deletes=false
@@ -328,6 +220,16 @@
 					this.goToDetail(item)
 				}else{
 					this.select(item,index)
+				}
+			},
+			handlePageUnload(){
+				if(collectionStore.modify){
+					console.log("触发修改")
+					//console.log(collectionStore.collection)
+					collectionStore.submitData()
+				}
+				else{
+					console.log("未触发修改")
 				}
 			}
 		},
