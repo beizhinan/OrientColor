@@ -280,11 +280,12 @@ export default {
       thirdLevelExpandMap: {}, // 添加用于跟踪三级分类展开状态的对象
       // 颜色映射表，用于设置不同颜色类别的主题色
       colorMap: {
-        绿色: "#40c860",
-        白色: "#8e8e93",
-        黄色: "#FFD700",
-        红色: "#FF6B6B",
-        青色: "#48C9B0",
+        绿: "#40c860",
+        白: "#8e8e93",
+        黄: "#FFD700",
+        红: "#FF6B6B",
+        青: "#48C9B0",
+        黑: "#000000",
       },
     };
   },
@@ -793,6 +794,9 @@ export default {
 .color-tags {
   display: flex;
   flex-wrap: wrap;
+  max-height: 140rpx;
+  overflow-y: auto;
+  padding: 10rpx 0;
 }
 
 .tag-item {
@@ -814,11 +818,13 @@ export default {
 .expandable-area {
   position: relative;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  min-height: 300rpx; /* 添加最小高度以保持布局稳定 */
 }
 
 .description-container {
   margin-bottom: 20rpx;
   position: relative;
+  min-height: 280rpx; /* 确保容器有最小高度 */
 }
 
 .description-container.expanded-container {

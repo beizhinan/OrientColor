@@ -1,7 +1,18 @@
 <template>
   <view class="color-card" @click="handleCardClick">
     <view class="card-header">
-      <image class="header-image" :src="headerImage" mode="widthFix" />
+      <!-- 添加加载状态 -->
+      <view v-if="!imageLoaded" class="image-placeholder">
+        <view class="loading-spinner"></view>
+      </view>
+      <image 
+        class="header-image" 
+        :src="headerImage" 
+        mode="widthFix" 
+        @load="onImageLoad"
+        @error="onImageError"
+        :class="{ 'image-loaded': imageLoaded }"
+      />
       <view class="header-tag" v-if="headerText">
         <text class="header-text">{{ headerText }}</text>
       </view>
@@ -37,6 +48,11 @@ export default {
       default: "介绍",
     },
   },
+  data() {
+    return {
+      imageLoaded: false
+    }
+  },
   methods: {
     handleCardClick() {
       console.log("卡片点击事件触发");
@@ -54,6 +70,16 @@ export default {
         }&title=${encodeURIComponent(this.title)}`,
       });
     },
+    
+    onImageLoad() {
+      this.imageLoaded = true;
+    },
+    
+    onImageError(e) {
+      console.error("图片加载失败:", e);
+      // 加载失败时也标记为已加载，避免一直显示加载状态
+      this.imageLoaded = true;
+    }
   },
 };
 </script>
@@ -64,6 +90,7 @@ export default {
   border-radius: 20rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .card-header {
@@ -87,6 +114,36 @@ export default {
   width: 100%;
   height: auto;
   display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.header-image.image-loaded {
+  opacity: 1;
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 240rpx; /* 设置一个默认高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+}
+
+.loading-spinner {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid #ccc;
+  border-radius: 50%;
+  border-top-color: #999;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .header-text {

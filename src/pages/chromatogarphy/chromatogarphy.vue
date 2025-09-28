@@ -61,11 +61,9 @@
               v-for="(subColor, index) in filteredColorGroups"
               :key="subColor.name"
               class="description-container"
-              :class="{ 'expanded-container': expandedIndex === index }"
             >
               <!-- 未展开状态下的文本截断显示 -->
               <view
-                v-if="expandedIndex !== index"
                 class="description-content collapsed"
               >
                 <text
@@ -82,24 +80,33 @@
                 </text>
               </view>
 
-              <!-- 展开状态下的滚动显示 -->
-              <scroll-view v-else class="description-content expanded" scroll-y>
-                <text
-                  v-for="(paragraph, idx) in formatDescription(
-                    subColor.description
-                  )"
-                  :key="idx"
-                >
-                  <text v-if="paragraph.isEmptyLine">\n</text>
-                  <text v-else-if="paragraph.isTitle" class="section-title">{{
-                    paragraph.text + "\n"
-                  }}</text>
-                  <text v-else>{{ paragraph.text + "\n" }}</text>
+              <!-- 展开状态下的滚动显示（覆盖层） -->
+              <view 
+                v-if="expandedIndex === index" 
+                class="description-content expanded overlay"
+              >
+                <scroll-view class="expanded-scroll" scroll-y>
+                  <text
+                    v-for="(paragraph, idx) in formatDescription(
+                      subColor.description
+                    )"
+                    :key="idx"
+                  >
+                    <text v-if="paragraph.isEmptyLine">\n</text>
+                    <text v-else-if="paragraph.isTitle" class="section-title">{{
+                      paragraph.text + "\n"
+                    }}</text>
+                    <text v-else>{{ paragraph.text + "\n" }}</text>
+                  </text>
+                </scroll-view>
+                
+                <text class="toggle-btn overlay-btn" @click="toggleExpand(index)">
+                  收起
                 </text>
-              </scroll-view>
+              </view>
 
-              <text class="toggle-btn" @click="toggleExpand(index)">
-                {{ expandedIndex === index ? "收起" : "词条详情" }}
+              <text class="toggle-btn" @click="toggleExpand(index)" v-if="expandedIndex !== index">
+                词条详情
               </text>
             </view>
           </view>
@@ -225,11 +232,12 @@ export default {
       thirdLevelExpandMap: {},
       // 颜色映射表，用于设置不同颜色类别的主题色
       colorMap: {
-        黑: "#000000",
-        白: "#FFFFFF",
-        黄: "#FFD700",
         绿: "#40c860",
+        白: "#8e8e93",
+        黄: "#FFD700",
+        红: "#FF6B6B",
         青: "#48C9B0",
+        黑: "#000000",
       },
     };
   },
@@ -309,21 +317,21 @@ export default {
           // 设置获取到的数据
           // 转换新数据结构为旧结构以适配UI
           const convertedData = {};
-          res.data.colorOne.forEach(color => {
+          res.data.colorOne.forEach((color) => {
             convertedData[color.name] = {
               name: color.name,
               imgurl: color.imgurl,
               description: color.description,
               culturalInfo: color.culturalInfo,
-              subColors: color.colorTwo.map(subColor => ({
+              subColors: color.colorTwo.map((subColor) => ({
                 name: subColor.name,
                 description: subColor.description,
-                children: subColor.colorThree.map(thirdLevel => ({
+                children: subColor.colorThree.map((thirdLevel) => ({
                   name: thirdLevel.name,
                   description: thirdLevel.description,
-                  children: thirdLevel.colorFour
-                }))
-              }))
+                  children: thirdLevel.colorFour,
+                })),
+              })),
             };
           });
 
@@ -339,9 +347,9 @@ export default {
 
             // 更新页面标题和背景图
             uni.setNavigationBarTitle({
-              title: res.data.title + "色谱"
+              title: res.data.title + "色谱",
             });
-            
+
             // 设置顶部信息
             this.colorData.name = res.data.title;
             this.colorData.description = res.data.description;
@@ -376,7 +384,11 @@ export default {
       this.selectedColor = color;
       this.colorData = this.allColorData[color];
       // 确保数据存在再访问
-      if (this.colorData && this.colorData.subColors && this.colorData.subColors.length > 0) {
+      if (
+        this.colorData &&
+        this.colorData.subColors &&
+        this.colorData.subColors.length > 0
+      ) {
         this.selectedTag = this.colorData.subColors[0].name;
       }
       this.expandedIndex = -1;
@@ -692,14 +704,8 @@ export default {
 .description-container {
   margin-bottom: 20rpx;
   position: relative;
-}
-
-.description-container.expanded-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  /* 固定高度以避免展开/收起时影响布局 */
+  height: 270rpx;
 }
 
 .description-content {
@@ -730,13 +736,24 @@ export default {
   background-color: rgba(226, 247, 220, 0.2); /* #e2f7dc 透明度0.2 */
 }
 
-/* 展开状态下的样式 */
-.description-content.expanded {
+/* 展开状态下的样式（覆盖层） */
+.description-content.expanded.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 520rpx;
   width: 92%;
   white-space: pre-wrap;
   background-color: #e2f7dc;
-  padding-bottom: 50rpx;
+  z-index: 100;
+  border-radius: 8rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.expanded-scroll {
+  height: 450rpx;
+  padding: 10rpx 20rpx;
 }
 
 .toggle-btn {
@@ -751,19 +768,24 @@ export default {
   border-radius: 0 0 8rpx 8rpx;
   position: relative;
   z-index: 101;
+  margin-top: -20rpx; /* 往上移一点 */
+  margin-left: auto;
+  width: fit-content;
 }
 
-/* 当展开时，调整按钮位置 */
-.description-container.expanded-container .toggle-btn {
+/* 展开状态下的按钮 */
+.toggle-btn.overlay-btn {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
-  text-align: center; /* 居中对齐 */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
   margin-top: 0;
   background-color: #e2f7dc;
-  padding: 10rpx 0;
+  padding: 10rpx 20rpx;
   border-radius: 0 0 8rpx 8rpx;
+  z-index: 102;
+  width: fit-content;
 }
 
 /* 三级分类容器 */
@@ -851,8 +873,7 @@ export default {
   background-color: inherit;
 }
 
-.third-level-description-container.expanded-third-level-container
-  .third-level-toggle-btn {
+.third-level-description-container.expanded-third-level-container .third-level-toggle-btn {
   position: absolute;
   bottom: 0;
   left: 0;
