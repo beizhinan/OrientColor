@@ -66,6 +66,10 @@
 				type: String,
 				required: true,
 			},
+			colorId: {
+				type: String,
+				required: true,
+			},
 			cardStyle: {
 				type: String,
 				required: true,
@@ -130,9 +134,11 @@
 			},
 			goToColorblock() {
 				this.$emit('hideChart', false)
+				console.log('id:', this.colorId)
+				console.log('name:', this.colorName)
+				console.log('code:', this.colorCode)
 				uni.navigateTo({
-					url: `/pages/colorblock/colorblock`,
-					//url: `/pages/colorblock/colorblock?name=${selectedColor.value.name}&code=${selectedColor.value.code}`
+					url: `/pages/colorblock/colorblock?name=${this.colorName}&value=${this.colorCode}&id=${this.colorId}`
 				})
 			}
 		}

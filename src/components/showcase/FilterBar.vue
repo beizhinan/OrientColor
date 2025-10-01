@@ -4,12 +4,15 @@
 		<view class="filters">
 			<view v-for="item in filters" :key="item.key" class="filter-item" :class="{ 
 					active: Array.isArray(selectedParentKey) ? selectedParentKey.includes(item.key) : item.key === selectedParentKey, 
-					all: item.key === 'all'  
+					all: item.key === 'all',
+					theme: item.key === 'theme'
 				}" @tap="toggleDropdown(item.key)">
 
+				<!-- 全部 -->
 				<view v-if="item.key === 'all'" class="filter-all" @tap="[activeKey='all', selectOption('all')]">
 					<text class="label"> {{ item.label }}</text>
 				</view>
+				
 				<view v-else class="filter-content">
 					<!-- 如果是 system 且有选中子项，用子项色块替换父 icon -->
 					<template v-if="item.key === 'system'">
@@ -57,7 +60,7 @@
 				         { selected: selectedParentKeyArray && selectedParentKeyArray.find(i => i.key === activeKey) && selectedParentKeyArray.find(i => i.key === activeKey).value === opt  }]"
 					@tap="selectOption(opt)">
 					<!-- 只有色系有icon -->
-					<view v-if="activeKey === 'system'" class="icon-color"
+					<view v-if="activeKey === 'system'" class="icon-color drop"
 						:style="{ backgroundColor: getColorCode(opt) }">
 					</view>
 					<text class="option-text">{{ opt }}</text>
@@ -260,6 +263,10 @@
 	.filter-item.all {
 		background-color: #deb67f;
 	}
+	
+	.filter-item.theme {
+		width: 435rpx;
+	}
 
 	.filter-all {
 		display: flex;
@@ -275,25 +282,28 @@
 	.filter-content {
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		justify-content: space-between;
+		width: 100%;
 	}
 
 	.icon {
 		width: 48rpx;
 		height: 48rpx;
-		margin-left: -16rpx;
-		margin-right: 8rpx;
+		margin-left: 16rpx;
 	}
 
 	.label {
+		flex: 1;              
+		text-align: center;     
 		padding: 10rpx;
 		font-size: 24rpx;
-		margin-right: 16rpx;
+		margin: 0 16rpx;      
 	}
 
 	.arrow {
 		width: 24rpx;
 		height: 12rpx;
+		margin-right: 16rpx;
 		transition: transform 0.3s;
 	}
 
@@ -352,7 +362,12 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 200rpx;
+		margin-left: 16rpx;
+	}
+	
+	.drop{
 		margin-right: 20rpx;
+		margin-left: 0rpx;
 	}
 
 	.option-text {
