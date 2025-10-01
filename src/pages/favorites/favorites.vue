@@ -11,7 +11,7 @@
 				<view class="details">
 					<view class="band" :style="{ background: colorCards[index].gradient }"></view>
 					<view class="order">{{item.name}}</view>
-					<view class="brief">#{{item.form}}</view>
+					<view class="brief">#{{item.system}},{{item.hue}},{{item.category}},{{item.theme}}</view>
 				</view>
 				<view class="btnBox">
 					<button class="btn" style="margin-bottom: 8rpx; border-color: #c69c6d; color:#c69c6d" @click="deleteData(index)">删除</button>
@@ -82,15 +82,31 @@
 				}
 				collectionStore.deleteCardData(this.data.name,index)
 			},
-			goToColorblock(item) {
-				// 跳转到页面
-			    uni.navigateTo({
-					url: `/pages/colorblock/colorblock?colorId=${item.colorId}`
-				})
-			},
 			goToShowcase(item){
-				uni.switchTab({
-					url: `/pages/showcase/showcase?colorId=${item.colorId}`
+				// 筛选项标题
+				const selectedFilters=(()=>{
+					const str =['system','hue','theme','category']
+					.map(field =>item[field]||'')
+					.filter(Boolean)// 去掉空值
+					.join('-');
+					return str || 'all'
+				})()
+				// 筛选项用于后端筛选
+				const Item = {
+					all: Object.keys(item).every(key => {
+					    const value = item[key];
+					    // 回调函数返回布尔值（判断当前字段是否为无效值）
+					    return value === "" || value === null || value === undefined;
+					}) ? "全部" : "",
+					system: item.system,
+					hue: item.hue,
+					theme: item.theme,
+					category:item.category// 复制 item 中的四个字段
+				}
+				const params = JSON.stringify(Item)
+				const newUrl = `/pages/chart/chart?selectedFilters=${selectedFilters}&filterData=${encodeURIComponent(params)}`
+				uni.navigateTo({
+					url: newUrl
 				})
 			},
 			// 生成渐变色字符串（按等分段处理，如4种颜色分4段）

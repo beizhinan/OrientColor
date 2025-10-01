@@ -35,7 +35,7 @@
 				></view>
 			</view>
 			
-			<view class="favorites" @click="addFavorites" v-show="!managerFlag">
+			<view class="favorites" @click="createFlag" v-show="!managerFlag">
 				<view class="iconfont icon-tianjiajiahaowubiankuang iconAdd"></view>
 			</view>
 			
@@ -59,6 +59,18 @@
 				</view>
 			</view>
 		</view>
+		
+		<view class="background" v-show="this.adds">
+			<view class="mains">
+				<view class="addMsg">{{msg}}</view>
+				<input placeholder="输入收藏夹名称，不多于10个字" class="newName" v-model="newName"/>
+				<view class="option">
+					<modelButtonVue @tap="this.adds=false">取消</modelButtonVue>
+					<modelButtonVue @tap="addFavorites">确认</modelButtonVue>
+				</view>
+			</view>
+		</view>
+		
 		<buttomTabVue></buttomTabVue>
 	</view>
 </template>
@@ -83,6 +95,7 @@
 				selectedIds: [], // 存储选中项的 ID（避免索引变化问题）
 				msg:'',//用于输出部分消息
 				deletes:false,
+				adds:false,
 			}
 		},
 		async onLoad(){
@@ -141,12 +154,23 @@
 				});
 			},
 			//新建收藏夹
+			createFlag(){
+				this.adds = true
+				this.msg = "新建收藏夹"
+			},
 			addFavorites(){
-				this.newName = '默认收藏夹'//设置默认名字，有其他需求再改
+				this.adds = true
+				
 				if (!this.newName.trim()) {
 				    // 验证：名称不能为空
-				    uni.showToast({ title: '请输入名称', icon: 'none' });
-				    return;
+				    this.newName = '默认收藏夹'//设置默认名字，有其他需求再改
+				}
+				if (this.newName.length > 10) {
+					uni.showToast({
+						title: '最多10个字',
+						icon: 'none'
+					});
+					return;
 				}
 				// 生成新id（确保唯一，取现有最大id+1）
 				const maxId = collectionStore.collection.length > 0 ? Math.max(...collectionStore.collection.map(item => item.id)) : 0;
@@ -161,6 +185,7 @@
 				collectionStore.collection.push(newItem)
 				// 清空输入框
 				this.newName = ''
+				this.adds = false
 				// 提示成功
 				uni.showToast({ title: '添加成功', icon: 'success' })
 				collectionStore.modify = true
@@ -399,7 +424,7 @@
 		background-color: rgba(243, 242, 245,0.8);
 		z-index: 999; /* 确保在页面内容上方（需大于其他元素z-index） */
 	}
-	/* 中间弹窗内容（可选样式，让弹窗居中） */
+	/* 中间弹窗内容 */
 	.mains {
 		position: absolute; /* 相对于蒙版定位 */
 		top: 50%;
@@ -417,6 +442,26 @@
 		left: 50%; 
 		transform: translateX(-50%); /* 水平居中修正 */
 		font-size: 28rpx;
+	}
+	.addMsg{
+		position: absolute;
+		top: 50rpx; 
+		left: 50%; 
+		transform: translateX(-50%); /* 水平居中修正 */
+		font-size: 30rpx;
+		font-weight: bold;
+	}
+	.newName{
+		position: absolute;
+		top: 150rpx;
+		left:30rpx;
+		padding-left: 30rpx;
+		width:550rpx;
+		height: 90rpx;
+		font-size: 30rpx;
+		line-height: 90rpx;
+		border: 2rpx solid black;
+		border-radius: 45rpx;
 	}
 	.option{
 		position: absolute; 
