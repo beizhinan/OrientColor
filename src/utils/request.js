@@ -1,5 +1,8 @@
 // 基础路径，根据实际项目配置
-const BASE_URL = 'https://localhost:5050/api/v1' // 替换为你的后端API地址
+const BASE_URL = 'http://39.97.55.169:8080/api/v1' // 替换为你的后端API地址
+
+// 调试开关
+const DEBUG = true
 
 /**
  * 网络请求封装
@@ -34,11 +37,21 @@ const request = (options) => {
     })
   }
   
-  // 获取token
-  const token = uni.getStorageSync('token')
-  if (token) {
-    options.header['Authorization'] = `Bearer ${token}`
+  // 调试输出请求信息
+  if (DEBUG) {
+    console.log('[Request] 发送请求:', {
+      url: options.url,
+      method: options.method,
+      data: options.data,
+      header: options.header
+    })
   }
+  
+  // // 获取token
+  // const token = uni.getStorageSync('token')
+  // if (token) {
+  //   options.header['Authorization'] = `Bearer ${token}`
+  // }
   
   // 返回Promise
   return new Promise((resolve, reject) => {
@@ -53,10 +66,19 @@ const request = (options) => {
           uni.hideLoading()
         }
         
+        // 调试输出响应信息
+        if (DEBUG) {
+          console.log('[Response] 收到响应:', {
+            url: options.url,
+            statusCode: res.statusCode,
+            data: res.data
+          })
+        }
+        
         // 处理响应数据
         if (res.statusCode === 200) {
           // 根据后端返回的数据结构进行调整
-          if (res.data.code === 200 || res.data.success) {
+          if (res.data.code === 200 || res.data.status === 'success') {
             resolve(res.data)
           } else {
             // 业务错误处理
@@ -73,6 +95,14 @@ const request = (options) => {
         // 隐藏加载中
         if (options.loading) {
           uni.hideLoading()
+        }
+        
+        // 调试输出错误信息
+        if (DEBUG) {
+          console.error('[Request] 请求失败:', {
+            url: options.url,
+            error: err
+          })
         }
         
         // 网络错误处理
@@ -99,6 +129,11 @@ function handleBusinessError(error) {
   }
   
   const message = error.message || errorMap[error.code] || '未知错误'
+  
+  // 调试输出业务错误
+  if (DEBUG) {
+    console.error('[Business Error] 业务错误:', error)
+  }
   
   // 401 token过期处理
   if (error.code === 401) {
@@ -145,6 +180,14 @@ function handleHttpError(statusCode) {
   
   const message = errorMap[statusCode] || `网络请求错误，状态码：${statusCode}`
   
+  // 调试输出HTTP错误
+  if (DEBUG) {
+    console.error('[HTTP Error] HTTP状态码错误:', {
+      statusCode: statusCode,
+      message: message
+    })
+  }
+  
   uni.showToast({
     title: message,
     icon: 'none',
@@ -163,6 +206,11 @@ function handleNetworkError(err) {
     message = '网络请求超时'
   } else if (err.errMsg.includes('abort')) {
     message = '网络请求被中止'
+  }
+  
+  // 调试输出网络错误
+  if (DEBUG) {
+    console.error('[Network Error] 网络错误:', err)
   }
   
   uni.showToast({

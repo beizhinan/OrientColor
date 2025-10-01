@@ -26,6 +26,7 @@
 		<detail-card
 		  :color-name="selectedColor.name"
 		  :color-code="selectedColor.code"
+		  :color-id="selectedColor.id"
 		  :cardStyle="'2d'"
 		  v-if="showDetail">
 		</detail-card>
@@ -51,31 +52,71 @@
 	import detailCard from "@/components/chart/detailCard.vue"
 	import collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
+	import { getColorPoints } from '@/api/colorPoints.js'
 
 	defineOptions({
 			name: 'ColorCubePage'
 		})
 		const selectedColor = ref({
 		  name: '',
-		  code: ''
+		  code: '',
+		  id: ''
 		})
 		const showDetail = ref(false)
 		const showCanvas= ref(true)
 		const colorPoints = ref([])
+		const colorPointsStatic = ref([])
 		const selectedFilters = ref('三维色谱')
+		const filterData = ref([])
 		
 		onLoad((options) => {
-		  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-		  selectedFilters.value = options.selectedFilters === 'all' ? '三维色谱' : options.selectedFilters
-		  uni.setNavigationBarTitle({
-		      title: selectedFilters.value
+			//静态测试数据 使用静态数据时把所有colorPoints改为colorPointsStatic
+			colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []  
+			selectedFilters.value = options.selectedFilters === 'all' ? '三维色谱' : options.selectedFilters
+			uni.setNavigationBarTitle({
+				title: selectedFilters.value
 			})
+			console.log(options.selectedFilters)
 			console.log(selectedFilters.value)
+			
+			filterData.value = JSON.parse(decodeURIComponent(options.filterData)) || []
+			//页面加载时请求后端数据
+			fetchColorPoints()
 		})
 		
 		onUnload(() => {
 			selectedFilters.value = '三维色谱'
 		})
+		
+		// 获取后端色彩数据
+		const fetchColorPoints = async () => {
+		  try {
+		    const params = {
+		      system: filterData.value.system || '',
+		      hue: filterData.value.hue || '',
+		      theme: filterData.value.theme || '',
+		      category: filterData.value.category || ''
+		    }
+		
+		    const res = await getColorPoints(params)
+		
+		    if (res.status === 'success') {
+		      colorPoints.value = res.data || []
+		      console.log('色彩点数据获取成功:', colorPoints.value)
+		    } else {
+		      uni.showToast({
+		        title: res.message || '获取数据失败',
+		        icon: 'none'
+		      })
+		    }
+		  } catch (err) {
+		    console.error('Failed to fetch colorPoints:', err)
+		    uni.showToast({
+		      title: '网络错误',
+		      icon: 'none'
+		    })
+		  }
+		}
 	
 		const canvasEventHandler = ref(() => {});
 		adapter
@@ -173,9 +214,13 @@
 				if (intersects.length > 0) {
 					const cube = intersects[0].object;
 					const data = cube.userData;
+					const matched = colorPoints.value.find(item => item.name === data.name);
+					console.log(matched)
 					selectedColor.value = {
 					    name: data.name,
-					    code: data.color
+					    code: data.color,
+						id: data.color,
+						//id: matched.id
 					};
 					showDetail.value = true;
 				}

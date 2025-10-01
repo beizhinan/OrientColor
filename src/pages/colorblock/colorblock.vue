@@ -238,42 +238,7 @@
 
 <script>
 import SaveSuccessModal from "../../components/colorblock/SaveSuccessModal.vue";
-const colorDatabase = {
-  id: 1,
-  no: "B-1-12",
-  name: "上好大绿",
-  value: "#2E8B57",
-  description:
-    "主要来自永乐宫色谱。\n鲜三绿是永乐宫色彩中彩度较高的三绿。\n鲜三绿见于三清殿、纯阳殿彩画中色彩较为鲜艳的部分，可能是老化、污染较轻的元代彩画色彩，也有可能是后世补绘的色彩。相较于三绿，鲜三绿在视觉上略少几分温润，更有青春活力。\n也可见于开化寺色谱和明清官式建筑彩画色谱。",
-  approxColorCode: "45",
-  lch: "L69C60H258",
-  prefix: "上好",
-  tone: "浊",
-  hue: "绿色",
-  englishHue: "G",
-  chroma: "2",
-  graphy: "12",
-  lightness: "10",
-  sourcetype: "文物样本",
-
-  cmyk: "(65, 5, 58, 26)",
-  cielab: "(54, -29, 12, 32, 158)",
-  rgb: "(44, 108, 76)",
-  sources: [
-    {
-      name: "纯阳殿彩画",
-      location: "纯阳殿前檐内侧 明间额枋 4",
-      macro: "https://placebear.com/180/200",
-      microcosmic: "https://placebear.com/440/440",
-    },
-    {
-      name: "三清殿彩画",
-      location: "三清殿当心间 西缝四椽袱 5",
-      macro: "https://placebear.com/180/200",
-      microcosmic: "https://placebear.com/640/640",
-    },
-  ],
-};
+import { getColorDetail } from '@/api/colorblock.js';
 
 export default {
   components: {
@@ -281,7 +246,9 @@ export default {
   },
   data() {
     return {
-      colorData: {},
+      colorData: {
+        sources: []
+      },
       parentColor: "",
       secondaryColor: "",
       tertiaryColor: "",
@@ -297,43 +264,21 @@ export default {
 
   onLoad(options) {
     if (options.name) {
-      const colorName = decodeURIComponent(options.name);
-      const staticColorData = colorDatabase;
-
-      if (staticColorData) {
-        this.colorData = {
-          ...staticColorData,
-          id: options.id || staticColorData.id,
-          name: colorName,
-          value: staticColorData.value,
-        };
-      } else {
-        this.colorData = {
-          name: colorName,
-          value: options.value ? decodeURIComponent(options.value) : "#ccc",
-          id: options.id || null,
-          description: options.description || "",
-          no: options.no || "",
-          approxColorCode: options.approxColorCode || "",
-          lch: options.lch || "",
-          prefix: options.prefix || "",
-          tone: options.tone || "",
-          hue: options.hue || "",
-          englishHue: options.englishHue || "",
-          chroma: options.chroma || "",
-          graphy: options.graphy || "",
-          lightness: options.lightness || "",
-          sourcetype: options.sourcetype || "",
-          labch: options.labch || "",
-          rgb: options.rgb || "",
-          sources: options.sources || [],
-          cmyk: options.cmyk || "",
-        };
+      // 构造请求参数
+      const params = {};
+      if (options.id) {
+        params.id = options.id;
       }
-
+      if (options.name) {
+        params.name = decodeURIComponent(options.name);
+      }
+      
+      // 调用API获取颜色详情
+      this.fetchColorDetail(params);
+      
       // 使用 colorData 中的 title 字段作为页面标题
       uni.setNavigationBarTitle({
-        title: this.colorData.title || this.colorData.name,
+        title: this.colorData.title || this.colorData.name || decodeURIComponent(options.name),
       });
     }
   },
@@ -367,6 +312,36 @@ export default {
   },
 
   methods: {
+    // 获取颜色详情数据
+    async fetchColorDetail(params) {
+      try {
+        const res = await getColorDetail(params);
+        if (res.status === "success") {
+          this.colorData = {
+            ...this.colorData,
+            ...res.data
+          };
+          
+          // 更新页面标题
+          uni.setNavigationBarTitle({
+            title: this.colorData.title || this.colorData.name,
+          });
+        } else {
+          console.error("获取颜色详情失败:", res.message);
+          uni.showToast({
+            title: "获取数据失败",
+            icon: "none",
+          });
+        }
+      } catch (error) {
+        console.error("获取颜色详情异常:", error);
+        uni.showToast({
+          title: "数据加载异常",
+          icon: "none",
+        });
+      }
+    },
+    
     toggleSources() {
       this.showSources = !this.showSources;
     },

@@ -16,6 +16,7 @@
 			<detail-card
 			  :color-name="selectedColor.name"
 			  :color-code="selectedColor.code"
+			  :color-id="selectedColor.id"
 			  :cardStyle="'2d'"
 			  v-if="showDetail">
 			</detail-card>
@@ -50,29 +51,37 @@
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
 	import Collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
+	import { getColorPoints } from '@/api/colorPoints.js'
 	
 	const selectedButton = ref('')
 	const chartChange = ref('')
 	const colorPoints = ref([])
+	const colorPointsStatic = ref([])
 	const chartRef = ref(null)
 	const dimension = ref('LC')
-	const selectedColor = ref({name: '', code: ''})
+	const selectedColor = ref({name: '', code: '', id: ''})
 	const showDetail = ref(false)
 	const selectedDim2DRect = ref('LC')
 	const selectedDim2DPolar = ref('LH')
 	const myChartRef = ref(null) // 存放 echarts 实例
 	const selectedCellIndex = ref(null) // 极坐标当前选中格子的索引
 	const selectedFilters = ref('二维色谱')
+	const filterData = ref([])
+	
 	
 	//从showcase接受值
 	onLoad((options) => {
-	  selectedButton.value = options.selectedButton
-	  colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-	  selectedFilters.value = options.selectedFilters === 'all' ? '二维色谱' : options.selectedFilters
-	  uni.setNavigationBarTitle({
-	      title: selectedFilters.value
-	  })
-	  console.log(selectedFilters.value)
+		selectedButton.value = options.selectedButton
+		colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+		selectedFilters.value = options.selectedFilters === 'all' ? '二维色谱' : options.selectedFilters
+		uni.setNavigationBarTitle({
+			title: selectedFilters.value
+		})
+		console.log(selectedFilters.value)
+	  
+		filterData.value = JSON.parse(decodeURIComponent(options.filterData)) || []
+		//页面加载时请求后端数据
+		fetchColorPoints()
 	})
 	
 	onUnload(() => {
@@ -99,6 +108,36 @@
 	    case 'LH': return '明度L-色相H';
 	    case 'CH(ab)': return '彩度C-色相H';
 	    default: return '二维模型';
+	  }
+	}
+	
+	// 获取后端色彩数据
+	const fetchColorPoints = async () => {
+	  try {
+	    const params = {
+	      system: filterData.value.system || '',
+	      hue: filterData.value.hue || '',
+	      theme: filterData.value.theme || '',
+	      category: filterData.value.category || ''
+	    }
+	
+	    const res = await getColorPoints(params)
+	
+	    if (res.status === 'success') {
+	      colorPoints.value = res.data || []
+	      console.log('色彩点数据获取成功:', colorPoints.value)
+	    } else {
+	      uni.showToast({
+	        title: res.message || '获取数据失败',
+	        icon: 'none'
+	      })
+	    }
+	  } catch (err) {
+	    console.error('Failed to fetch colorPoints:', err)
+	    uni.showToast({
+	      title: '网络错误',
+	      icon: 'none'
+	    })
 	  }
 	}
 
@@ -261,14 +300,18 @@
 			if (params.data) {
 				selectedCellIndex.value = params.dataIndex
 				if (chartChange.value === 'rect') {
+					const matched = colorPoints.value.find(item => item.name === params.data[3])
 				    selectedColor.value = {
 						name: params.data[3], 
-						code: params.data[2]
+						code: params.data[2],
+						id: matched ? matched.id : null
 				    }
 				} else {
+					const matchedp = colorPoints.value.find(item => item.name === params.data.name)
 				    selectedColor.value = {
 						name: params.data.name, 
-						code: params.data.code
+						code: params.data.code,
+						id: matchedp ? matchedp.id : null
 				    }
 				}
 				showDetail.value = true

@@ -60,7 +60,7 @@
 				         { selected: selectedParentKeyArray && selectedParentKeyArray.find(i => i.key === activeKey) && selectedParentKeyArray.find(i => i.key === activeKey).value === opt  }]"
 					@tap="selectOption(opt)">
 					<!-- 只有色系有icon -->
-					<view v-if="activeKey === 'system'" class="icon-color"
+					<view v-if="activeKey === 'system'" class="icon-color drop"
 						:style="{ backgroundColor: getColorCode(opt) }">
 					</view>
 					<text class="option-text">{{ opt }}</text>
@@ -362,7 +362,12 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 200rpx;
+		margin-left: 16rpx;
+	}
+	
+	.drop{
 		margin-right: 20rpx;
+		margin-left: 0rpx;
 	}
 
 	.option-text {

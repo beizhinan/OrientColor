@@ -45,7 +45,7 @@
 <script>
 import premiumPopup from "@/components/home/premium-popup.vue";
 import colorCard from "@/components/home/color-card.vue";
-import request from "@/utils/request.js"; // 引入封装好的请求类
+import { getRecommendedColors } from "@/api/index.js"; // 引入获取推荐色谱的接口
 
 export default {
   components: {
@@ -56,40 +56,7 @@ export default {
     return {
       showPopup: true,
       displayCount: 20, // 初始显示数量
-      // cardList: [],
-      cardList: [
-        {
-          id: 1,
-          headerImage: "https://placebear.com/340/340",
-          title: "开化寺",
-          description: "古老的佛教寺庙，拥有精美的壁画和建筑",
-        },
-        {
-          id: 2,
-          headerImage: "https://placebear.com/340/240",
-          title: "晋祠",
-          description: "中国古代建筑艺术的瑰宝，园林景观优美",
-        },
-        {
-          id: 3,
-          headerImage: "https://placebear.com/340/240",
-          title: "平遥古城",
-          description: "保存完整的明清时期古城，世界文化遗产",
-        },
-        {
-          id: 4,
-          headerImage: "https://placebear.com/340/340",
-          title: "五台山",
-          description: "中国四大佛教名山之一，历史悠久",
-        },
-        // 模拟更多数据以测试分页功能
-        ...Array.from({ length: 36 }, (_, i) => ({
-          id: i + 5,
-          headerImage: `https://placebear.com/340/${300 + (i % 10) * 10}`,
-          title: `景点${i + 5}`,
-          description: `这是景点${i + 5}的描述信息，用于展示分页加载功能`,
-        })),
-      ],
+      cardList: [],
     };
   },
   computed: {
@@ -125,12 +92,12 @@ export default {
     // 获取推荐色谱数据
     async fetchRecommendedColors() {
       try {
-        const response = await request.get("/home/recommended");
+        const response = await getRecommendedColors();
         if (response.status === "success") {
-          this.cardList = response.data;
+          this.cardList = response.data || [];
         } else {
           uni.showToast({
-            title: "获取数据失败",
+            title: response.message || "获取数据失败",
             icon: "none",
           });
         }
@@ -146,7 +113,7 @@ export default {
 
   // 页面加载时获取数据
   onLoad() {
-    // this.fetchRecommendedColors();
+    this.fetchRecommendedColors();
   },
 };
 </script>

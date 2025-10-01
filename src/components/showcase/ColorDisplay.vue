@@ -44,7 +44,6 @@
 </template>
 
 <script>
-	import { getColorPoints } from '@/api/auth.js'
 	export default {
 		props: {
 			dimension: String,
@@ -113,30 +112,8 @@
 			      this.showPopup = true
 			    }
 				
-				//页面加载时请求 colorPoints
-				//this.fetchColorPoints()
 			},
 			methods: {
-				/*async fetchColorPoints() {
-					try {
-						const params = {
-							system: this.filterData.system || '',
-							hue: this.filterData.hue || '',
-							theme: this.filterData.theme || '',
-							category: this.filterData.category || ''
-						}
-						const res = await getColorPoints(params)
-						this.colorPoints = res.data || []
-						console.log('colorPoints fetched:', this.colorPoints)
-				    } catch (err) {
-						console.error('Failed to fetch colorPoints:', err)
-						uni.showToast({
-							title: '获取色彩数据失败',
-							icon: 'none'
-						})
-				    }
-				},*/
-				
 				selectButton(buttonKey) {
 					this.selectedButton = buttonKey
 					this.$emit('button-change', {
@@ -145,9 +122,12 @@
 					})
 				},
 				
+				// 给跳转页面传值
 				goToDetail() {
 					const selectedButton = this.selectedButton;
 					const colorPointsStr = encodeURIComponent(JSON.stringify(this.colorPoints));
+					
+					// 筛选项标题
 					const selectedFilters = (() => {
 					  const str = ['system', 'hue', 'theme', 'category']
 					    .map(field => this.filterData[field] || '')
@@ -156,19 +136,25 @@
 					
 					  return str || 'all';
 					})();
-				
+					// 筛选项用于后端筛选
+					const params = JSON.stringify(this.filterData)   
+					console.log('selectedFilters:',selectedFilters)
+					console.log('params:',params)
 					let url = '';
 					switch (this.dimension) {
 						case '1D':
 							url =
-								`/pages/chart1D/chart1D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}`;
+								`/pages/chart1D/chart1D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}
+									&filterData=${encodeURIComponent(params)}&selectedFilters=${selectedFilters}`;
 							break;
 						case '2D':
 							url =
-								`/pages/chart2D/chart2D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}`;
+								`/pages/chart2D/chart2D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}
+									&filterData=${encodeURIComponent(params)}&selectedFilters=${selectedFilters}`;
 							break;
 						case '3D':
-							url = `/pages/chart/chart?colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}`;
+							url = `/pages/chart/chart?colorPoints=${colorPointsStr}&selectedFilters=${selectedFilters}
+								&filterData=${encodeURIComponent(params)}`;
 							break;
 					}
 

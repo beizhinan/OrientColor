@@ -17,15 +17,15 @@
 					<button class="btn" style="margin-bottom: 8rpx; border-color: #c69c6d; color:#c69c6d" @click="deleteData(index)">删除</button>
 					<button class="btn" 
 					style="border-color: #98867c; color: #98867c;" 
-					@click="showDetail(index)" 
+					@click="goToShowcase(item)" 
 					v-show="!detailFlag || index!==order"
 					>详情</button>
 				</view>
 				
-				<view class="box" v-show="detailFlag && index === order">
+				<!-- <view class="box" v-show="detailFlag && index === order">
 					<view class="colorSolid" @click="goToColorblock(item)">查看色立体</view>
 					<view class="entry" @click="goToShowcase(item)">查看词条</view>
-				</view>
+				</view> -->
 			</view>
 		</view>
 		<buttomTab></buttomTab>
@@ -34,6 +34,9 @@
 
 <script>
 	import buttomTabVue from '../../components/buttomTab/buttomTab.vue'
+	import {useCollectedStore} from '@/stores/collectionStore.js'
+	
+	const collectionStore = useCollectedStore()
 	export default{
 		data(){
 			return{
@@ -48,7 +51,7 @@
 			}
 		},
 		onLoad(options){
-			// this.name=options.name
+			//this.name=options.name
 			// console.log(this.name)
 			 // 解析JSON字符串为对象
 			if (options.item) {
@@ -60,15 +63,12 @@
 				if (!Array.isArray(this.data?.colorCard)) {
 				    this.data.colorCard = []
 				    //console.log("colorCard 不是数组，已重置为空数组")
-				} 
-				// else {
-				//     console.log("colorCard 是数组，长度：", this.data.colorCard.length)
-				// }
+				}
 				 // 提取colorCard数组，并为每个项生成渐变样式
 				this.colorCards = (this.item.colorCard || []).map(card => ({
 				    ...card,
 				    gradient: this.generateGradient(card.color) // 直接使用card.color生成渐变
-				}));
+				}))
 				console.log(this.colorCards[0].gradient)
 			}
 		},
@@ -80,6 +80,7 @@
 				if(this.data.length === 0){
 					this.flag=false
 				}
+				collectionStore.deleteCardData(this.data.name,index)
 			},
 			goToColorblock(item) {
 				// 跳转到页面
@@ -96,7 +97,6 @@
 			generateGradient(colors) {
 				const segment = 25 // 每段占比（如4种颜色各占25%）
 				let gradient = 'to right, '
-			  
 				colors.forEach((color, index) => {
 					const start = index * segment; // 本段起始百分比
 					const end = (index + 1) * segment; // 本段结束百分比
@@ -105,10 +105,6 @@
 				});
 				// 去除最后一个逗号和空格
 				return `linear-gradient(${gradient.slice(0, -2)})`
-			},
-			showDetail(index){
-				this.detailFlag=true
-				this.order=index
 			}
 		},
 		components:{

@@ -22,6 +22,7 @@
 				<detail-card 
 					:color-name="currentColor.name" 
 					:color-code="currentColor.code"
+					:color-id="currentColor.id"
 					:cardStyle="handleCardStyle" 
 					v-if="showDetail">
 				</detail-card>
@@ -64,29 +65,36 @@
 	import Collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
 	import ring1d from "@/components/chart/ring-1D.vue"
+	import { getColorPoints } from '@/api/colorPoints.js'
 
 	const chartRef = ref(null)
 	const myChartRef = ref(null)
 	const currentColor = ref({
 		name: '',
-		code: ''
+		code: '',
+		id: '',
 	})
 	const selectedButton = ref('')
 	const selectedDim1D = ref('L')
 	const colorPoints = ref([])
+	const colorPointsStatic = ref([])
 	const showDetail = ref(false)
 	const selectedFilters = ref('一维色谱')
 	const chartChange = ref('')
+	const filterData = ref([])
 
 	//从showcase接受值
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
-		colorPoints.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
+		colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
 		selectedFilters.value = options.selectedFilters === 'all' ? '一维色谱' : options.selectedFilters
 		uni.setNavigationBarTitle({
 		    title: selectedFilters.value
 		})
 		console.log(selectedFilters.value)
+		filterData.value = JSON.parse(decodeURIComponent(options.filterData)) || []
+		//页面加载时请求后端数据
+		fetchColorPoints()
 	})
 	
 	onUnload(() => {
@@ -127,11 +135,43 @@
 		return ''
 	})
 	
+	// 获取后端色彩数据
+	const fetchColorPoints = async () => {
+	  try {
+	    const params = {
+	      system: filterData.value.system || '',
+	      hue: filterData.value.hue || '',
+	      theme: filterData.value.theme || '',
+	      category: filterData.value.category || ''
+	    }
+	
+	    const res = await getColorPoints(params)
+	
+	    if (res.status === 'success') {
+	      colorPoints.value = res.data || []
+	      console.log('色彩点数据获取成功:', colorPoints.value)
+	    } else {
+	      uni.showToast({
+	        title: res.message || '获取数据失败',
+	        icon: 'none'
+	      })
+	    }
+	  } catch (err) {
+	    console.error('Failed to fetch colorPoints:', err)
+	    uni.showToast({
+	      title: '网络错误',
+	      icon: 'none'
+	    })
+	  }
+	}
+	
 	// -------环状图组件相关处理-------
 	const handleSelectColor = (colorArray) => {
+		const matched = colorPoints.value.find(item => item.name === colorArray[0])
 		currentColor.value = {
 			name: colorArray[0],
-			code: colorArray[1]
+			code: colorArray[1],
+			id: matched ? matched.id : null,
 		}
 		showDetail.value = true
 	}
@@ -173,7 +213,8 @@
 				start,
 				end,
 				name: point ? point.name : '',
-				code: point ? point.code : '#CCCCCC' // 没数据填灰色
+				code: point ? point.code : '#CCCCCC', // 没数据填灰色
+				id: point ? point.id : ''
 			})
 		}
 
@@ -269,7 +310,8 @@
 			if (params.data.name) {
 				currentColor.value = {
 					name: params.data.name,
-					code: params.data.code
+					code: params.data.code,
+					id: params.data.id,
 				}
 				showDetail.value = true
 			}

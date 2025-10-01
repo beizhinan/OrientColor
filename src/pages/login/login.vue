@@ -1,10 +1,16 @@
 <template>
   <view class="container">
+	  <!--标题-->
     <view>
-      <image src="/static/logo.png" mode="" class="logo"></image>
+      <image src="/static/login/title.png" mode="" class="title"></image>
+	  <image src="/src/static/login/english.png" class="English"></image>
+	  <image src="/src/static/login/logo.png" class="logo"></image>
     </view>
-    <!-- 标题 -->
-    <view class="title">东方色彩</view>
+	
+	<view>
+		<image src="/src/static/login/bg1.png" class="image1"></image>
+		<image src="/src/static/login/bg2.png" class="image2"></image>
+	</view>
 
     <!-- 权限申请信息 -->
     <view class="permission-info">
@@ -43,6 +49,7 @@
 </template>
 
 <script>
+	import { useAuthStore } from "@/stores/auth";
 export default {
   data() {
     return {
@@ -69,6 +76,8 @@ export default {
         title: "授权登录成功",
         icon: "success",
       });
+	  const login = useAuthStore()
+	  login.completeLogin()
     },
 
     // 取消授权
@@ -92,28 +101,50 @@ export default {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  background-color: #f8f8f8;
+  background-color: white;
   padding: 40rpx;
 }
 
-.logo {
-  width: 250rpx;
-  height: 250rpx;
-  margin-top: 50rpx;
-  border-radius: 50%;
+.title {
+  height:130rpx;
+  width:450rpx;
+  margin: 140rpx auto 0;
+  display: block;
 }
 
-.title {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-  margin-top: 20rpx;
-  margin-bottom: 80rpx;
+.English{
+	height:25rpx;
+	width:380rpx;
+	margin: 30rpx auto;
+	display: block;
+}
+
+.logo {
+  width: 635rpx;
+  height: 65rpx;
+  margin: 30rpx auto 60rpx;
+  display: block;
+}
+
+.image1{
+	width: 122rpx;
+	height:312rpx;
+	position: absolute;
+	left:0;
+	top:40rpx;
+}
+
+.image2{
+	width: 130rpx;
+	height:355rpx;
+	position: absolute;
+	right:0;
+	top:215rpx;
 }
 
 .permission-info {
   width: 100%;
-  margin-bottom: 60rpx;
+  margin-top: 60rpx;
 }
 
 .permission-title {

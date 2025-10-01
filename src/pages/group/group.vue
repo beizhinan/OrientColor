@@ -4,24 +4,30 @@
       <!-- 使用网格布局显示颜色卡片，每行3个 -->
       <view class="color-grid">
         <preview-card
-          v-for="(color, index) in staticColors"
-          :key="index"
+          v-for="color in colorList"
+          :key="color.id"
           :color-name="color.name"
-          :color-code="color.code"
+          :color-code="color.code || color.hex"
           @click="goToColorDetail(color)"
           class="color-card-item"
         />
       </view>
+
+      <!-- 空数据提示 -->
+      <empty-data v-if="colorList.length === 0 && !loading" />
     </view>
   </view>
 </template>
 
 <script>
 import previewCard from "@/components/search/text-search/preview-card.vue";
+import emptyData from "@/components/search/empty-data.vue";
+import { getGroupColors } from "@/api/group.js";
 
 export default {
   components: {
     previewCard,
+    emptyData,
   },
 
   data() {
@@ -29,18 +35,8 @@ export default {
       label: "",
       value: "",
       pageTitle: "",
-      // 静态颜色数据用于测试
-      staticColors: [
-        { name: "珊瑚红", code: "#FF6F61" },
-        { name: "薄荷绿", code: "#6BDDA0" },
-        { name: "天蓝", code: "#6BB5FF" },
-        { name: "向日葵黄", code: "#FFD166" },
-        { name: "薰衣草紫", code: "#B56BFF" },
-        { name: "珊瑚粉", code: "#FF6B9D" },
-        { name: "青柠绿", code: "#C4FF6B" },
-        { name: "玫瑰金", code: "#FF6B6B" },
-        { name: "海洋蓝", code: "#3C6E71" },
-      ],
+      colorList: [],
+      loading: false,
     };
   },
 
@@ -54,10 +50,41 @@ export default {
       uni.setNavigationBarTitle({
         title: this.pageTitle,
       });
+
+      // 获取颜色数据
+      this.fetchColorList();
     }
   },
 
   methods: {
+    // 获取颜色数据
+    async fetchColorList() {
+      this.loading = true;
+      try {
+        const res = await getGroupColors({
+          label: this.label,
+          value: this.value,
+        });
+
+        if (res.status === "success") {
+          this.colorList = res.data || [];
+        } else {
+          uni.showToast({
+            title: "数据获取失败",
+            icon: "none",
+          });
+        }
+      } catch (error) {
+        uni.showToast({
+          title: "请求失败",
+          icon: "none",
+        });
+        console.error("获取颜色数据失败:", error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
     // 跳转到颜色详情页
     goToColorDetail(color) {
       console.log("跳转到颜色详情页", color);
@@ -65,7 +92,7 @@ export default {
       // 构造跳转参数
       const params = {
         name: encodeURIComponent(color.name),
-        value: encodeURIComponent(color.code),
+        value: encodeURIComponent(color.code || color.hex),
         id: color.id || null,
         titlePath: color.titlePath ? encodeURIComponent(color.titlePath) : null,
       };

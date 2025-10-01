@@ -20,10 +20,10 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     
-    // 完成登录流程（传入用户信息）
-    async completeLogin(userInfoRes) {
+    // 完成登录流程
+    async completeLogin() {
       try {
-         // 先获取用户信息
+        // 先获取用户信息（需用户主动触发）
         const userInfoRes = await getWxUserInfo()
         
         // 检查是否获取到用户信息
@@ -31,12 +31,21 @@ export const useAuthStore = defineStore('auth', {
           return Promise.reject(new Error('获取用户信息失败'))
         }
 
-        // 获取code
-        const code = await wxLogin()
+        // 获取code（调用当前store的wxLogin方法）
+        const code = await this.wxLogin()
         console.log("code：", code)  // 只用于开发
         
         // 发送到后端验证
         const res = await wxAuthLogin(code)
+		// const res = {
+		// 	// 测试数据，为了通过验证
+		// 	code:200,
+		// 	success:true,
+		// 	data:{
+		// 		token:"didjis",
+		// 		data:[]
+		// 	}
+		// }
         console.log("res：", res)
         
         if (res.code === 200) {
@@ -53,19 +62,20 @@ export const useAuthStore = defineStore('auth', {
           return Promise.reject(res)
         }
       } catch (error) {
+        this.clearAuth()
         return Promise.reject(error)
       }
     },
     
-    // 检查登录状态
-    async checkLogin() {
+    // 检查登录状态（仅验证本地状态，不自动登录）
+    checkLogin() {
       // 检查本地是否有token和用户信息
       if (this.token && this.userInfo) {
         this.isLogin = true;
         return true;
       }
       
-      // 如果本地没有token或用户信息，尝试从storage中获取
+      // 从storage同步最新状态
       const storedToken = uni.getStorageSync('token');
       const storedUserInfo = uni.getStorageSync('userInfo');
       
@@ -76,17 +86,28 @@ export const useAuthStore = defineStore('auth', {
         return true;
       }
       
-      // 如果都没有，则执行完整登录流程
+      // 未登录状态
+      this.isLogin = false;
+      return false;
+    },
+    
+    // 验证token有效性（通过后端接口）
+    async validateLogin() {
+      if (!this.checkLogin()) {
+        return false;
+      }
+      
       try {
-        const result = await this.completeLogin();
-        if (result.code === 200) {
+        const res = await checkLogin()
+        if (res.code === 200) {
+          this.isLogin = true;
           return true;
         } else {
           this.clearAuth();
           return false;
         }
       } catch (error) {
-        console.error("自动登录失败:", error);
+        console.error("验证登录状态失败:", error);
         this.clearAuth();
         return false;
       }
@@ -109,3 +130,4 @@ export const useAuthStore = defineStore('auth', {
     avatarUrl: (state) => state.userInfo?.avatarUrl || '/static/default-avatar.png'
   }
 })
+    
