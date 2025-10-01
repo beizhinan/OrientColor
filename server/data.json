@@ -1,0 +1,213 @@
+{
+  "user1": {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "name": "收藏夹1",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "#f9f9f9",
+              "#f1f1f1",
+              "#e6e6e6",
+              "#d9d9d9"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 2,
+            "color": [
+              "blue",
+              "white",
+              "yellow",
+              "orange"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "收藏夹2",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 2,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 3,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "收藏夹3",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 2,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "收藏夹4",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 2,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "收藏夹5",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 2,
+            "color": [
+              "red",
+              "white"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "收藏夹6",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          },
+          {
+            "cardId": 2,
+            "color": [
+              "red"
+            ],
+            "name": "色卡1",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "name": "数据库",
+        "colorCard": [
+          {
+            "cardId": 1,
+            "color": [
+              "#437283",
+              "#f1f1f1",
+              "#e6e6e6",
+              "#d9d9d9"
+            ],
+            "name": "偏绿的三青",
+            "system": "红色系",
+            "hue": "淡调",
+            "category": "建筑",
+            "theme": "开化寺色谱"
+          }
+        ]
+      }
+    ]
+  }
+}
