@@ -93,11 +93,7 @@
 				})()
 				// 筛选项用于后端筛选
 				const Item = {
-					all: Object.keys(item).every(key => {
-					    const value = item[key];
-					    // 回调函数返回布尔值（判断当前字段是否为无效值）
-					    return value === "" || value === null || value === undefined;
-					}) ? "全部" : "",
+					all: "",
 					system: item.system,
 					hue: item.hue,
 					theme: item.theme,
@@ -241,5 +237,6 @@
 		border: 3rpx solid #b2b2b2;
 		border-radius: 8rpx;
 		color:#b2b2b2 ;
+
 	}
 </style>
