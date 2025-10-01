@@ -19,12 +19,18 @@ export const useCollectedStore = defineStore('collectionStore',{
 			.then(collectionData => {
 			    // 2. 赋值并处理数据
 				this.collection = collectionData
-				//console.log(this.collection)
+				console.log('初始化数据：',this.collection)
 			})
 			.catch(error => {
 				// 3. 捕获错误（若有）
 				console.error('收藏夹数据加载失败:', error)
 			})
+		},
+		//更新数据
+		updateList(data){
+			this.collection = data
+			this.modify = true
+			console.log(this.collection)
 		},
 		//删除数据---色带
 		deleteCardData(name,index){
@@ -40,15 +46,10 @@ export const useCollectedStore = defineStore('collectionStore',{
 		async submitData() {
 		  try {
 		    const sendData = {
-		      user1: {
-		        code: 200,
-		        success: true,
-		        data: this.collection
-		      }
+		      success: true,
+		      data: this.collection
 		    }
 		
-		    // 小程序环境使用 wx.request (微信小程序) 或 uni.request (uni-app)
-		    // 这里以 uni-app 为例，跨平台兼容性更好
 		    return new Promise((resolve, reject) => {
 		      uni.request({
 		        url: 'http://localhost:8888/user1',
