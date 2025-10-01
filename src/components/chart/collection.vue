@@ -14,11 +14,11 @@
 				<view class="folder-list">
 					<view class="folder" :class="{ active: selectedIndex === index }" v-for="(item, index) in folders"
 						:key="index" @tap="selectFolder(index)">
-						<image class="icon" :src="item.icon" />
+						<view class="header"></view>
 						<text class="folder-name">{{ item.name }}</text>
-						<text class="folder-num">{{ item.count }}项</text>
+						<text class="folder-num">{{ item.colorCard.length }}项</text>
 					</view>
-					<view class="folder-add" @tap="addFolder" v-if="folders.length < 3">
+					<view class="folder-add" @tap="addFolder">
 						<image class="icon" src="/static/showcase/collection-add.png" />
 						<view class="space"></view>
 						<text class="folder-name">添加收藏夹</text>
@@ -43,6 +43,10 @@
 </template>
 
 <script>
+	import { useCollectedStore } from '../../stores/collectionStore'
+	
+	const collectionStore = useCollectedStore()
+	
 	export default {
 		data() {
 			return {
@@ -50,21 +54,32 @@
 				selectedIndex: null,
 				showCreatePopup: false,
 				newFolderName: '',
-				folders: [{
-						name: '收藏夹1',
-						count: 20,
-						icon: '/static/showcase/filter-icon.png'
-					},
-					{
-						name: '收藏夹2',
-						count: 20,
-						icon: '/static/showcase/filter-icon.png'
-					}
-				]
+				folders: [],
+				foldersLength:0,
 			}
+		},
+		props: {
+		    // 声明接收 color 对象
+			//需要属性
+			//color: 例如：[this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
+			//name: 颜色中文名
+			//system: "红色系",
+			//hue: "淡调",
+			//category: "建筑",
+			//theme: "开化寺色谱"
+		    color: {
+				type: Object,
+				required: false,
+		    }
+		},
+		async mounted() {
+			await collectionStore.initList()
+			this.folders = [...collectionStore.collection]
+			this.foldersLength = this.folders.length
 		},
 		methods: {
 			startCollect() {
+				//console.log(this.color)
 				this.showPopup = true
 				this.$emit("received", false)
 			},
@@ -84,6 +99,24 @@
 						title: '收藏成功',
 						icon: 'success'
 					});
+					this.folders.forEach((item,index)=>{
+						if (!Array.isArray(item.colorCard)) {
+						    item.colorCard = []
+						}
+						if(index == this.selectedIndex){
+							item.colorCard.push({
+								cardId: item.colorCard.length+1,
+								color: [this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
+								name: this.color.name,
+								system: "红色系",
+								hue: "淡调",
+								category: "建筑",
+								theme: "开化寺色谱"
+							});
+						}
+					})
+					//console.log(this.folders)
+					collectionStore.updateList(this.folders)
 					this.showPopup = false;
 				} else {
 					uni.showToast({
@@ -112,12 +145,16 @@
 					});
 					return;
 				}
+				//console.log(name)
 				this.folders.push({
+					id:this.foldersLength+1,
 					name,
-					count: 0,
-					icon: '/static/showcase/filter-icon.png'
+					colorCard:[]
 				});
 				this.showCreatePopup = false;
+				this.foldersLength += 1
+				//console.log(this.folders)
+				collectionStore.updateList(this.folders)
 			},
 			backShowcase() {
 			    // 返回上一级页面
@@ -192,6 +229,10 @@
 		padding: 30rpx;
 		border-top-left-radius: 30rpx;
 		border-top-right-radius: 30rpx;
+		
+		max-height: 500rpx; /* 根据实际空间需求设置最大高度（如500rpx） */
+		overflow-y: auto; /* 内容超出时显示纵向滚动条 */
+		overflow-x: hidden; /* 禁止横向滚动 */
 	}
 
 	.popup-title {
@@ -234,7 +275,16 @@
 	.space {
 		margin-top: 20rpx;
 	}
-
+	
+	.header{
+		margin:10rpx 60rpx;
+		width: 84rpx;
+		height: 84rpx;
+		border-radius: 42rpx;
+		background-color: #007aff;
+		opacity: 0.1;
+	}
+	
 	.folder-name {
 		font-size: 26rpx;
 		color: #151515;
