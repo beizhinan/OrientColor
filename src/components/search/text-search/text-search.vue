@@ -14,6 +14,9 @@
           v-model="searchValue"
           @input="onSearchInput"
         />
+        <view v-if="searchValue" class="clear-btn" @click="clearSearch">
+          <text class="clear-text">×</text>
+        </view>
       </view>
       <view class="tags">
         <!-- 添加标签列表 -->
@@ -29,54 +32,66 @@
       </view>
     </view>
     <view class="list">
+      <!-- 加载状态 -->
+      <view v-if="isLoading" class="loading">
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <!-- 错误状态 -->
+      <view v-else-if="isError" class="error">
+        <text class="error-text">加载失败，请稍后重试</text>
+        <button class="retry-btn" @click="retry">重新加载</button>
+      </view>
+
+      <!-- 空数据状态 -->
+      <view
+        v-else-if="filteredColorList.length === 0 && !isLoading"
+        class="empty"
+      >
+        <text class="empty-text">暂无相关颜色数据</text>
+      </view>
+
       <!-- 使用卡片组件展示颜色数据 -->
-      <view class="color-list">
+      <view v-else class="color-list">
         <color-card
           v-for="(color, index) in filteredColorList"
           :key="index"
           :color-name="color.name"
-          :color-code="color.code"
+          :color-code="color.colorCode"
           @click="goToColorDetail(color)"
         />
       </view>
     </view>
   </view>
+
+  <!-- 返回顶部组件 -->
+  <backtop :visible="showBackTop"></backtop>
 </template>
 
 <script>
 // 引入颜色卡片组件
 import ColorCard from "@/components/search/text-search/preview-card.vue";
+import { getColorTags, searchText } from "@/api/search/text-search.js";
+// 引入返回顶部组件
+import Backtop from "@/components/backtop/backtop.vue";
 
 export default {
   components: {
     ColorCard,
+    Backtop,
   },
   data() {
     return {
       searchValue: "",
-      colorTagList: [
-        "全部",
-        "青",
-        "绿",
-        "朱",
-        "黄",
-        "金",
-        "白",
-        "灰",
-      ],
+      colorTagList: ["全部"],
       selectedTag: "全部", // 默认选中"全部"标签
       // 添加颜色数据
-      colorList: [
-        { id: 1, name: "蛤粉", code: "#EAE9DF", type: "朱" },
-        { id: 2, name: "洋红", code: "#8A2026", type: "朱" },
-        { id: 3, name: "浅黄香色", code: "#E1A871", type: "黄" },
-        { id: 4, name: "浅绿华", code: "#4D7C7C", type: "青" },
-        { id: 5, name: "黯深朱", code: "#573224", type: "朱" },
-        { id: 6, name: "常使群青", code: "#2A6086", type: "青" },
-        { id: 7, name: "偏黄的大青", code: "#4D7C7C", type: "青" },
-        { id: 8, name: "粉四青", code: "#9CBACE", type: "青" },
-        { id: 9, name: "偏黄的四绿", code: "#9DA279", type: "绿" },
-      ],
+      colorList: [],
+      // 添加缓存对象
+      searchCache: {},
+      isLoading: false,
+      isError: false,
+      showBackTop: true,
     };
   },
   computed: {
@@ -84,17 +99,119 @@ export default {
       if (this.selectedTag === "全部") {
         return this.colorList;
       }
-      return this.colorList.filter(color => color.type === this.selectedTag);
-    }
+      return this.colorList.filter((color) => color.type === this.selectedTag);
+    },
+  },
+  mounted() {
+    this.loadTags();
+    this.loadAllColors();
+  },
+  onPageScroll(e) {
+    // 控制返回顶部按钮显示
+    this.showBackTop = e.scrollTop > 300;
   },
   methods: {
+    // 获取所有标签
+    async loadTags() {
+      try {
+        const res = await getColorTags();
+        if (res.status === "success") {
+          this.colorTagList = ["全部", ...res.data];
+        }
+      } catch (error) {
+        console.error("获取标签失败:", error);
+        uni.showToast({
+          title: "获取标签失败",
+          icon: "none",
+        });
+      }
+    },
+
+    // 加载所有颜色数据
+    async loadAllColors() {
+      this.isLoading = true;
+      this.isError = false;
+      try {
+        // 检查缓存中是否有'all'的数据
+        if (this.searchCache["all"]) {
+          this.colorList = this.searchCache["all"];
+          this.isLoading = false;
+          return;
+        }
+
+        const res = await searchText("all");
+        if (res.status === "success") {
+          // 将结果存入缓存
+          this.searchCache["all"] = res.data;
+          this.colorList = res.data;
+        }
+      } catch (error) {
+        console.error("获取颜色数据失败:", error);
+        this.isError = true;
+        uni.showToast({
+          title: "获取颜色数据失败",
+          icon: "none",
+        });
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // 搜索颜色
+    async searchColors(keyword) {
+      this.isLoading = true;
+      this.isError = false;
+      try {
+        // 如果关键词为空，则使用默认值"all"
+        const searchKeyword = keyword || "all";
+
+        // 检查缓存中是否已有该关键词的搜索结果
+        if (this.searchCache[searchKeyword]) {
+          this.colorList = this.searchCache[searchKeyword];
+          this.isLoading = false;
+          return;
+        }
+
+        const res = await searchText(searchKeyword);
+        if (res.status === "success") {
+          // 将结果存入缓存
+          this.searchCache[searchKeyword] = res.data;
+          this.colorList = res.data;
+        }
+      } catch (error) {
+        console.error("搜索颜色失败:", error);
+        this.isError = true;
+        uni.showToast({
+          title: "搜索失败，请重试",
+          icon: "none",
+        });
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
     onSearchInput(event) {
       this.searchValue = event.detail.value;
-      // 可以在这里添加搜索逻辑
+      // 防抖处理
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => {
+        this.searchColors(this.searchValue);
+      }, 300);
     },
+
     clearSearch() {
       this.searchValue = "";
+      this.searchColors();
     },
+
+    retry() {
+      if (this.searchValue) {
+        this.searchColors(this.searchValue);
+      } else {
+        this.loadAllColors();
+      }
+    },
+
     selectTag(tag) {
       this.selectedTag = tag;
       // 可以在这里添加标签选择后的逻辑
@@ -130,6 +247,8 @@ export default {
   display: flex;
   flex-direction: column;
   background-color: #f1e9d8;
+  height: 100vh; /* 使用固定高度而不是min-height */
+  overflow: hidden; /* 隐藏页面滚动条 */
 }
 
 .head {
@@ -146,6 +265,7 @@ export default {
   padding: 16rpx 25rpx;
   transition: all 0.3s ease;
   border: 3rpx solid #bababa;
+  position: relative;
 }
 
 .search-box:focus-within {
@@ -166,6 +286,24 @@ export default {
   color: #333;
   height: 40rpx;
   line-height: 48rpx;
+}
+
+.clear-btn {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-btn image {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.clear-text {
+  font-size: 24rpx;
+  color: #999;
 }
 
 .placeholder-style {
@@ -217,6 +355,11 @@ export default {
   padding: 0 25rpx;
   box-sizing: border-box;
   margin-top: 40rpx;
+  min-height: 300rpx;
+  position: relative;
+  flex: 1;
+  overflow-y: auto; /* 只允许列表区域滚动 */
+  /* 移除固定高度，使用flex自动填充剩余空间 */
 }
 
 .color-list {
@@ -225,5 +368,40 @@ export default {
   justify-content: space-between;
   gap: 20rpx;
   padding-bottom: 20rpx;
+}
+
+.loading,
+.error,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.loading-icon,
+.error-icon,
+.empty-icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.loading-text,
+.error-text,
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.retry-btn {
+  margin-top: 30rpx;
+  background-color: #9f7735;
+  color: #fff;
+  border: none;
+  padding: 10rpx 30rpx;
+  border-radius: 10rpx;
+  font-size: 28rpx;
 }
 </style>

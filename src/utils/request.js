@@ -53,6 +53,11 @@ const request = (options) => {
   //   options.header['Authorization'] = `Bearer ${token}`
   // }
   
+  // 如果是FormData，删除默认Content-Type，让浏览器自动设置
+  if (options.data instanceof FormData) {
+    delete options.header['Content-Type'];
+  }
+  
   // 返回Promise
   return new Promise((resolve, reject) => {
     uni.request({

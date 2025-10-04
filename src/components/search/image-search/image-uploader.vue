@@ -24,16 +24,38 @@
       ></image>
       <text class="tips">点击图片、色块进行查色</text>
 
-      <!-- 修改部分：显示色块 -->
+      <!-- 显示色块 -->
       <view class="color-blocks-container" v-if="result && result.length > 0">
         <view
           v-for="(color, index) in result"
           :key="index"
           class="color-block-item"
-          :style="{ backgroundColor: color.value }"
+          :style="{ backgroundColor: getColorValue(color) }"
           @click="goToColorDetail(color)"
-        ></view>
+        >
+        </view>
       </view>
+
+      <!-- 新增：展示从API返回的data数组数据 -->
+      <!-- <view class="extracted-data-container" v-if="extractedData && extractedData.length > 0">
+        <view class="data-title">提取的颜色信息：</view>
+        <view class="data-list">
+          <view 
+            v-for="(item, index) in extractedData" 
+            :key="index" 
+            class="data-item"
+            @click="goToColorDetailFromData(item)"
+          >
+            <view class="color-preview" :style="{ backgroundColor: item.hex }"></view>
+            <view class="data-info">
+              <text class="color-name">{{ item.name }}</text>
+              <text class="color-hex">{{ item.hex }}</text>
+              <text class="color-rgb">RGB({{ item.rgb.join(', ') }})</text>
+              <text class="color-lab">LAB({{ item.lab.map(v => v.toFixed(2)).join(', ') }})</text>
+            </view>
+          </view>
+        </view>
+      </view> -->
 
       <view class="upload-button" @click="chooseImage">
         <text class="button-text">重新上传图片</text>
@@ -49,91 +71,26 @@
 </template>
 
 <script>
+import { extractColorsFromImage } from '@/api/search/image-search.js'
+
 export default {
   name: "ImageUploader",
   data() {
     return {
       imageSrc: "",
-      result: [
-        {
-          id: 1,
-          name: "活力红",
-          value: "#FF6B6B",
-        },
-        {
-          id: 2,
-          name: "清新青",
-          value: "#4ECDC4",
-        },
-        {
-          id: 3,
-          name: "天空蓝",
-          value: "#45B7D1",
-        },
-        {
-          id: 4,
-          name: "明亮黄",
-          value: "#FFBE0B",
-        },
-        {
-          id: 5,
-          name: "活力橙",
-          value: "#FB5607",
-        },
-        {
-          id: 6,
-          name: "优雅紫",
-          value: "#8338EC",
-        },
-        {
-          id: 7,
-          name: "宝石蓝",
-          value: "#3A86FF",
-        },
-        {
-          id: 8,
-          name: "翠绿",
-          value: "#38B000",
-        },
-        {
-          id: 9,
-          name: "紫罗兰",
-          value: "#9D4EDD",
-        },
-        {
-          id: 10,
-          name: "洋红",
-          value: "#FF006E",
-        },
-        {
-          id: 11,
-          name: "粉色",
-          value: "#FFA7C4",
-        },
-        {
-          id: 12,
-          name: "玫瑰红",
-          value: "#FF2D55",
-        },
-        {
-          id: 13,
-          name: "burgundy",
-          value: "#A80023",
-        },
-        {
-          id: 14,
-          name: "深粉",
-          value: "#EB4D5C",
-        },
-        {
-          id: 15,
-          name: "深粉",
-          value: "#EB4D5C",
-        },
-      ],
+      imageFile: null,
+      result: [],
+      extractedData: [] // 新增：用于存储提取的颜色详细数据
     };
   },
   methods: {
+    // 新增：获取颜色值的方法
+    getColorValue(color) {
+      // 根据接口返回的数据结构获取颜色值
+      // 从调试信息看，接口返回的color对象包含value属性
+      return color.value || color.hex || color.colorCode || '#' + Math.floor(Math.random()*16777215).toString(16);
+    },
+    
     chooseImage() {
       uni.chooseImage({
         count: 1,
@@ -141,13 +98,52 @@ export default {
         sourceType: ["album", "camera"],
         success: (res) => {
           this.imageSrc = res.tempFilePaths[0];
-          // 可以在这里触发事件将图片路径传递给父组件
-          this.$emit("imageUploaded", this.imageSrc);
+          this.imageFile = res.tempFiles[0];
+          // 调用API提取颜色
+          this.extractColors();
         },
         fail: (err) => {
           console.error("选择图片失败", err);
+          uni.showToast({
+            title: '选择图片失败',
+            icon: 'none'
+          });
         },
       });
+    },
+
+    // 提取图片颜色
+    async extractColors() {
+      if (!this.imageFile) return;
+      
+      try {
+        console.log('[ImageUploader] 开始提取颜色，文件信息:', this.imageFile);
+        const res = await extractColorsFromImage(this.imageFile);
+        console.log('[ImageUploader] 接口返回完整数据:', res);
+        
+        if (res.code === 200) {
+          this.result = res.data.data; // 注意这里需要使用res.data.data
+          console.log('[ImageUploader] 匹配的东方色彩数据:', this.result);
+          
+          // 处理提取的颜色详细数据
+          if (res.data.extractedColors) {
+            this.extractedData = res.data.extractedColors;
+            console.log('[ImageUploader] 提取的颜色详细数据:', this.extractedData);
+          }
+        } else {
+          console.warn('[ImageUploader] 颜色提取失败，错误信息:', res.message);
+          uni.showToast({
+            title: res.message || '颜色提取失败',
+            icon: 'none'
+          });
+        }
+      } catch (error) {
+        console.error('[ImageUploader] 提取颜色失败:', error);
+        uni.showToast({
+          title: '颜色提取失败',
+          icon: 'none'
+        });
+      }
     },
 
     // 添加图片预览方法
@@ -158,14 +154,39 @@ export default {
         indicator: "default",
         loop: true,
       });
-    }, // 跳转到颜色详情页
+    }, 
+    
+    // 跳转到颜色详情页（原来的颜色匹配结果）
     goToColorDetail(color) {
       console.log("跳转到颜色详情页", color);
 
       // 构造跳转参数
       const params = {
         name: encodeURIComponent(color.name),
-        value: encodeURIComponent(color.code),
+        value: encodeURIComponent(color.value),
+        id: color.id || null,
+      };
+
+      // 过滤掉空值参数并构建查询字符串
+      const queryString = Object.keys(params)
+        .filter((key) => params[key] !== null && params[key] !== undefined)
+        .map((key) => `${key}=${params[key]}`)
+        .join("&");
+
+      // 跳转到详情页
+      uni.navigateTo({
+        url: `/pages/colorblock/colorblock?${queryString}`,
+      });
+    },
+    
+    // 新增：跳转到颜色详情页（从提取的颜色数据）
+    goToColorDetailFromData(color) {
+      console.log("跳转到提取的颜色详情页", color);
+
+      // 构造跳转参数
+      const params = {
+        name: encodeURIComponent(color.name || '未知颜色'),
+        value: encodeURIComponent(color.hex || '#000000'),
         id: color.id || null,
       };
 
@@ -274,7 +295,7 @@ export default {
   border-radius: 10rpx;
 }
 
-/* 新增样式：色块容器 */
+/* 色块容器 */
 .color-blocks-container {
   display: flex;
   flex-wrap: wrap;
@@ -283,13 +304,26 @@ export default {
   margin-top: 20rpx;
 }
 
-/* 新增样式：单个色块 */
+/* 单个色块 */
 .color-block-item {
   width: calc(20% - 10rpx); /* 一行显示5个，减去间距 */
   height: 60rpx;
-  border-radius: 10rpx; /* 圆角 */
   margin-bottom: 10rpx;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20rpx;
+  text-align: center;
+}
+
+.color-name {
+  padding: 0 5rpx;
+  text-shadow: 0 0 2rpx rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .change-btn {
@@ -311,5 +345,68 @@ export default {
   font-size: 24rpx;
   color: #9f7735;
   letter-spacing: 2rpx;
+}
+
+/* 新增样式：展示提取数据 */
+.extracted-data-container {
+  width: 100%;
+  margin-top: 30rpx;
+  padding: 20rpx;
+  background-color: #fff;
+  border-radius: 10rpx;
+}
+
+.data-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  color: #333;
+}
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.data-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 15rpx;
+  border-radius: 10rpx;
+  background-color: #f9f9f9;
+}
+
+.color-preview {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 10rpx;
+  margin-right: 20rpx;
+  border: 1rpx solid #eee;
+}
+
+.data-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.color-name {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5rpx;
+}
+
+.color-hex, .color-rgb, .color-lab {
+  font-size: 22rpx;
+  color: #666;
+  margin-bottom: 3rpx;
+}
+
+.color-hex {
+  color: #9f7735;
+  font-weight: bold;
 }
 </style>
