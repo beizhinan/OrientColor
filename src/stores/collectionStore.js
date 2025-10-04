@@ -30,7 +30,6 @@ export const useCollectedStore = defineStore('collectionStore',{
 		updateList(data){
 			this.collection = data
 			this.modify = true
-			console.log(this.collection)
 		},
 		//删除数据---色带
 		deleteCardData(name,index){
@@ -45,9 +44,16 @@ export const useCollectedStore = defineStore('collectionStore',{
 		//提交数据
 		async submitData() {
 		  try {
+			this.collection.forEach((item,id)=>{
+				item.id = id
+				item.colorCard.forEach((colorCard,index)=>{
+					colorCard.cardId = index + 1
+				})
+			})
 		    const sendData = {
-		      success: true,
-		      data: this.collection
+				code:200,
+				success: true,
+				data: this.collection
 		    }
 		
 		    return new Promise((resolve, reject) => {
