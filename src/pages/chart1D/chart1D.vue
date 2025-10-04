@@ -9,9 +9,9 @@
 		<view class="container">
 			<!-- 左侧图表 -->
 			<view class="chart">
-				<l-echart v-if="chartChange==='rect'" class="chart-content" ref="chartRef" @finished="init"></l-echart>
+				<l-echart v-if="colorPoints.length > 0 && chartChange==='rect'" class="chart-content" ref="chartRef" @finished="init"></l-echart>
 				<ring1d 
-					v-if="chartChange==='polar'"
+					v-if="colorPoints.length > 0 && chartChange === 'polar'"
 					:color-points="colorPoints"
 					@selectColor="handleSelectColor">
 				</ring1d>
@@ -87,7 +87,7 @@
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
 		colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-		selectedFilters.value = options.selectedFilters === 'all' ? '一维色谱' : options.selectedFilters
+		selectedFilters.value = options.selectedFilters === '三维色谱' ? '一维色谱' : options.selectedFilters
 		uni.setNavigationBarTitle({
 		    title: selectedFilters.value
 		})

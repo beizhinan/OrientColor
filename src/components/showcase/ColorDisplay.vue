@@ -134,7 +134,7 @@
 					    .filter(Boolean) // 去掉空值
 					    .join('-');
 					
-					  return str || 'all';
+					  return str || '三维色谱';
 					})();
 					// 筛选项用于后端筛选
 					const params = JSON.stringify(this.filterData)   

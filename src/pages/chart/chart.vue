@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-	import { ref } from 'vue'
+	import { ref, watch } from 'vue'
 	import { onShow, onHide, onLoad, onUnload } from '@dcloudio/uni-app'
 	import * as THREE from 'three';
 	import {adapter} from '@minisheep/three-platform-adapter';
@@ -71,15 +71,11 @@
 		
 		onLoad((options) => {
 			//静态测试数据 使用静态数据时把所有colorPoints改为colorPointsStatic
-			console.log("options.colorPoints:",options.colorPoints)
 			colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []  
 			selectedFilters.value = options.selectedFilters === 'all' ? '三维色谱' : options.selectedFilters
 			uni.setNavigationBarTitle({
 				title: selectedFilters.value
 			})
-			console.log(options.selectedFilters)
-			console.log(selectedFilters.value)
-			
 			filterData.value = JSON.parse(decodeURIComponent(options.filterData)) || []
 			//页面加载时请求后端数据
 			fetchColorPoints()
@@ -220,8 +216,7 @@
 					selectedColor.value = {
 					    name: data.name,
 					    code: data.color,
-						id: data.color,
-						//id: matched.id
+						id: matched.id
 					};
 					showDetail.value = true;
 				}
@@ -237,21 +232,38 @@
 			animate();
 		}
 		
-		//控制canvas的显示
-		function handleHideChart(val){
-			showCanvas.value = val
-		}
+		//初始化Three.js
+		const initCanvas = () => {
+		  adapter
+		    .useCanvas('#canvas')
+		    .then(({ canvas, requestAnimationFrame, eventHandler }) => {
+		      canvasEventHandler.value = eventHandler;
+		      initThree(canvas, requestAnimationFrame);
+		    })
+		    .catch((err) => {
+		      console.error('Canvas 初始化失败:', err);
+		    });
+		};
+
 		onHide(() => {
 			// 清理事件绑定（如果是自定义事件）
 			if (canvasEventHandler.value && canvasEventHandler.value.dispose) {
 				canvasEventHandler.value.dispose();
 			}
 		})
+		
+		//colorPoints（异步请求）数据加载完成后才初始化Three.js场景
+		watch(colorPoints, (newVal) => {
+		  if (newVal && newVal.length > 0) {
+		    initCanvas();
+		  }
+		});
+
 		onShow(() => {
 		  showCanvas.value = true
 		  console.log(showCanvas.value)
 		  const canvasEventHandler = ref(() => {});
-		  adapter
+		  /*adapter
 		  	.useCanvas('#canvas')
 		  	.then(({
 		  		canvas,
@@ -260,7 +272,7 @@
 		  	}) => {
 		  		canvasEventHandler.value = eventHandler;
 		  		initThree(canvas, requestAnimationFrame);
-		  	});
+		  	});*/
 		})
 		
 	
