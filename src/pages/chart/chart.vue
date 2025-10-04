@@ -33,7 +33,7 @@
 		
 		<!-- 收藏组件-->
 		<view class="collection-container">
-			<collection></collection>
+			<collection :color="selectedColor" :filterData="filterData"></collection>
 		</view>
 		
 		<!-- 底部导航-->
@@ -71,6 +71,7 @@
 		
 		onLoad((options) => {
 			//静态测试数据 使用静态数据时把所有colorPoints改为colorPointsStatic
+			console.log("options.colorPoints:",options.colorPoints)
 			colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []  
 			selectedFilters.value = options.selectedFilters === 'all' ? '三维色谱' : options.selectedFilters
 			uni.setNavigationBarTitle({

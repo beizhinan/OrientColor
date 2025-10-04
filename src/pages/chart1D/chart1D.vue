@@ -41,7 +41,7 @@
 
 		<!-- 收藏组件-->
 		<view class="c-container">
-			<Collection></Collection>
+			<Collection :color="currentColor" :filterData="filterData"></Collection>
 		</view>
 
 		<!-- 底部导航-->
@@ -91,7 +91,6 @@
 		uni.setNavigationBarTitle({
 		    title: selectedFilters.value
 		})
-		console.log(selectedFilters.value)
 		filterData.value = JSON.parse(decodeURIComponent(options.filterData)) || []
 		//页面加载时请求后端数据
 		fetchColorPoints()

@@ -35,7 +35,7 @@
 		
 		<!-- 收藏组件-->
 		<view class="center c-container">
-			<Collection></Collection> 
+			<Collection :color="selectedColor" :filterData="filterData"></Collection> 
 		</view>
 		
 		<!-- 底部导航-->
