@@ -60,17 +60,23 @@
 		},
 		props: {
 		    // 声明接收 color 对象
-			//需要属性
+			//需要使用属性
 			//color: 例如：[this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
 			//name: 颜色中文名
+		    color: {
+				type: Object,
+				required: false,
+		    },
+			// 声明接收 filterData 对象
+			//需要使用属性
 			//system: "红色系",
 			//hue: "淡调",
 			//category: "建筑",
 			//theme: "开化寺色谱"
-		    color: {
-				type: Object,
-				required: false,
-		    }
+			filterData:{
+				type:Object,
+				required:false,
+			}
 		},
 		async mounted() {
 			await collectionStore.initList()
@@ -99,6 +105,8 @@
 						title: '收藏成功',
 						icon: 'success'
 					});
+					console.log('当前 color 值：', this.color)
+					console.log('当前 filterData 值：', this.filterData)
 					this.folders.forEach((item,index)=>{
 						if (!Array.isArray(item.colorCard)) {
 						    item.colorCard = []
@@ -108,10 +116,10 @@
 								cardId: item.colorCard.length+1,
 								color: [this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
 								name: this.color.name,
-								system: "红色系",
-								hue: "淡调",
-								category: "建筑",
-								theme: "开化寺色谱"
+								system: this.filterData.system,
+								hue: this.filterData.hue ,
+								category: this.filterData.category,
+								theme: this.filterData.theme
 							});
 						}
 					})
