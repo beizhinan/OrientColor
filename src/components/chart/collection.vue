@@ -2,8 +2,8 @@
 	<view class="container">
 		<!-- 收藏按钮 -->
 		<view class="buttons">
-				<button class="collect-btn" @click="startCollect">收藏色谱</button>
-				<button class="back-btn" @click="backShowcase">重新筛选</button>
+			<button class="collect-btn" @click="startCollect">收藏色谱</button>
+			<button class="back-btn" @click="backShowcase">重新筛选</button>
 		</view>
 
 		<!-- 收藏弹窗 -->
@@ -43,10 +43,16 @@
 </template>
 
 <script>
-	import { useCollectedStore } from '../../stores/collectionStore'
-	
+	import {
+		useCollectedStore
+	} from '../../stores/collectionStore'
+	import {
+		useAuthStore
+	} from '@/stores/auth'
+
 	const collectionStore = useCollectedStore()
-	
+	const authStore = useAuthStore()
+
 	export default {
 		data() {
 			return {
@@ -55,27 +61,27 @@
 				showCreatePopup: false,
 				newFolderName: '',
 				folders: [],
-				foldersLength:0,
+				foldersLength: 0,
 			}
 		},
 		props: {
-		    // 声明接收 color 对象
+			// 声明接收 color 对象
 			//需要使用属性
 			//color: 例如：[this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
 			//name: 颜色中文名
-		    color: {
+			color: {
 				type: Object,
 				required: false,
-		    },
+			},
 			// 声明接收 filterData 对象
 			//需要使用属性
 			//system: "红色系",
 			//hue: "淡调",
 			//category: "建筑",
 			//theme: "开化寺色谱"
-			filterData:{
-				type:Object,
-				required:false,
+			filterData: {
+				type: Object,
+				required: false,
 			}
 		},
 		async mounted() {
@@ -84,7 +90,24 @@
 			this.foldersLength = this.folders.length
 		},
 		methods: {
+			//增加登陆判断
 			startCollect() {
+				if (!authStore.isLogin) {
+					uni.showModal({
+						title: "提示",
+						content: "请先登录",
+						confirmText: "确定",
+						success: (res) => {
+							if (res.confirm) {
+								uni.navigateTo({
+									url: "/pages/login/login"
+								});
+							}
+						},
+					});
+					return;
+				}
+
 				//console.log(this.color)
 				this.showPopup = true
 				this.$emit("received", false)
@@ -107,17 +130,17 @@
 					});
 					console.log('当前 color 值：', this.color)
 					console.log('当前 filterData 值：', this.filterData)
-					this.folders.forEach((item,index)=>{
+					this.folders.forEach((item, index) => {
 						if (!Array.isArray(item.colorCard)) {
-						    item.colorCard = []
+							item.colorCard = []
 						}
-						if(index == this.selectedIndex){
+						if (index == this.selectedIndex) {
 							item.colorCard.push({
-								cardId: item.colorCard.length+1,
+								cardId: item.colorCard.length + 1,
 								color: [this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
 								name: this.color.name,
 								system: this.filterData.system,
-								hue: this.filterData.hue ,
+								hue: this.filterData.hue,
 								category: this.filterData.category,
 								theme: this.filterData.theme
 							});
@@ -155,9 +178,9 @@
 				}
 				//console.log(name)
 				this.folders.push({
-					id:this.foldersLength+1,
+					id: this.foldersLength + 1,
 					name,
-					colorCard:[]
+					colorCard: []
 				});
 				this.showCreatePopup = false;
 				this.foldersLength += 1
@@ -165,17 +188,17 @@
 				collectionStore.updateList(this.folders)
 			},
 			backShowcase() {
-			    // 返回上一级页面
-			    uni.navigateBack({
-			    delta: 1
-			    });
+				// 返回上一级页面
+				uni.navigateBack({
+					delta: 1
+				});
 			},
 		}
 	}
 </script>
 
 <style>
-	 /* .container{
+	/* .container{
 		position: fixed;
 		bottom: 130rpx;
 		display: flex;
@@ -184,8 +207,8 @@
 		width: 100%;             
 		box-sizing: border-box;
 	}*/
-	
-	.buttons{
+
+	.buttons {
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -200,8 +223,8 @@
 		border: none;
 		margin-right: 30rpx;
 	}
-	
-	.back-btn{
+
+	.back-btn {
 		padding: 5rpx 50rpx;
 		font-size: 26rpx;
 		border-radius: 22rpx;
@@ -237,10 +260,13 @@
 		padding: 30rpx;
 		border-top-left-radius: 30rpx;
 		border-top-right-radius: 30rpx;
-		
-		max-height: 500rpx; /* 根据实际空间需求设置最大高度（如500rpx） */
-		overflow-y: auto; /* 内容超出时显示纵向滚动条 */
-		overflow-x: hidden; /* 禁止横向滚动 */
+
+		max-height: 500rpx;
+		/* 根据实际空间需求设置最大高度（如500rpx） */
+		overflow-y: auto;
+		/* 内容超出时显示纵向滚动条 */
+		overflow-x: hidden;
+		/* 禁止横向滚动 */
 	}
 
 	.popup-title {
@@ -283,16 +309,16 @@
 	.space {
 		margin-top: 20rpx;
 	}
-	
-	.header{
-		margin:10rpx 60rpx;
+
+	.header {
+		margin: 10rpx 60rpx;
 		width: 84rpx;
 		height: 84rpx;
 		border-radius: 42rpx;
 		background-color: #007aff;
 		opacity: 0.1;
 	}
-	
+
 	.folder-name {
 		font-size: 26rpx;
 		color: #151515;

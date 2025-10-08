@@ -1,35 +1,35 @@
 <template>
-	<view :style="{width:'100%'}">
-		<!--<view class="title">环状一维模型</view>-->
-		<!-- 指向 -->
-		<view class="box">
-			<Rings class="ring" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd"
-				:rotateDeg="rotateDeg" :colors="ringData" :size="750"></Rings>
-			<view class="rotate-text">
-				<view class="rotate-row">
-					<view class="rotate">H</view>
-					<view class="rotate angle">{{rotateH}}°</view>
+		<view :style="{width:'100%'}">
+			<!--<view class="title">环状一维模型</view>-->
+			<!-- 指向 -->
+			<view class="box">
+				<Rings class="ring" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd"
+					:rotateDeg="rotateDeg" :colors="ringData" :size="750"></Rings>
+				<view class="rotate-text">
+					<view class="rotate-row">
+						<view class="rotate">H</view>
+						<view class="rotate angle">{{rotateH}}°</view>
+					</view>
+					<view class="trangle"></view>
 				</view>
-				<view class="trangle"></view>
+			</view>
+
+			<!--  view class="content">
+				<view class="color" :style="{backgroundColor: currentColor}"></view>
+				<view class="introduce">
+					<view class="name">{{currentColorName}}</view>
+					<view class="hex">{{currentColor}}</view>
+					<view class="download" @tap="saveSolidImage"></view>
+					<canvas canvas-id="solidCanvas" style="width: 100px; height: 100px; position: absolute; left: -9999px;" />
+				</view>
+			</view -->
+
+			<!-- 当前位置 -->
+			<view class="now">
+				<Rings :size="240" :maskFlag="true" class="small" :rotateDeg="rotateDeg" :colors="ringData"></Rings>
+				<view class="words">当前位置</view>
 			</view>
 		</view>
-
-		<!--  view class="content">
-			<view class="color" :style="{backgroundColor: currentColor}"></view>
-			<view class="introduce">
-				<view class="name">{{currentColorName}}</view>
-				<view class="hex">{{currentColor}}</view>
-				<view class="download" @tap="saveSolidImage"></view>
-				<canvas canvas-id="solidCanvas" style="width: 100px; height: 100px; position: absolute; left: -9999px;" />
-			</view>
-		</view -->
-
-		<!-- 当前位置 -->
-		<view class="now">
-			<Rings :size="240" :maskFlag="true" class="small" :rotateDeg="rotateDeg" :colors="ringData"></Rings>
-			<view class="words">当前位置</view>
-		</view>
-	</view>
 </template>
 
 <script>

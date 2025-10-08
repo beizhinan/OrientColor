@@ -16,19 +16,19 @@
 		<!-- 图表 -->
 		<view class="chart-cube">
 			<view class="chart" v-if="dimension == '3D'">
-				<image mode="aspectFit" class="gif" src="/src/static/showcase/display-3d.gif"></image>
+				<image mode="aspectFit" class="gif" src="https://ai4d-787vnqasbej5d5ojag.oss-cn-shanghai.aliyuncs.com/image/gif/display-3d.GIF"></image>
 				<view v-if="showPopup" class="popup">
 					<text class="text poptext">点击色立体图像查看三维模型，可以自动显示色谱在三维空间中的分视图，用户可以自主通过点击、捏合、滑动实现对模型的操作。</text>
 					<text class="text know" @tap.stop="showPopup = false">✔明白了</text>
 				</view>
 			</view>
 			<view class="chart" v-if="dimension == '2D'">
-				<image class="gif" v-if="selectedButton === 'button1'" mode="aspectFit" src="/src/static/showcase/display-2drect.gif"></image>
-				<image class="gif" v-if="selectedButton === 'button2'" mode="aspectFit" src="/src/static/showcase/display-2dpolar.gif"></image>
+				<image class="gif" v-if="selectedButton === 'button1'" mode="aspectFit" src="https://ai4d-787vnqasbej5d5ojag.oss-cn-shanghai.aliyuncs.com/image/gif/display-2drect.GIF"></image>
+				<image class="gif" v-if="selectedButton === 'button2'" mode="aspectFit" src="https://ai4d-787vnqasbej5d5ojag.oss-cn-shanghai.aliyuncs.com/image/gif/display-2dpolar.GIF"></image>
 			</view>
 			<view class="chart" v-if="dimension == '1D'">
-				<image class="gif" v-if="selectedButton === 'button1'" mode="aspectFit" src="/src/static/showcase/display-1drect.gif"></image>
-				<image class="gif" v-if="selectedButton === 'button2'" mode="aspectFit" src="/src/static/showcase/display-1dpolar.gif"></image>
+				<image class="gif" v-if="selectedButton === 'button1'" mode="aspectFit" src="https://ai4d-787vnqasbej5d5ojag.oss-cn-shanghai.aliyuncs.com/image/gif/display-1drect.GIF"></image>
+				<image class="gif" v-if="selectedButton === 'button2'" mode="aspectFit" src="https://ai4d-787vnqasbej5d5ojag.oss-cn-shanghai.aliyuncs.com/image/gif/display-1dpolar.GIF"></image>				
 			</view>
 		</view>
 		<!-- 文字栏 -->
@@ -134,7 +134,7 @@
 					    .filter(Boolean) // 去掉空值
 					    .join('-');
 					
-					  return str || 'all';
+					  return str || '三维色谱';
 					})();
 					// 筛选项用于后端筛选
 					const params = JSON.stringify(this.filterData)   

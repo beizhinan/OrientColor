@@ -73,12 +73,10 @@
 	onLoad((options) => {
 		selectedButton.value = options.selectedButton
 		colorPointsStatic.value = JSON.parse(decodeURIComponent(options.colorPoints)) || []
-		selectedFilters.value = options.selectedFilters === 'all' ? '二维色谱' : options.selectedFilters
+		selectedFilters.value = options.selectedFilters === '三维色谱' ? '二维色谱' : options.selectedFilters
 		uni.setNavigationBarTitle({
 			title: selectedFilters.value
 		})
-		console.log(selectedFilters.value)
-	  
 		filterData.value = JSON.parse(decodeURIComponent(options.filterData)) || []
 		//页面加载时请求后端数据
 		fetchColorPoints()
