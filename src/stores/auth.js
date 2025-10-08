@@ -5,7 +5,8 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     userInfo: uni.getStorageSync('userInfo') || null, // 用户信息
     token: uni.getStorageSync('token') || null, // 从缓存中读取token
-    isLogin: false // 登录状态
+    isLogin: false, // 登录状态
+	user_id: null
   }),
   
   actions: {
@@ -19,12 +20,46 @@ export const useAuthStore = defineStore('auth', {
         return Promise.reject(error)
       }
     },
+	
+	//解析token
+	parseJWT(tokens) {
+	  try {
+	    // 1. 拆分 token，获取 Payload 部分（第二部分）
+	    const base64Url = tokens.split('.')[1]
+	    if (!base64Url) {
+	      throw new Error('无效的 token 格式')
+	    }
+	
+	    // 2. 处理 Base64URL 编码（替换特殊字符，补充 padding）
+	    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/') // 替换 URL 安全字符
+	    const padding = base64.length % 4
+	    if (padding) {
+	      const padLength = 4 - padding
+	      base64 += '='.repeat(padLength) // 补充 Base64 必要的 padding
+	    }
+	
+	    // 3. Base64 解码为 JSON 字符串
+	    const jsonPayload = decodeURIComponent(
+	      atob(base64) // 解码 Base64
+	        .split('')
+	        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)) // 转换为 URI 编码
+	        .join('')
+	    )
+	
+	    // 4. 转换为 JSON 对象并返回
+	    return JSON.parse(jsonPayload)
+	  } catch (error) {
+	    console.error('解析 token 失败：', error.message)
+	    return null
+	  }
+	},
     
     // 完成登录流程
     async completeLogin() {
       try {
         // 先获取用户信息（需用户主动触发）
         const userInfoRes = await getWxUserInfo()
+		console.log(userInfoRes)
         
         // 检查是否获取到用户信息
         if (!userInfoRes.userInfo) {
@@ -47,14 +82,25 @@ export const useAuthStore = defineStore('auth', {
 		// 	}
 		// }
         console.log("res：", res)
+		
+		// 解析 token
+		const payload = this.parseJWT(res.token)
+		
+		if (payload) {
+		  console.log('解析结果：', payload)
+		  this.user_id = payload.sub
+		  console.log("赋值：",this.user_id,"  原值",payload.sub)
+		}
         
-        if (res.code === 200) {
-          this.token = res.data.token
+        if (res) {
+          //this.token = res.data.token
+		  this.token =res.token
           this.userInfo = userInfoRes.userInfo
           this.isLogin = true
+		  
           
           // 存储到缓存
-          uni.setStorageSync('token', res.data.token)
+          uni.setStorageSync('token', res.token)
           uni.setStorageSync('userInfo', userInfoRes.userInfo)
           
           return Promise.resolve(res)

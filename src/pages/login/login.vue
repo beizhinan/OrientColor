@@ -49,7 +49,7 @@
 </template>
 
 <script>
-	import { useAuthStore } from "@/stores/auth";
+	import { useAuthStore } from "@/stores/auth.js";
 export default {
   data() {
     return {
@@ -63,7 +63,7 @@ export default {
     },
 
     // 授权登录处理
-    handleAuthLogin() {
+    async handleAuthLogin() {
       if (!this.agreed) {
         uni.showToast({
           title: "请先同意用户协议",
@@ -71,13 +71,33 @@ export default {
         });
         return;
       }
-      // 授权登录逻辑
-      uni.showToast({
-        title: "授权登录成功",
-        icon: "success",
-      });
 	  const login = useAuthStore()
-	  login.completeLogin()
+	  await login.completeLogin()
+	  
+	  // 加一个小延迟，确保 isLogin 状态已更新
+	  await new Promise(resolve => setTimeout(resolve, 100))
+	  
+      // 授权登录逻辑
+	  if(login.isLogin){
+		  uni.showToast({
+		    title: "授权登录成功",
+		    icon: "success",
+			duration: 1500
+		  });
+		  setTimeout(() => {
+		    uni.navigateBack()
+		  }, 1500)
+		  
+	  }else{
+		  console.log("failed")
+		  uni.showToast({
+		  	title: "登录失败，请重试",
+		  	icon: "none",
+		  	duration: 1500
+		  })
+	  }
+      
+	  
     },
 
     // 取消授权
