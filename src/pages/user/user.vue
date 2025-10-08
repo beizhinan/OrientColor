@@ -58,11 +58,13 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
+import { ref,watch } from "vue";
+import { useAuthStore } from "@/stores/auth.js";
+import { useCollectedStore } from "@/stores/collectionStore";
 import { onShow } from "@dcloudio/uni-app";
 
 const authStore = useAuthStore();
+const collectionStore = useCollectedStore();
 
 // 默认头像
 const defaultAvatar = "../../static/default-avatar.png";
@@ -72,7 +74,7 @@ const menuList = ref([
 	id: 1, 
 	title: "我的收藏", 
 	icon: "icon-order", 
-	path: "/pages/collection/collection" ,
+	path: `/pages/collection/collection?user_id=${authStore.user_id}` ,
 	iconfont:"/static/user/collections.png"
   },
   {
@@ -86,8 +88,21 @@ const menuList = ref([
 
 // 页面显示时检查登录状态
 onShow(() => {
-  authStore.checkLogin();
+	//console.log('准备传递的user_id：', authStore.user_id)
+	//console.log(authStore);
+	//authStore.checkLogin();
+	if(authStore.isLogin){
+		collectionStore.user_id = authStore.user_id
+	}
+	//authStore.completeLogin()
 });
+
+watch(
+  () => authStore.user_id,
+  (newUserId) => {
+    menuList.value[0].path = `/pages/collection/collection?user_id=${newUserId || ''}`
+  }
+)
 
 // 用户信息点击处理 - 跳转到登录页面
 const handleUserClick = () => {
@@ -99,6 +114,7 @@ const handleUserClick = () => {
 
 // 导航到其他页面
 const navigateTo = (path) => {
+	console.log('最终跳转URL：', path)
   if (!authStore.isLogin) {
     uni.showModal({
       title: "提示",
