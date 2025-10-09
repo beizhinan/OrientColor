@@ -60,11 +60,9 @@
 <script setup>
 import { ref,watch } from "vue";
 import { useAuthStore } from "@/stores/auth.js";
-import { useCollectedStore } from "@/stores/collectionStore";
 import { onShow } from "@dcloudio/uni-app";
 
 const authStore = useAuthStore();
-const collectionStore = useCollectedStore();
 
 // 默认头像
 const defaultAvatar = "../../static/default-avatar.png";
@@ -74,7 +72,7 @@ const menuList = ref([
 	id: 1, 
 	title: "我的收藏", 
 	icon: "icon-order", 
-	path: `/pages/collection/collection?user_id=${authStore.user_id}` ,
+	path: `/pages/collection-package/collection/collection?user_id=${authStore.user_id}` ,
 	iconfont:"/static/user/collections.png"
   },
   {
@@ -88,19 +86,12 @@ const menuList = ref([
 
 // 页面显示时检查登录状态
 onShow(() => {
-	//console.log('准备传递的user_id：', authStore.user_id)
-	//console.log(authStore);
-	//authStore.checkLogin();
-	if(authStore.isLogin){
-		collectionStore.user_id = authStore.user_id
-	}
-	//authStore.completeLogin()
 });
 
 watch(
   () => authStore.user_id,
   (newUserId) => {
-    menuList.value[0].path = `/pages/collection/collection?user_id=${newUserId || ''}`
+    menuList.value[0].path = `/pages/collection-package/collection/collection?user_id=${newUserId || ''}`
   }
 )
 
@@ -108,7 +99,7 @@ watch(
 const handleUserClick = () => {
   if (!authStore.isLogin) {
     // 跳转到登录页面
-    uni.navigateTo({ url: "/pages/login/login" });
+    uni.navigateTo({ url: "/pages/auth-package/login/login" });
   }
 };
 
@@ -122,7 +113,7 @@ const navigateTo = (path) => {
       success: (res) => {
         if (res.confirm) {
           // 跳转到登录页面而不是直接登录
-          uni.navigateTo({ url: "/pages/login/login" });
+          uni.navigateTo({ url: "/pages/auth-package/login/login" });
         }
       },
     });
