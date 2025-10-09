@@ -98,8 +98,8 @@
 				adds:false,
 			}
 		},
-		async onLoad(){
-			await collectionStore.initList()
+		async onLoad(options){
+			await collectionStore.initCollectionList(options.user_id)
 			this.dataList = [...collectionStore.collection]
 			this.dataListLength = this.dataList.length
 			//console.log(collectionStore.collection)
@@ -138,7 +138,7 @@
 			//搜索函数
 			findData(){
 				const value = this.inputValue.trim()// 获取输入的关键词（去除空格）
-				console.log(value)
+				//console.log(value)
 				this.dataList = []
 				if(!value){
 					//重置dataList
