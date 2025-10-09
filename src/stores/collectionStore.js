@@ -1,21 +1,36 @@
 import { defineStore } from 'pinia'
 import { getCollection } from "@/api/collection.js"
+import { useAuthStore } from '@/stores/auth.js'
 
 export const useCollectedStore = defineStore('collectionStore',{
 	state:() => ({
 		//收藏页相关共享的数据
 		collection:[],
-		modify:false
+		modify:false,
 	}),
 	actions:{
 		//初始化，在 collection.vue调用时 调用
 		initList(){
+			const authStore = useAuthStore()
+			if(!authStore.user_id){
+				// 1. 先移除旧的监听（避免重复监听）
+				uni.$off('loginSuccessGlobal');
+				// 2. 监听全局事件
+				uni.$on('loginSuccessGlobal', () => {
+				    console.log('全局事件触发，重新执行 initList');
+				    this.initList(); // 登录成功后重新执行
+				});
+				uni.navigateTo({
+				      url: "pages/auth-package/login/login",
+				});
+				return;
+			}
 			//console.log("这是初始化")
 			if(this.collection.length !== 0){
 				console.log("已经有数据了")
 				return Promise.resolve()
 			}
-			return getCollection()
+			return getCollection(authStore.user_id)
 			.then(collectionData => {
 			    // 2. 赋值并处理数据
 				this.collection = collectionData
@@ -58,7 +73,7 @@ export const useCollectedStore = defineStore('collectionStore',{
 		
 		    return new Promise((resolve, reject) => {
 		      uni.request({
-		        url: 'http://localhost:8888/user1',
+		        url: `http://39.97.55.169:8080/api/v1/user/collection?user_id=${user_id}`,
 		        method: 'PUT',
 		        header: {
 		          'Content-Type': 'application/json'
