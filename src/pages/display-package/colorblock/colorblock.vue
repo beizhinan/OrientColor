@@ -237,7 +237,7 @@
 </template>
 
 <script>
-import SaveSuccessModal from "../../components/colorblock/SaveSuccessModal.vue";
+import SaveSuccessModal from "@/components/colorblock/SaveSuccessModal.vue";
 import { getColorDetail } from '@/api/colorblock.js';
 
 export default {
