@@ -16,7 +16,7 @@
 		</view>
 		<!--具体内容-->
 		<view class="content">
-			<view class="favorites" :url="`/pages/favorites/favorites?name=${item.name}`" open-type="navigate"
+			<view class="favorites" :url="`/pages/collection-package/favorites/favorites?name=${item.name}`" open-type="navigate"
 			v-for="(item) in dataList"
 			:key="item.id"
 			@click="selectOrGoto(item,index)"
@@ -99,7 +99,7 @@
 			}
 		},
 		async onLoad(options){
-			await collectionStore.initCollectionList(options.user_id)
+			await collectionStore.initList()
 			this.dataList = [...collectionStore.collection]
 			this.dataListLength = this.dataList.length
 			//console.log(collectionStore.collection)
@@ -108,7 +108,6 @@
 			if (Array.isArray(collectionStore.collection)) {
 			    this.dataList = [...collectionStore.collection]
 			    this.dataListLength = this.dataList.length
-			    //console.log(this.dataList)
 			} else {
 			    this.dataList = []
 			    this.dataListLength = 0
@@ -128,12 +127,9 @@
 				// 跳转到页面
 			    if (!this.managerFlag) {
 					uni.navigateTo({
-						url: `/pages/favorites/favorites?item=${itemStr}`
+						url: `/pages/collection-package/favorites/favorites?item=${itemStr}`
 					})
 				}
-				// else{
-				// 	this.select(item,index)
-				// }
 			},
 			//搜索函数
 			findData(){
@@ -250,7 +246,6 @@
 			handlePageUnload(){
 				if(collectionStore.modify){
 					console.log("触发修改")
-					//console.log(collectionStore.collection)
 					collectionStore.submitData()
 				}
 				else{

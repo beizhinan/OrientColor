@@ -87,8 +87,6 @@
 			}
 		},
 		onLoad(options){
-			//this.name=options.name
-			// console.log(this.name)
 			 // 解析JSON字符串为对象
 			if (options.item) {
 				this.item = JSON.parse(decodeURIComponent(options.item))
@@ -110,7 +108,6 @@
 		},
 		methods:{
 			deleteData(index){
-				// splice(索引, 删除数量)：直接修改原数组，删除指定元素
 				this.data.colorCard.splice(index, 1)
 				console.log(`已删除索引为${index}的元素`)
 				if(this.data.length === 0){
@@ -138,7 +135,7 @@
 				const params = JSON.stringify(Item)
 				//第三个参数
 				const colorPointsStr = encodeURIComponent(JSON.stringify(this.colorPoints));
-				const newUrl = `/pages/chart/chart?selectedFilters=${selectedFilters}&filterData=${encodeURIComponent(params)}&colorPoints=${colorPointsStr}`
+				const newUrl = `/pages/chart-package/chart/chart?selectedFilters=${selectedFilters}&filterData=${encodeURIComponent(params)}&colorPoints=${colorPointsStr}`
 				uni.navigateTo({
 					url: newUrl
 				})
@@ -153,7 +150,6 @@
 					// 拼接格式：颜色 起始%, 颜色 结束%, 
 					gradient += `${color} ${start}%, ${color} ${end}%, `
 				});
-				// 去除最后一个逗号和空格
 				return `linear-gradient(${gradient.slice(0, -2)})`
 			}
 		},
