@@ -35,7 +35,7 @@
 				<text class="popup-title add-title">新建收藏夹</text>
 				<text class="popup-tip">收藏夹名称</text>
 				<input class="folder-input" type="text" v-model="newFolderName" maxlength="10"
-					placeholder="输入收藏夹名称，不多于10个字" />
+					placeholder="输入收藏夹名称，不多于10个字"></input>
 				<button class="save-btn add-btn" @click="createFolder">完成</button>
 			</view>
 		</view>
