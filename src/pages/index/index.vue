@@ -43,13 +43,11 @@
 </template>
 
 <script>
-import premiumPopup from "@/components/home/premium-popup.vue";
 import colorCard from "@/components/home/color-card.vue";
 import { getRecommendedColors } from "@/api/index.js"; // 引入获取推荐色谱的接口
 
 export default {
   components: {
-    premiumPopup,
     colorCard,
   },
   data() {
@@ -82,7 +80,7 @@ export default {
     handleViewDetails() {},
     navigateToAllColor() {
       uni.navigateTo({
-        url: "/pages/allcolor/allcolor",
+        url: "/pages/display-package/allcolor/allcolor",
       });
     },
     loadMore() {

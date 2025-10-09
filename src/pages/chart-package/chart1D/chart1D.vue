@@ -59,13 +59,17 @@
 	import {
 		onLoad, onUnload
 	} from '@dcloudio/uni-app'
-	const echarts = require('../../uni_modules/lime-echart/static/echarts.min')
+	const echarts = require('../uni_modules/lime-echart/static/echarts.min')
 	import detailCard from "@/components/chart/detailCard.vue"
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
 	import Collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
 	import ring1d from "@/components/chart/ring-1D.vue"
-	import { getColorPoints } from '@/api/colorPoints.js'
+	import { getColorPoints } from '../api/colorPoints.js'
+
+	defineOptions({
+		name: 'chart-1d'
+	})
 
 	const chartRef = ref(null)
 	const myChartRef = ref(null)

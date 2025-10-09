@@ -52,7 +52,7 @@
 	import detailCard from "@/components/chart/detailCard.vue"
 	import collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
-	import { getColorPoints } from '@/api/colorPoints.js'
+	import { getColorPoints } from '../api/colorPoints.js'
 
 	defineOptions({
 			name: 'ColorCubePage'

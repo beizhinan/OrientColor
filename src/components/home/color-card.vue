@@ -65,7 +65,7 @@ export default {
       console.log("当前标题：", this.title);
       // 跳转到色谱详情页，携带ID和标题
       uni.navigateTo({
-        url: `/pages/chromatogarphy/chromatogarphy?id=${
+        url: `/pages/display-package/chromatogarphy/chromatogarphy?id=${
           this.id
         }&title=${encodeURIComponent(this.title)}`,
       });

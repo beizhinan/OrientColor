@@ -259,7 +259,7 @@ import {
   getLevelTwoColors,
   getLevelThreeColors,
   getLevelFourColors,
-} from "@/api/allcolor";
+} from "../api/allcolor";
 
 export default {
   data() {
@@ -461,7 +461,7 @@ export default {
 
       uni.navigateTo({
         url:
-          `/pages/colorblock/colorblock?` +
+          `/pages/display-package/colorblock/colorblock?` +
           `name=${encodeURIComponent(color.name)}&` +
           `value=${encodeURIComponent(color.value)}&` +
           `id=${color.id || ""}&` +

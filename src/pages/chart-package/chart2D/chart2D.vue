@@ -46,13 +46,17 @@
 <script setup>
 	import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 	import { onLoad, onUnload } from '@dcloudio/uni-app'
-	const echarts = require('../../uni_modules/lime-echart/static/echarts.min')
+	const echarts = require('../uni_modules/lime-echart/static/echarts.min')
 	import detailCard from "@/components/chart/detailCard.vue"
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
 	import Collection from "@/components/chart/collection.vue";
 	import buttomTabVue from '@/components/buttomTab/buttomTab.vue'
-	import { getColorPoints } from '@/api/colorPoints.js'
-	
+	import { getColorPoints } from '../api/colorPoints.js'
+
+	defineOptions({
+		name: 'ColorChart'
+	})
+
 	const selectedButton = ref('')
 	const chartChange = ref('')
 	const colorPoints = ref([])

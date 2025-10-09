@@ -78,6 +78,7 @@ const caf = (id) => {
 // 图表引用和状态
 const chart = ref(null);
 let chartInstance = null;
+let updateTimer = null;
 const selectedColor = ref(null);
 const currentAngle = ref(0);
 const chartStyleStr = "width: 100%; height: 300px;";
@@ -100,8 +101,6 @@ const gestureState = ref({
   inertiaTimer: null,
 });
 
-// 防抖定时器
-let updateTimer = null;
 
 // LAB颜色空间转换函数
 function labToRgb(l, a, b) {
@@ -662,39 +661,38 @@ function handleTouchEnd() {
 // 初始化图表
 const initChart = async () => {
   try {
-    const echarts = require("../../../uni_modules/lime-echart/static/echarts.min.js");
+    const echarts = require("../../../../pages/chart-package/uni_modules/lime-echart/static/echarts.min.js");
 
-    if (!chart.value || !chart.value.init) return;
+    if (!chart.value || !chart.value.init) {
+      console.error("图表组件未正确初始化");
+      return;
+    }
 
     chartInstance = await chart.value.init(echarts);
 
-    const centerAngle = -currentAngle.value;
-    const startAngle = centerAngle - 90;
-    const endAngle = centerAngle + 90;
-
-    const currentData = showLowChroma.value ? low : gener;
-    const seriesData = generatePolarData(currentData, startAngle, endAngle);
+    const seriesData = generatePolarData(gener, -90, 270);
 
     const option = {
       polar: {
-        center: ["50%", "50%"],
-        radius: "100%",
+        center: ["50%", "100%"],
+        radius: "120%",
       },
       angleAxis: {
         type: "value",
-        startAngle: -currentAngle.value,
+        startAngle: 0,
         clockwise: false,
         show: false,
         min: 0,
         max: 360,
-        animation: false,
+        animation: true,
+        animationDuration: 100,
+        animationEasing: "linear",
       },
       radiusAxis: {
         type: "value",
         min: 0,
         max: 1,
         show: false,
-        animation: false,
       },
       series: [
         {
@@ -702,41 +700,31 @@ const initChart = async () => {
           renderItem: renderPolarSector,
           data: seriesData,
           coordinateSystem: "polar",
-          animation: false,
-          // 移除了 silent: true，启用交互
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+          },
         },
       ],
     };
 
     chartInstance.setOption(option);
 
-    // 添加点击事件监听
+    // 点击事件
     chartInstance.on("click", (params) => {
-      console.log("点击了颜色块:", params);
+      if (params.data?.customData?.isNoData) {
+        return;
+      }
 
-      const customData = params.data?.customData;
-      if (customData) {
-        console.log("颜色数据:", customData);
-
-        // 如果不是无数据区域且不是中心区域，则选择该颜色
-        if (!customData.isNoData && !customData.isCenter) {
-          selectColor(customData);
-          console.log("已选择颜色:", customData.hex);
-        } else if (customData.isNoData) {
-          console.log("点击了无数据区域");
-        } else if (customData.isCenter) {
-          console.log("点击了中心区域");
-        }
-      } else {
-        console.log("未找到自定义数据");
+      if (params.data?.customData) {
+        selectColor(params.data.customData);
       }
     });
 
-    // 初始化后选择中心颜色
     calculateCenterColors();
-    if (centerColors.value.length > 1) {
-      selectedColor.value = centerColors.value[1];
-    }
   } catch (error) {
     console.error("初始化图表失败:", error);
   }

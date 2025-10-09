@@ -209,7 +209,7 @@
 </template>
 
 <script>
-import { getChromatographyDetail } from "@/api/chromatography.js";
+import { getChromatographyDetail } from "../api/chromatography.js";
 
 export default {
   data() {
@@ -445,7 +445,7 @@ export default {
 
       uni.navigateTo({
         url:
-          `/pages/colorblock/colorblock?` +
+          `/pages/display-package/colorblock/colorblock?` +
           `name=${encodeURIComponent(color.name)}&` +
           `value=${encodeURIComponent(color.value)}&` +
           `id=${color.id || ""}&` +

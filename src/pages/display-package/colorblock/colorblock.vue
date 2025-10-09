@@ -238,7 +238,7 @@
 
 <script>
 import SaveSuccessModal from "@/components/colorblock/SaveSuccessModal.vue";
-import { getColorDetail } from '@/api/colorblock.js';
+import { getColorDetail } from '../api/colorblock.js';
 
 export default {
   components: {
@@ -379,7 +379,7 @@ export default {
     navigateToGroup(label, value) {
       if (value && value !== "-") {
         uni.navigateTo({
-          url: `/pages/group/group?label=${encodeURIComponent(
+          url: `/pages/display-package/group/group?label=${encodeURIComponent(
             label
           )}&value=${encodeURIComponent(value)}`,
         });

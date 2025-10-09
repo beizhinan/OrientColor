@@ -22,7 +22,7 @@
 <script>
 import previewCard from "@/components/search/text-search/preview-card.vue";
 import emptyData from "@/components/search/empty-data.vue";
-import { getGroupColors } from "@/api/group.js";
+import { getGroupColors } from "../api/group.js";
 
 export default {
   components: {
@@ -105,7 +105,7 @@ export default {
 
       // 跳转到详情页
       uni.navigateTo({
-        url: `/pages/colorblock/colorblock?${queryString}`,
+        url: `/pages/display-package/colorblock/colorblock?${queryString}`,
       });
     },
   },
