@@ -45,6 +45,7 @@ export const useCollectedStore = defineStore('collectionStore',{
 		updateList(data){
 			this.collection = data
 			this.modify = true
+			this.submitData()
 		},
 		//删除数据---色带
 		deleteCardData(name,index){
@@ -70,11 +71,11 @@ export const useCollectedStore = defineStore('collectionStore',{
 		    const sendData = this.collection.map(item=>{
 				return {
 					id:item.id,
-					name:item.name,
+					name:item.name || '默认收藏夹',
 					colorCard: item.colorCard.map(card=>{
 						return {
 							cardId:card.cardId,
-						    name: card.name,    
+						    name: card.name || '未知色卡',    
 						    system: card.system,   
 						    hue: card.hue,        
 						    category: card.category,  
@@ -83,6 +84,7 @@ export const useCollectedStore = defineStore('collectionStore',{
 					})
 				}
 			})
+			console.log(sendData)
 		    return new Promise((resolve, reject) => {
 		      uni.request({
 		        url:`http://39.97.55.169:8080/api/v1/user/collection?user_id=${authStore.user_id}`,
