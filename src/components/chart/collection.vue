@@ -86,10 +86,22 @@
 		},
 		async mounted() {
 			await collectionStore.initList()
-			this.folders = [...collectionStore.collection]
-			this.foldersLength = this.folders.length
+			// this.folders = [...collectionStore.collection]
+			// this.foldersLength = this.folders.length
+			this.syncFolders(collectionStore);
+			this.$watch(
+			      () => collectionStore.collection,
+			      (newVal) => {
+			        this.syncFolders(collectionStore);
+			      },
+			      { deep: true }
+			);
 		},
 		methods: {
+			syncFolders(store) {
+			      this.folders = [...store.collection];
+			      this.foldersLength = this.folders.length;
+			},
 			//增加登陆判断
 			startCollect() {
 				if (!authStore.isLogin) {
@@ -138,7 +150,7 @@
 							item.colorCard.push({
 								cardId: item.colorCard.length + 1,
 								color: [this.color.code, "#f1f1f1", "#e6e6e6", "#d9d9d9"],
-								name: this.color.name,
+								name: this.color.name||'未知色卡',
 								system: this.filterData.system,
 								hue: this.filterData.hue,
 								category: this.filterData.category,
