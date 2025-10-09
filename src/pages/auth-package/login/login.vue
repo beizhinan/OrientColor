@@ -85,8 +85,10 @@ export default {
 			duration: 1500
 		  });
 		  setTimeout(() => {
+			uni.$emit('loginSuccessGlobal'); 
 		    uni.navigateBack()
 		  }, 1500)
+		
 		  
 	  }else{
 		  console.log("failed")
@@ -96,8 +98,6 @@ export default {
 		  	duration: 1500
 		  })
 	  }
-      
-	  
     },
 
     // 取消授权

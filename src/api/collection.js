@@ -3,10 +3,8 @@ import { request } from '@/utils/request'
 export function getCollection(user_id){
 	return new Promise((resolve, reject) => {
 	    request({
-	      //url: 'http://localhost:8888/user1',   //测试数据地址，使用json-server，需要npm安装
 		  url:`http://39.97.55.169:8080/api/v1/user/collection?user_id=${user_id}`,
 	      method: 'GET',
-		  //params: { user_id: user_id }, // GET请求用params传递参数
 	    })
 	    .then(response => {
 			// 确保基础数据是数组
