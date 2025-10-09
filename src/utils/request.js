@@ -83,13 +83,14 @@ const request = (options) => {
         // 处理响应数据
         if (res.statusCode === 200) {
           // 根据后端返回的数据结构进行调整
-          if (res.data.code === 200 || res.data.status === 'success') {
+          /*if (res.data.code === 200 || res.data.status === 'success') {
             resolve(res.data)
           } else {
             // 业务错误处理
             handleBusinessError(res.data)
             reject(res.data)
-          }
+          }*/
+		  resolve(res.data)
         } else {
           // HTTP状态码错误处理
           handleHttpError(res.statusCode)

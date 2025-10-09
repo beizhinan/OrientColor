@@ -1,12 +1,12 @@
 <template>
   <cover-view class="popup-mask" v-if="show" @tap="closePopup">
     <cover-view class="popup-container" @tap.stop>
-      <!-- 海报图片 -->
+      <!-- 海报图片 
       <cover-image
         class="ad-poster"
         src="../../static/home/ad-plus.jpg"
         mode="aspectFill"
-      ></cover-image>
+      ></cover-image>-->
 
       <!-- 点击体验图片 -->
       <cover-view class="experience-btn" @tap="handleExperience">

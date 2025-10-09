@@ -144,12 +144,12 @@
 					switch (this.dimension) {
 						case '1D':
 							url =
-								`/pages/chart1D/chart1D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}
+								`/subPackages/chart1D/chart1D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}
 									&filterData=${encodeURIComponent(params)}&selectedFilters=${selectedFilters}`;
 							break;
 						case '2D':
 							url =
-								`/pages/chart2D/chart2D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}
+								`/subPackages/chart2D/chart2D?selectedButton=${selectedButton}&colorPoints=${colorPointsStr}
 									&filterData=${encodeURIComponent(params)}&selectedFilters=${selectedFilters}`;
 							break;
 						case '3D':
