@@ -138,7 +138,7 @@
 				console.log('name:', this.colorName)
 				console.log('code:', this.colorCode)
 				uni.navigateTo({
-					url: `/pages/colorblock/colorblock?name=${this.colorName}&value=${this.colorCode}&id=${this.colorId}`
+					url: `/pages/display-package/colorblock/colorblock?name=${this.colorName}&value=${this.colorCode}&id=${this.colorId}`
 				})
 			}
 		}

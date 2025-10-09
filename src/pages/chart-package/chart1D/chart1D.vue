@@ -9,7 +9,8 @@
 		<view class="container">
 			<!-- 左侧图表 -->
 			<view class="chart">
-				<l-echart v-if="colorPoints.length > 0 && chartChange==='rect'" class="chart-content" ref="chartRef" @finished="init"></l-echart>
+				<l-echart v-if="colorPoints.length > 0 && chartChange==='rect'" class="chart-content" 
+					ref="chartRef" @finished="init" style="width: 100%; height: 500rpx;"></l-echart>
 				<ring1d 
 					v-if="colorPoints.length > 0 && chartChange === 'polar'"
 					:color-points="colorPoints"
@@ -60,6 +61,7 @@
 		onLoad, onUnload
 	} from '@dcloudio/uni-app'
 	const echarts = require('../uni_modules/lime-echart/static/echarts.min')
+	import lEchart from '../uni_modules/lime-echart/components/l-echart/l-echart.vue'
 	import detailCard from "@/components/chart/detailCard.vue"
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
 	import Collection from "@/components/chart/collection.vue";
@@ -68,7 +70,8 @@
 	import { getColorPoints } from '../api/colorPoints.js'
 
 	defineOptions({
-		name: 'chart-1d'
+		name: 'chart-1d',
+		components: { lEchart }
 	})
 
 	const chartRef = ref(null)

@@ -100,7 +100,7 @@
 						success: (res) => {
 							if (res.confirm) {
 								uni.navigateTo({
-									url: "/pages/login/login"
+									url: "/pages/auth-package/login/login"
 								});
 							}
 						},

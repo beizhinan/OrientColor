@@ -8,7 +8,7 @@
 		
 		<!-- 图表 -->
 		<view class="chart">
-			<l-echart class="chart-content" ref="chartRef" @finished="init"></l-echart>
+			<l-echart class="chart-content" ref="chartRef" @finished="init" style="width: 90%; height: 600rpx;"></l-echart>
 		</view>
 		
 		<!-- 色彩详情组件 -->
@@ -47,6 +47,7 @@
 	import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 	import { onLoad, onUnload } from '@dcloudio/uni-app'
 	const echarts = require('../uni_modules/lime-echart/static/echarts.min')
+	import lEchart from '../uni_modules/lime-echart/components/l-echart/l-echart.vue'
 	import detailCard from "@/components/chart/detailCard.vue"
 	import InteractionTip from "@/components/chart/InteractionTip.vue"
 	import Collection from "@/components/chart/collection.vue";
@@ -54,7 +55,8 @@
 	import { getColorPoints } from '../api/colorPoints.js'
 
 	defineOptions({
-		name: 'ColorChart'
+		name: 'ColorChart',
+		components: { lEchart }
 	})
 
 	const selectedButton = ref('')
