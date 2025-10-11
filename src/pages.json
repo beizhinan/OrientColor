@@ -11,7 +11,7 @@
     "root": "pages/chart-package",
     "pages": [
       { "path" : "chart/chart", "style" : {"navigationBarTitleText" : "三维色谱", "disableScroll": true} },
-	    { "path" : "chart2D/chart2D", "style" : {"navigationBarTitleText" : "二维色谱", "disableScroll": true} },
+      { "path" : "chart2D/chart2D", "style" : {"navigationBarTitleText" : "二维色谱", "disableScroll": true} },
       { "path" : "chart1D/chart1D","style" : {"navigationBarTitleText" : "一维色谱", "disableScroll": true}}
     ]
   },
@@ -86,5 +86,4 @@
       "padding": "10px"
     }
   }
-  
 }

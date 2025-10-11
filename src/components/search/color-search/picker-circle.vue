@@ -1,16 +1,23 @@
 <template>
   <view class="color-picker-container">
-    <!-- 中间三个颜色信息显示
-    <view class="center-colors-info" v-if="centerColors.length > 0">
-      <view
-        v-for="(color, index) in centerColors"
+    <!-- 切换高低色盘按钮 -->
+    <view class="toggle-button-container">
+      <button class="toggle-button" @click="handleCenterClick">
+        {{ showLowChroma ? "切换到高艳色色盘" : "切换到低艳色色盘" }}
+      </button>
+    </view>
+
+    <!-- 中心三个颜色显示 -->
+    <!-- <view class="center-colors-info" v-if="centerColors.length > 0">
+      <view 
+        v-for="(color, index) in centerColors" 
         :key="index"
         class="center-color-item"
         :class="{ 'center-main': index === 1 }"
         @click="selectColor(color)"
       >
-        <view
-          class="center-color-preview"
+        <view 
+          class="center-color-preview" 
           :style="{ backgroundColor: color.hex }"
         ></view>
         <text class="center-color-label">{{ color.label }}</text>
@@ -27,37 +34,30 @@
     >
       <!-- 主图表容器 -->
       <view class="chart-fixed-container">
-        <!-- 旋转容器 -->
-        <view
-          class="chart-rotate-container"
-          :style="{ transform: `rotate(${currentAngle}deg)` }"
-        >
-          <!-- 图表容器 -->
-          <view class="chart-container">
-            <l-echart
-              ref="chart"
-              :custom-style="chartStyleStr"
-              type="2d"
-              @finished="initChart"
-            ></l-echart>
-          </view>
+        <!-- 图表容器 -->
+        <view class="chart-container">
+          <canvas
+            id="colorWheel"
+            canvas-id="colorWheel"
+            class="color-wheel-canvas"
+          ></canvas>
         </view>
-      </view>
-
-      <!-- 中心点击区域（覆盖层） -->
-      <view
-        class="center-click-area"
-        @click="handleCenterClick"
-        :style="{ backgroundColor: showLowChroma ? '#888' : '#f0f0f0' }"
-      >
-        <text class="center-text">{{ showLowChroma ? "返回" : "低彩度" }}</text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, watch } from "vue";
+import {
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  getCurrentInstance,
+} from "vue";
+
+// 获取当前组件实例
+const instance = getCurrentInstance();
 
 // 微信小程序兼容的动画帧函数
 const raf = (callback) => {
@@ -76,12 +76,10 @@ const caf = (id) => {
 };
 
 // 图表引用和状态
-const chart = ref(null);
-let chartInstance = null;
+let canvasContext = null;
 let updateTimer = null;
 const selectedColor = ref(null);
 const currentAngle = ref(0);
-const chartStyleStr = "width: 100%; height: 300px;";
 const showLowChroma = ref(false);
 
 // 中心颜色相关
@@ -100,7 +98,6 @@ const gestureState = ref({
   velocity: 0,
   inertiaTimer: null,
 });
-
 
 // LAB颜色空间转换函数
 function labToRgb(l, a, b) {
@@ -155,246 +152,170 @@ function rgbToHex(r, g, b) {
   );
 }
 
-// 极坐标数据生成
-function generatePolarData(generData, startAngle = 0, endAngle = 360) {
-  startAngle = ((startAngle % 360) + 360) % 360;
-  endAngle = ((endAngle % 360) + 360) % 360;
-
-  const seriesData = [];
-  const minC = 0;
-  const maxC = 100;
-  const minDisplayC = showLowChroma.value ? 0 : 14; // 低艳色从0开始，主色从14开始
-
-  // 无数据区域 (仅主色盘需要)
-  if (!showLowChroma.value) {
-    seriesData.push({
-      name: "no-data-1",
-      value: [
-        0,
-        0,
-        0.1 + (minDisplayC / maxC) * 0.9,
-        1,
-        ((360 - 360) * Math.PI) / 180,
-        ((360 - 300) * Math.PI) / 180,
-      ],
-      itemStyle: {
-        color: "rgba(224,224,224,0.5)",
-        borderWidth: 0,
-      },
-      customData: { isNoData: true },
-      silent: true,
-    });
-
-    seriesData.push({
-      name: "no-data-2",
-      value: [
-        0,
-        0,
-        0.1 + (minDisplayC / maxC) * 0.9,
-        1,
-        ((360 - 10) * Math.PI) / 180,
-        ((360 - 0) * Math.PI) / 180,
-      ],
-      itemStyle: {
-        color: "rgba(224,224,224,0.5)",
-        borderWidth: 0,
-      },
-      customData: { isNoData: true },
-      silent: true,
-    });
-  }
-
-  // 中心区域
-  seriesData.push({
-    name: "low-chroma-center",
-    value: [0, 0, 0, 0.1 + (minDisplayC / maxC) * 0.9, 0, 2 * Math.PI],
-    itemStyle: {
-      color: showLowChroma.value ? "#888" : "#f0f0f0",
-      borderWidth: 0,
-    },
-    customData: {
-      name: "中心区域",
-      label: showLowChroma.value ? "返回主色盘" : "低彩度",
-      hStart: 0,
-      hEnd: 360,
-      cStart: 0,
-      cEnd: minDisplayC,
-      l: showLowChroma.value ? 50 : 80,
-      a: 0,
-      b: 0,
-      hex: showLowChroma.value ? "#888" : "#f0f0f0",
-      isCenter: true,
-    },
-  });
-
-  // 处理每个颜色类别
-  generData.forEach((category) => {
-    const hStart = 360 - (category.h[1] || 0);
-    const hEnd = 360 - (category.h[0] || 0);
-
-    if (showLowChroma.value) {
-      // 低艳色色盘 - 简单渲染方式
-      const colorObj = category.colors?.[0] || { l: 50, a: 0, b: 0 };
-      const rgb = labToRgb(colorObj.l, colorObj.a, colorObj.b);
-      const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
-
-      seriesData.push({
-        name: category.label,
-        value: [0, 0, 0.1, 1, (hStart * Math.PI) / 180, (hEnd * Math.PI) / 180],
-        itemStyle: {
-          color: hexColor,
-          borderWidth: 0.5,
-          borderColor: "#fff",
-        },
-        customData: {
-          name: category.name,
-          label: category.label,
-          hStart: category.h[0],
-          hEnd: category.h[1],
-          cStart: 0,
-          cEnd: 100,
-          ...colorObj,
-          hex: hexColor,
-        },
-      });
-    } else {
-      // 主色盘 - 按c范围划分
-      const sortedCRanges = [...category.c].sort(
-        (a, b) => (a[0] || 0) - (b[0] || 0)
-      );
-      let prevCEnd = minDisplayC;
-
-      sortedCRanges.forEach((cRange, cIndex) => {
-        const cStart = Math.max(cRange[0] || 0, minDisplayC);
-        const cEnd = cRange[1] || cStart || 0;
-
-        const actualCStart = Math.max(cStart, prevCEnd);
-        const actualCEnd = cEnd;
-
-        if (actualCStart >= actualCEnd) return;
-
-        let matchedColor = null;
-        if (category.colors?.length > 0) {
-          for (const color of category.colors) {
-            const colorC = color.c || 0;
-            if (colorC >= actualCStart && colorC < actualCEnd) {
-              matchedColor = color;
-              break;
-            }
-          }
-        }
-
-        if (!matchedColor) {
-          prevCEnd = actualCEnd;
-          return;
-        }
-
-        const innerRadius = 0.1 + (actualCStart / maxC) * 0.9;
-        const outerRadius = 0.1 + (actualCEnd / maxC) * 0.9;
-
-        const rgb = labToRgb(matchedColor.l, matchedColor.a, matchedColor.b);
-        const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
-
-        seriesData.push({
-          name: `${category.label}-${cIndex + 1}`,
-          value: [
-            cIndex,
-            0,
-            innerRadius,
-            outerRadius,
-            (hStart * Math.PI) / 180,
-            (hEnd * Math.PI) / 180,
-          ],
-          itemStyle: {
-            color: hexColor,
-            borderWidth: 0.5,
-            borderColor: "#fff",
-          },
-          customData: {
-            name: category.name,
-            label: category.label,
-            hStart: category.h[0],
-            hEnd: category.h[1],
-            cStart: actualCStart,
-            cEnd: actualCEnd,
-            ...matchedColor,
-            hex: hexColor,
-          },
-        });
-
-        prevCEnd = actualCEnd;
-      });
-    }
-  });
-
-  return seriesData;
+// 绘制扇形
+function drawSector(
+  ctx,
+  cx,
+  cy,
+  innerRadius,
+  outerRadius,
+  startAngle,
+  endAngle,
+  color
+) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerRadius, startAngle, endAngle);
+  ctx.arc(cx, cy, innerRadius, endAngle, startAngle, true);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
 }
 
-// 自定义渲染器
-function renderPolarSector(params, api) {
-  const values = [
-    api.value(0) || 0,
-    api.value(1) || 0,
-    api.value(2) || 0,
-    api.value(3) || 0,
-    api.value(4) || 0,
-    api.value(5) || 0,
-  ];
+// 绘制色轮
+function drawColorWheel() {
+  if (!canvasContext) return;
 
-  const [
-    categoryIndex,
-    itemIndex,
-    innerRadius,
-    outerRadius,
-    startAngle,
-    endAngle,
-  ] = values;
-  const coordSys = params.coordSys;
+  // 延迟一段时间确保canvas渲染完成
+  setTimeout(() => {
+    try {
+      const query = uni.createSelectorQuery().in(instance);
+      query.select("#colorWheel").boundingClientRect();
 
-  if (!coordSys || startAngle === endAngle) return;
+      query.exec((res) => {
+        try {
+          if (!res || !res[0] || !res[0].width || !res[0].height) {
+            console.error("无法获取canvas节点或节点尺寸信息不完整:", res);
+            return;
+          }
 
-  // 添加无数据区域特殊处理
-  if (params.data?.customData?.isNoData) {
-    return {
-      type: "sector",
-      shape: {
-        cx: coordSys.cx,
-        cy: coordSys.cy,
-        r0: innerRadius * coordSys.r,
-        r: outerRadius * coordSys.r,
-        startAngle: startAngle,
-        endAngle: endAngle,
-      },
-      style: {
-        fill: "rgba(224,224,224,0.5)",
-        stroke: "transparent",
-      },
-      silent: true,
-    };
-  }
+          const canvas = res[0];
+          const width = canvas.width;
+          const height = canvas.height;
+          const cx = width / 2;
+          // 将中心点重新设置在底部，以适配半圆显示
+          const cy = height;
+          // 调整半径计算方式，确保不会超出屏幕宽度
+          const maxRadius = Math.min(width, height * 2) * 0.45;
 
-  return {
-    type: "sector",
-    shape: {
-      cx: coordSys.cx,
-      cy: coordSys.cy,
-      r0: innerRadius * coordSys.r,
-      r: outerRadius * coordSys.r,
-      startAngle: startAngle,
-      endAngle: endAngle,
-    },
-    style: api.style({
-      fill: api.visual("color"),
-      stroke: api.style().borderColor || "#fff",
-      lineWidth: api.style().borderWidth || 0.5,
-    }),
-  };
+          // 清空画布
+          canvasContext.clearRect(0, 0, width, height);
+
+          const currentData = showLowChroma.value ? low : gener;
+          const minDisplayC = showLowChroma.value ? 0 : 14;
+          const maxC = 100;
+
+          // 绘制中心圆
+          const centerRadius = maxRadius * (0.1 + (minDisplayC / maxC) * 0.9);
+          canvasContext.beginPath();
+          canvasContext.arc(cx, cy, centerRadius, 0, 2 * Math.PI);
+          canvasContext.fillStyle = showLowChroma.value ? "#888" : "#f0f0f0";
+          canvasContext.fill();
+
+          // 计算旋转弧度
+          const rotation = (currentAngle.value * Math.PI) / 180;
+
+          // 绘制色块
+          currentData.forEach((category) => {
+            // 计算原始角度并转换为弧度
+            const hStartOriginal =
+              ((360 - (category.h[1] || 0)) * Math.PI) / 180;
+            const hEndOriginal = ((360 - (category.h[0] || 0)) * Math.PI) / 180;
+
+            // 应用旋转
+            const hStart = hStartOriginal + rotation;
+            const hEnd = hEndOriginal + rotation;
+
+            if (showLowChroma.value) {
+              // 低艳色色盘 - 简单渲染方式
+              const colorObj = category.colors?.[0] || { l: 50, a: 0, b: 0 };
+              const rgb = labToRgb(colorObj.l, colorObj.a, colorObj.b);
+              const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+              drawSector(
+                canvasContext,
+                cx,
+                cy,
+                centerRadius,
+                maxRadius,
+                hStart,
+                hEnd,
+                hexColor
+              );
+            } else {
+              // 主色盘 - 按c范围划分
+              const sortedCRanges = [...category.c].sort(
+                (a, b) => (a[0] || 0) - (b[0] || 0)
+              );
+              let prevCEnd = minDisplayC;
+
+              sortedCRanges.forEach((cRange) => {
+                const cStart = Math.max(cRange[0] || 0, minDisplayC);
+                const cEnd = cRange[1] || cStart || 0;
+
+                const actualCStart = Math.max(cStart, prevCEnd);
+                const actualCEnd = cEnd;
+
+                if (actualCStart >= actualCEnd) return;
+
+                let matchedColor = null;
+                if (category.colors?.length > 0) {
+                  for (const color of category.colors) {
+                    const colorC = color.c || 0;
+                    if (colorC >= actualCStart && colorC < actualCEnd) {
+                      matchedColor = color;
+                      break;
+                    }
+                  }
+                }
+
+                if (!matchedColor) {
+                  prevCEnd = actualCEnd;
+                  return;
+                }
+
+                const innerRadius =
+                  maxRadius * (0.1 + (actualCStart / maxC) * 0.9);
+                const outerRadius =
+                  maxRadius * (0.1 + (actualCEnd / maxC) * 0.9);
+
+                const rgb = labToRgb(
+                  matchedColor.l,
+                  matchedColor.a,
+                  matchedColor.b
+                );
+                const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+                drawSector(
+                  canvasContext,
+                  cx,
+                  cy,
+                  innerRadius,
+                  outerRadius,
+                  hStart,
+                  hEnd,
+                  hexColor
+                );
+
+                prevCEnd = actualCEnd;
+              });
+            }
+          });
+
+          canvasContext.draw();
+        } catch (error) {
+          console.error("绘制色块失败:", error);
+        }
+      });
+    } catch (error) {
+      console.error("查询canvas节点失败:", error);
+    }
+  }, 100);
 }
 
 // 处理中心点击
 const handleCenterClick = () => {
   showLowChroma.value = !showLowChroma.value;
-  updateChart();
+  drawColorWheel();
 
   // 发送事件通知父组件
   emit("low-chroma-toggle", showLowChroma.value);
@@ -403,33 +324,6 @@ const handleCenterClick = () => {
   if (typeof wx !== "undefined" && wx.vibrateShort) {
     wx.vibrateShort();
   }
-};
-
-// 更新图表
-const updateChart = () => {
-  if (!chartInstance) return;
-
-  const centerAngle = -currentAngle.value;
-  const startAngle = centerAngle - 90;
-  const endAngle = centerAngle + 90;
-
-  const currentData = showLowChroma.value ? low : gener;
-  const seriesData = generatePolarData(currentData, startAngle, endAngle);
-
-  const option = {
-    angleAxis: {
-      startAngle: -currentAngle.value,
-    },
-    series: [
-      {
-        data: seriesData,
-        silent: true, // 禁用主图表交互
-      },
-    ],
-  };
-
-  chartInstance.setOption(option);
-  calculateCenterColors();
 };
 
 // 计算中心三个颜色
@@ -514,7 +408,7 @@ function handleTouchStart(event) {
     // 检查是否点击中心区域
     const { clientX, clientY } = event.touches[0];
     const centerX = event.currentTarget.offsetWidth / 2;
-    const centerY = 150; // 图表中心Y位置
+    const centerY = event.currentTarget.offsetHeight / 2; // 使用容器中心点
     const distance = Math.sqrt(
       Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2)
     );
@@ -566,32 +460,7 @@ function handleTouchMove(event) {
     const velocity = deltaTime > 0 ? deltaX / deltaTime : 0;
     currentAngle.value = gestureState.value.startAngle + deltaX * 0.5;
 
-    if (chartInstance) {
-      if (!updateTimer) {
-        const centerAngle = -currentAngle.value;
-        const startAngle = centerAngle - 90;
-        const endAngle = centerAngle + 90;
-
-        const currentData = showLowChroma.value ? low : gener;
-        const seriesData = generatePolarData(currentData, startAngle, endAngle);
-
-        const option = {
-          angleAxis: {
-            startAngle: -currentAngle.value,
-          },
-          series: [
-            {
-              data: seriesData,
-            },
-          ],
-        };
-        chartInstance.setOption(option);
-
-        updateTimer = setTimeout(() => {
-          updateTimer = null;
-        }, 30);
-      }
-    }
+    drawColorWheel();
 
     gestureState.value = {
       ...gestureState.value,
@@ -613,36 +482,7 @@ function handleTouchEnd() {
       velocity *= 0.95;
       currentAngle.value += velocity * 16;
 
-      if (chartInstance) {
-        if (!updateTimer) {
-          const centerAngle = -currentAngle.value;
-          const startAngle = centerAngle - 90;
-          const endAngle = centerAngle + 90;
-
-          const currentData = showLowChroma.value ? low : gener;
-          const seriesData = generatePolarData(
-            currentData,
-            startAngle,
-            endAngle
-          );
-
-          const option = {
-            angleAxis: {
-              startAngle: -currentAngle.value,
-            },
-            series: [
-              {
-                data: seriesData,
-              },
-            ],
-          };
-          chartInstance.setOption(option);
-
-          updateTimer = setTimeout(() => {
-            updateTimer = null;
-          }, 30);
-        }
-      }
+      drawColorWheel();
 
       if (Math.abs(velocity) > 0.01) {
         gestureState.value.inertiaTimer = raf(animateInertia);
@@ -658,77 +498,41 @@ function handleTouchEnd() {
   }
 }
 
-// 初始化图表
-const initChart = async () => {
+// 初始化Canvas
+function initCanvas() {
   try {
-    const echarts = require("../../../../pages/chart-package/uni_modules/lime-echart/static/echarts.min.js");
-
-    if (!chart.value || !chart.value.init) {
-      console.error("图表组件未正确初始化");
-      return;
-    }
-
-    chartInstance = await chart.value.init(echarts);
-
-    const seriesData = generatePolarData(gener, -90, 270);
-
-    const option = {
-      polar: {
-        center: ["50%", "100%"],
-        radius: "120%",
-      },
-      angleAxis: {
-        type: "value",
-        startAngle: 0,
-        clockwise: false,
-        show: false,
-        min: 0,
-        max: 360,
-        animation: true,
-        animationDuration: 100,
-        animationEasing: "linear",
-      },
-      radiusAxis: {
-        type: "value",
-        min: 0,
-        max: 1,
-        show: false,
-      },
-      series: [
-        {
-          type: "custom",
-          renderItem: renderPolarSector,
-          data: seriesData,
-          coordinateSystem: "polar",
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.5)",
-            },
-          },
-        },
-      ],
-    };
-
-    chartInstance.setOption(option);
-
-    // 点击事件
-    chartInstance.on("click", (params) => {
-      if (params.data?.customData?.isNoData) {
-        return;
-      }
-
-      if (params.data?.customData) {
-        selectColor(params.data.customData);
-      }
-    });
-
+    canvasContext = uni.createCanvasContext("colorWheel", instance);
+    drawColorWheel();
     calculateCenterColors();
   } catch (error) {
-    console.error("初始化图表失败:", error);
+    console.error("初始化Canvas失败:", error);
   }
-};
+}
+
+// 监听角度变化，更新中心颜色
+watch(currentAngle, () => {
+  if (!gestureState.value.isDragging) {
+    calculateCenterColors();
+  }
+});
+
+// 监听色盘切换
+watch(showLowChroma, () => {
+  drawColorWheel();
+});
+
+onMounted(() => {
+  initCanvas();
+});
+
+onBeforeUnmount(() => {
+  if (gestureState.value.inertiaTimer) {
+    caf(gestureState.value.inertiaTimer);
+  }
+  if (updateTimer) {
+    clearTimeout(updateTimer);
+  }
+});
 
 // 颜色数据
 const gener = [
@@ -1088,30 +892,6 @@ const low = [
     colors: [{ l: 87, a: 2, b: 7, c: 7, h: 74 }],
   },
 ];
-
-// 监听角度变化，更新中心颜色
-watch(currentAngle, () => {
-  if (!gestureState.value.isDragging) {
-    calculateCenterColors();
-  }
-});
-
-// 监听色盘切换
-watch(showLowChroma, () => {
-  updateChart();
-});
-
-onBeforeUnmount(() => {
-  if (gestureState.value.inertiaTimer) {
-    caf(gestureState.value.inertiaTimer);
-  }
-  if (chartInstance) {
-    chartInstance.dispose();
-  }
-  if (updateTimer) {
-    clearTimeout(updateTimer);
-  }
-});
 </script>
 
 <style scoped>
@@ -1122,62 +902,27 @@ onBeforeUnmount(() => {
   background-color: #f1e9d8;
 }
 
-.gesture-container {
-  width: 100%;
-  height: 300px;
-  margin-top: auto;
-  position: relative;
-  touch-action: none;
-  -webkit-user-select: none;
-  user-select: none;
-  overflow: hidden;
-}
-
-.chart-fixed-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-}
-
-.chart-rotate-container {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: center center;
-  transition: transform 0.1s linear;
-}
-
-.chart-container {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-}
-
-.center-click-area {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  z-index: 10;
+.toggle-button-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  padding: 10px;
 }
 
-.center-text {
-  font-size: 12px;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+.toggle-button {
+  background-color: #c69c6d;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  border-radius: 20px;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.toggle-button:active {
+  background-color: #9f7735;
 }
 
 .center-colors-info {
@@ -1217,5 +962,66 @@ onBeforeUnmount(() => {
 .center-color-label {
   font-size: 12px;
   text-align: center;
+}
+
+.gesture-container {
+  width: 100%;
+  height: 200px;
+  margin-top: auto;
+  position: relative;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.chart-fixed-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); /* 只显示上半部分 */
+}
+
+.chart-rotate-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.chart-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+
+.color-wheel-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.center-click-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.center-text {
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 </style>

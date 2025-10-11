@@ -8,7 +8,7 @@
         <!-- 修复图片路径并添加错误处理 -->
         <image
           class="spectrum-image"
-          src="/static/picker.png"
+          src="/static/picker.jpg"
           mode="aspectFit"
           @error="onImageError"
         ></image>

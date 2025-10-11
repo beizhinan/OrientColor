@@ -41,7 +41,7 @@ export default {
     // 第二个弹窗的文本内容
     secondText: {
       type: String,
-      default: "点击底部灰色小圆盘可查看低彩度色彩详情",
+      default: "点击上方切换按钮可查看低彩度色彩详情",
     },
   },
   data() {

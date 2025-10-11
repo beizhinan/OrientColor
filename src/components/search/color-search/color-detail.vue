@@ -218,8 +218,8 @@ export default {
 
 <style scoped>
 .container {
-  padding: 20rpx;
-  height: 700rpx;
+  padding: 0 20rpx;
+  height: 600rpx;
 }
 
 .title {
