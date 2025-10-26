@@ -19,6 +19,7 @@
             :headerImage="card.headerImage"
             :title="card.title"
             :description="card.description"
+            :video="card.video"
           />
         </view>
         <!-- 第二列 -->
@@ -31,6 +32,7 @@
             :headerImage="card.headerImage"
             :title="card.title"
             :description="card.description"
+            :video="card.video"
           />
         </view>
       </view>

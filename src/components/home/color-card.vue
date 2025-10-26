@@ -1,16 +1,17 @@
 <template>
-  <view class="color-card" @click="handleCardClick">
+  <view class="color-card">
     <view class="card-header">
       <!-- 添加加载状态 -->
       <view v-if="!imageLoaded" class="image-placeholder">
         <view class="loading-spinner"></view>
       </view>
-      <image 
-        class="header-image" 
-        :src="headerImage" 
-        mode="widthFix" 
+      <image
+        class="header-image"
+        :src="headerImage"
+        mode="widthFix"
         @load="onImageLoad"
         @error="onImageError"
+        @click="handleImageClick"
         :class="{ 'image-loaded': imageLoaded }"
       />
       <view class="header-tag" v-if="headerText">
@@ -18,7 +19,12 @@
       </view>
     </view>
     <view class="card-content">
-      <text class="content-title">{{ title }}</text>
+      <view class="content-header">
+        <text class="content-title">{{ title }}</text>
+        <view class="action-button" @click="handleCardClick">
+          <image class="button-icon" src="/static/arrow-right.png"></image>
+        </view>
+      </view>
       <text class="content-desc">{{ description }}</text>
     </view>
   </view>
@@ -47,16 +53,44 @@ export default {
       type: String,
       default: "介绍",
     },
+    video: {
+      type: String,
+      default: "",
+    },
   },
   data() {
     return {
-      imageLoaded: false
-    }
+      imageLoaded: false,
+    };
   },
   methods: {
     handleCardClick() {
       console.log("卡片点击事件触发");
       this.performAction();
+    },
+
+    handleImageClick() {
+      console.log("图片点击事件触发");
+      this.playVideo();
+    },
+
+    playVideo() {
+      // 检查是否有视频链接，处理"暂无"的情况
+      if (this.video && this.video !== "暂无") {
+        // 使用uni-app的视频播放API
+        uni.navigateTo({
+          url: `/pages/media/media?videoSrc=${encodeURIComponent(
+            this.video
+          )}&title=${encodeURIComponent(this.title)}`,
+        });
+      } else {
+        // 没有视频时提示用户
+        uni.showToast({
+          title: "暂无视频介绍",
+          icon: "none",
+          duration: 2000,
+        });
+      }
     },
 
     performAction() {
@@ -70,16 +104,16 @@ export default {
         }&title=${encodeURIComponent(this.title)}`,
       });
     },
-    
+
     onImageLoad() {
       this.imageLoaded = true;
     },
-    
+
     onImageError(e) {
       console.error("图片加载失败:", e);
       // 加载失败时也标记为已加载，避免一直显示加载状态
       this.imageLoaded = true;
-    }
+    },
   },
 };
 </script>
@@ -116,6 +150,7 @@ export default {
   display: block;
   opacity: 0;
   transition: opacity 0.3s ease;
+  cursor: pointer;
 }
 
 .header-image.image-loaded {
@@ -156,11 +191,34 @@ export default {
   background-color: white;
 }
 
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .content-title {
   display: block;
   font-size: 24rpx;
   margin-top: 10rpx;
   margin-bottom: 10rpx;
+  flex-grow: 1;
+  margin-right: 20rpx; /* 增加右边距，与按钮保持距离 */
+}
+
+.action-button {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+}
+
+.button-icon {
+  width: 20rpx;
+  height: 20rpx;
 }
 
 .content-desc {
