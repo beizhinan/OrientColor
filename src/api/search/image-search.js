@@ -11,7 +11,7 @@ export function extractColorsFromImage(file) {
     console.log('[ImageSearch] 开始上传图片:', file);
     
     uni.uploadFile({
-      url: 'http://39.97.55.169:8080/api/v1/search/image',
+      url: 'https://coloreast.cn/api/v1/search/image',
       filePath: file.path || file.uri || file,
       name: 'image',
       header: {

@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import { extractColorsFromImage } from '@/api/search/image-search.js'
+import { extractColorsFromImage } from "@/api/search/image-search.js";
 
 export default {
   name: "ImageUploader",
@@ -80,7 +80,7 @@ export default {
       imageSrc: "",
       imageFile: null,
       result: [],
-      extractedData: [] // 新增：用于存储提取的颜色详细数据
+      extractedData: [], // 新增：用于存储提取的颜色详细数据
     };
   },
   methods: {
@@ -88,9 +88,14 @@ export default {
     getColorValue(color) {
       // 根据接口返回的数据结构获取颜色值
       // 从调试信息看，接口返回的color对象包含value属性
-      return color.value || color.hex || color.colorCode || '#' + Math.floor(Math.random()*16777215).toString(16);
+      return (
+        color.value ||
+        color.hex ||
+        color.colorCode ||
+        "#" + Math.floor(Math.random() * 16777215).toString(16)
+      );
     },
-    
+
     chooseImage() {
       uni.chooseImage({
         count: 1,
@@ -105,8 +110,8 @@ export default {
         fail: (err) => {
           console.error("选择图片失败", err);
           uni.showToast({
-            title: '选择图片失败',
-            icon: 'none'
+            title: "选择图片失败",
+            icon: "none",
           });
         },
       });
@@ -115,33 +120,36 @@ export default {
     // 提取图片颜色
     async extractColors() {
       if (!this.imageFile) return;
-      
+
       try {
-        console.log('[ImageUploader] 开始提取颜色，文件信息:', this.imageFile);
+        console.log("[ImageUploader] 开始提取颜色，文件信息:", this.imageFile);
         const res = await extractColorsFromImage(this.imageFile);
-        console.log('[ImageUploader] 接口返回完整数据:', res);
-        
+        console.log("[ImageUploader] 接口返回完整数据:", res);
+
         if (res.code === 200) {
           this.result = res.data.data; // 注意这里需要使用res.data.data
-          console.log('[ImageUploader] 匹配的东方色彩数据:', this.result);
-          
+          console.log("[ImageUploader] 匹配的东方色彩数据:", this.result);
+
           // 处理提取的颜色详细数据
           if (res.data.extractedColors) {
             this.extractedData = res.data.extractedColors;
-            console.log('[ImageUploader] 提取的颜色详细数据:', this.extractedData);
+            console.log(
+              "[ImageUploader] 提取的颜色详细数据:",
+              this.extractedData
+            );
           }
         } else {
-          console.warn('[ImageUploader] 颜色提取失败，错误信息:', res.message);
+          console.warn("[ImageUploader] 颜色提取失败，错误信息:", res.message);
           uni.showToast({
-            title: res.message || '颜色提取失败',
-            icon: 'none'
+            title: res.message || "颜色提取失败",
+            icon: "none",
           });
         }
       } catch (error) {
-        console.error('[ImageUploader] 提取颜色失败:', error);
+        console.error("[ImageUploader] 提取颜色失败:", error);
         uni.showToast({
-          title: '颜色提取失败',
-          icon: 'none'
+          title: "颜色提取失败",
+          icon: "none",
         });
       }
     },
@@ -154,8 +162,8 @@ export default {
         indicator: "default",
         loop: true,
       });
-    }, 
-    
+    },
+
     // 跳转到颜色详情页（原来的颜色匹配结果）
     goToColorDetail(color) {
       console.log("跳转到颜色详情页", color);
@@ -175,18 +183,18 @@ export default {
 
       // 跳转到详情页
       uni.navigateTo({
-        url: `/pages/colorblock/colorblock?${queryString}`,
+        url: `/pages/display-package/colorblock/colorblock?${queryString}`,
       });
     },
-    
+
     // 新增：跳转到颜色详情页（从提取的颜色数据）
     goToColorDetailFromData(color) {
       console.log("跳转到提取的颜色详情页", color);
 
       // 构造跳转参数
       const params = {
-        name: encodeURIComponent(color.name || '未知颜色'),
-        value: encodeURIComponent(color.hex || '#000000'),
+        name: encodeURIComponent(color.name || "未知颜色"),
+        value: encodeURIComponent(color.hex || "#000000"),
         id: color.id || null,
       };
 
@@ -399,7 +407,9 @@ export default {
   margin-bottom: 5rpx;
 }
 
-.color-hex, .color-rgb, .color-lab {
+.color-hex,
+.color-rgb,
+.color-lab {
   font-size: 22rpx;
   color: #666;
   margin-bottom: 3rpx;

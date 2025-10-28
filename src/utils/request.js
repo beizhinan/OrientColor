@@ -1,5 +1,5 @@
 // 基础路径，根据实际项目配置
-const BASE_URL = 'http://39.97.55.169:8080/api/v1' // 替换为你的后端API地址
+const BASE_URL = 'https://coloreast.cn/api/v1' // 替换为你的后端API地址
 
 // 调试开关
 const DEBUG = true
