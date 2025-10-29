@@ -1,4 +1,4 @@
-<template>
+ <template>
   <view class="color-picker-container">
     <!-- 切换高低色盘按钮 -->
     <view class="toggle-button-container">
@@ -74,6 +74,12 @@ const caf = (id) => {
     clearTimeout(id);
   }
 };
+
+// 添加节流控制变量
+let throttleTimer = null;
+let pendingDraw = false;
+let lastDrawTime = 0;
+const MIN_DRAW_INTERVAL = 16; // 约60fps
 
 // 图表引用和状态
 let canvasContext = null;
@@ -175,141 +181,165 @@ function drawSector(
 function drawColorWheel() {
   if (!canvasContext) return;
 
-  // 延迟一段时间确保canvas渲染完成
-  setTimeout(() => {
-    try {
-      const query = uni.createSelectorQuery().in(instance);
-      query.select("#colorWheel").boundingClientRect();
+  const now = Date.now();
+  // 实现更高效的节流控制，避免频繁绘制
+  if (now - lastDrawTime < MIN_DRAW_INTERVAL) {
+    if (!throttleTimer) {
+      throttleTimer = setTimeout(() => {
+        throttleTimer = null;
+        pendingDraw = false;
+        performDrawColorWheel();
+      }, MIN_DRAW_INTERVAL - (now - lastDrawTime));
+      pendingDraw = true;
+    } else {
+      pendingDraw = true;
+    }
+    return;
+  }
 
-      query.exec((res) => {
-        try {
-          if (!res || !res[0] || !res[0].width || !res[0].height) {
-            console.error("无法获取canvas节点或节点尺寸信息不完整:", res);
-            return;
-          }
+  lastDrawTime = now;
+  if (throttleTimer) {
+    clearTimeout(throttleTimer);
+    throttleTimer = null;
+  }
+  pendingDraw = false;
 
-          const canvas = res[0];
-          const width = canvas.width;
-          const height = canvas.height;
-          const cx = width / 2;
-          // 将中心点重新设置在底部，以适配半圆显示
-          const cy = height;
-          // 调整半径计算方式，确保不会超出屏幕宽度
-          const maxRadius = Math.min(width, height * 2) * 0.45;
+  performDrawColorWheel();
+}
 
-          // 清空画布
-          canvasContext.clearRect(0, 0, width, height);
+function performDrawColorWheel() {
+  try {
+    const query = uni.createSelectorQuery().in(instance);
+    query.select("#colorWheel").boundingClientRect();
 
-          const currentData = showLowChroma.value ? low : gener;
-          const minDisplayC = showLowChroma.value ? 0 : 14;
-          const maxC = 100;
+    query.exec((res) => {
+      try {
+        if (!res || !res[0] || !res[0].width || !res[0].height) {
+          console.error("无法获取canvas节点或节点尺寸信息不完整:", res);
+          return;
+        }
 
-          // 绘制中心圆
-          const centerRadius = maxRadius * (0.1 + (minDisplayC / maxC) * 0.9);
-          canvasContext.beginPath();
-          canvasContext.arc(cx, cy, centerRadius, 0, 2 * Math.PI);
-          canvasContext.fillStyle = showLowChroma.value ? "#888" : "#f0f0f0";
-          canvasContext.fill();
+        const canvas = res[0];
+        const width = canvas.width;
+        const height = canvas.height;
+        const cx = width / 2;
+        // 将中心点重新设置在底部，以适配半圆显示
+        const cy = height;
+        // 调整半径计算方式，确保不会超出屏幕宽度
+        const maxRadius = Math.min(width, height * 2) * 0.5;
 
-          // 计算旋转弧度
-          const rotation = (currentAngle.value * Math.PI) / 180;
+        // 清空画布
+        canvasContext.clearRect(0, 0, width, height);
 
-          // 绘制色块
-          currentData.forEach((category) => {
-            // 计算原始角度并转换为弧度
-            const hStartOriginal =
-              ((360 - (category.h[1] || 0)) * Math.PI) / 180;
-            const hEndOriginal = ((360 - (category.h[0] || 0)) * Math.PI) / 180;
+        const currentData = showLowChroma.value ? low : gener;
+        const minDisplayC = showLowChroma.value ? 0 : 14;
+        const maxC = 100;
 
-            // 应用旋转
-            const hStart = hStartOriginal + rotation;
-            const hEnd = hEndOriginal + rotation;
+        // 绘制中心圆
+        const centerRadius = maxRadius * (0.1 + (minDisplayC / maxC) * 0.9);
+        canvasContext.beginPath();
+        canvasContext.arc(cx, cy, centerRadius, 0, 2 * Math.PI);
+        canvasContext.fillStyle = showLowChroma.value ? "#888" : "#f0f0f0";
+        canvasContext.fill();
 
-            if (showLowChroma.value) {
-              // 低艳色色盘 - 简单渲染方式
-              const colorObj = category.colors?.[0] || { l: 50, a: 0, b: 0 };
-              const rgb = labToRgb(colorObj.l, colorObj.a, colorObj.b);
+        // 计算旋转弧度
+        const rotation = (currentAngle.value * Math.PI) / 180;
+
+        // 绘制色块
+        currentData.forEach((category) => {
+          // 计算原始角度并转换为弧度
+          const hStartOriginal =
+            ((360 - (category.h[1] || 0)) * Math.PI) / 180;
+          const hEndOriginal = ((360 - (category.h[0] || 0)) * Math.PI) / 180;
+
+          // 应用旋转
+          const hStart = hStartOriginal + rotation;
+          const hEnd = hEndOriginal + rotation;
+
+          if (showLowChroma.value) {
+            // 低艳色色盘 - 简单渲染方式
+            const colorObj = category.colors?.[0] || { l: 50, a: 0, b: 0 };
+            const rgb = labToRgb(colorObj.l, colorObj.a, colorObj.b);
+            const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+            drawSector(
+              canvasContext,
+              cx,
+              cy,
+              centerRadius,
+              maxRadius,
+              hStart,
+              hEnd,
+              hexColor
+            );
+          } else {
+            // 主色盘 - 按c范围划分
+            const sortedCRanges = [...category.c].sort(
+              (a, b) => (a[0] || 0) - (b[0] || 0)
+            );
+            let prevCEnd = minDisplayC;
+
+            sortedCRanges.forEach((cRange) => {
+              const cStart = Math.max(cRange[0] || 0, minDisplayC);
+              const cEnd = cRange[1] || cStart || 0;
+
+              const actualCStart = Math.max(cStart, prevCEnd);
+              const actualCEnd = cEnd;
+
+              if (actualCStart >= actualCEnd) return;
+
+              let matchedColor = null;
+              if (category.colors?.length > 0) {
+                for (const color of category.colors) {
+                  const colorC = color.c || 0;
+                  if (colorC >= actualCStart && colorC < actualCEnd) {
+                    matchedColor = color;
+                    break;
+                  }
+                }
+              }
+
+              if (!matchedColor) {
+                prevCEnd = actualCEnd;
+                return;
+              }
+
+              const innerRadius =
+                maxRadius * (0.1 + (actualCStart / maxC) * 0.9);
+              const outerRadius =
+                maxRadius * (0.1 + (actualCEnd / maxC) * 0.9);
+
+              const rgb = labToRgb(
+                matchedColor.l,
+                matchedColor.a,
+                matchedColor.b
+              );
               const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
 
               drawSector(
                 canvasContext,
                 cx,
                 cy,
-                centerRadius,
-                maxRadius,
+                innerRadius,
+                outerRadius,
                 hStart,
                 hEnd,
                 hexColor
               );
-            } else {
-              // 主色盘 - 按c范围划分
-              const sortedCRanges = [...category.c].sort(
-                (a, b) => (a[0] || 0) - (b[0] || 0)
-              );
-              let prevCEnd = minDisplayC;
 
-              sortedCRanges.forEach((cRange) => {
-                const cStart = Math.max(cRange[0] || 0, minDisplayC);
-                const cEnd = cRange[1] || cStart || 0;
+              prevCEnd = actualCEnd;
+            });
+          }
+        });
 
-                const actualCStart = Math.max(cStart, prevCEnd);
-                const actualCEnd = cEnd;
-
-                if (actualCStart >= actualCEnd) return;
-
-                let matchedColor = null;
-                if (category.colors?.length > 0) {
-                  for (const color of category.colors) {
-                    const colorC = color.c || 0;
-                    if (colorC >= actualCStart && colorC < actualCEnd) {
-                      matchedColor = color;
-                      break;
-                    }
-                  }
-                }
-
-                if (!matchedColor) {
-                  prevCEnd = actualCEnd;
-                  return;
-                }
-
-                const innerRadius =
-                  maxRadius * (0.1 + (actualCStart / maxC) * 0.9);
-                const outerRadius =
-                  maxRadius * (0.1 + (actualCEnd / maxC) * 0.9);
-
-                const rgb = labToRgb(
-                  matchedColor.l,
-                  matchedColor.a,
-                  matchedColor.b
-                );
-                const hexColor = rgbToHex(rgb.r, rgb.g, rgb.b);
-
-                drawSector(
-                  canvasContext,
-                  cx,
-                  cy,
-                  innerRadius,
-                  outerRadius,
-                  hStart,
-                  hEnd,
-                  hexColor
-                );
-
-                prevCEnd = actualCEnd;
-              });
-            }
-          });
-
-          canvasContext.draw();
-        } catch (error) {
-          console.error("绘制色块失败:", error);
-        }
-      });
-    } catch (error) {
-      console.error("查询canvas节点失败:", error);
-    }
-  }, 100);
+        canvasContext.draw();
+      } catch (error) {
+        console.error("绘制色块失败:", error);
+      }
+    });
+  } catch (error) {
+    console.error("查询canvas节点失败:", error);
+  }
 }
 
 // 处理中心点击
@@ -433,12 +463,15 @@ function handleTouchStart(event) {
       startAngle: currentAngle.value,
       lastTimestamp: Date.now(),
       velocity: 0,
+      // 新增用于连续跟踪移动的属性
+      lastX: clientX,
+      positions: [{x: clientX, time: Date.now()}] // 用于计算速度的历史位置
     };
   }
 }
 
 function handleTouchMove(event) {
-  if (!gestureState.value.isClick) return;
+  if (!gestureState.value.isClick && !gestureState.value.isDragging) return;
 
   const moveThreshold = 5;
   const deltaX = Math.abs(event.touches[0].clientX - gestureState.value.startX);
@@ -454,18 +487,27 @@ function handleTouchMove(event) {
 
     const now = Date.now();
     const currentX = event.touches[0].clientX;
-    const deltaX = currentX - gestureState.value.startX;
-    const deltaTime = now - gestureState.value.lastTimestamp;
+    
+    // 更新历史位置记录，仅保留最近100毫秒内的记录用于速度计算
+    const currentTime = Date.now();
+    gestureState.value.positions = gestureState.value.positions.filter(
+      pos => currentTime - pos.time < 100
+    );
+    gestureState.value.positions.push({x: currentX, time: currentTime});
 
-    const velocity = deltaTime > 0 ? deltaX / deltaTime : 0;
-    currentAngle.value = gestureState.value.startAngle + deltaX * 0.5;
+    // 计算基于上一次移动的角度变化
+    const deltaMoveX = currentX - gestureState.value.lastX;
+    
+    // 更新角度 - 使用更灵敏的系数
+    currentAngle.value = currentAngle.value + deltaMoveX * 0.8;
 
+    // 使用节流优化的绘制函数
     drawColorWheel();
 
     gestureState.value = {
       ...gestureState.value,
+      lastX: currentX,
       lastTimestamp: now,
-      velocity: velocity,
     };
   }
 }
@@ -475,27 +517,52 @@ function handleTouchEnd() {
 
   gestureState.value.isDragging = false;
 
-  if (Math.abs(gestureState.value.velocity) > 0.1) {
-    let velocity = gestureState.value.velocity;
+  // 基于最近的触摸点计算更准确的速度
+  const positions = gestureState.value.positions;
+  if (positions.length > 1) {
+    const latest = positions[positions.length - 1];
+    const oldest = positions[0];
+    const deltaTime = latest.time - oldest.time;
+    
+    if (deltaTime > 0) {
+      const deltaX = latest.x - oldest.x;
+      const velocity = deltaX / deltaTime; // 像素/毫秒
+      
+      // 只有当速度足够大时才启动惯性动画
+      if (Math.abs(velocity) > 0.05) {
+        let currentVelocity = velocity;
+        let lastTime = Date.now();
+        const deceleration = 0.95; // 更平滑的减速
+        
+        const animateInertia = () => {
+          const now = Date.now();
+          const deltaTimeMs = now - lastTime;
+          lastTime = now;
+          
+          // 使用指数衰减计算新速度
+          currentVelocity *= Math.pow(deceleration, deltaTimeMs/16);
+          currentAngle.value += currentVelocity * deltaTimeMs * 0.8;
 
-    const animateInertia = () => {
-      velocity *= 0.95;
-      currentAngle.value += velocity * 16;
+          // 使用节流优化的绘制函数
+          drawColorWheel();
 
-      drawColorWheel();
+          // 当速度降到足够小时停止动画
+          if (Math.abs(currentVelocity) > 0.001) {
+            gestureState.value.inertiaTimer = raf(animateInertia);
+          } else {
+            gestureState.value.inertiaTimer = null;
+            calculateCenterColors();
+          }
+        };
 
-      if (Math.abs(velocity) > 0.01) {
         gestureState.value.inertiaTimer = raf(animateInertia);
-      } else {
-        gestureState.value.inertiaTimer = null;
-        calculateCenterColors();
+        return;
       }
-    };
-
-    gestureState.value.inertiaTimer = raf(animateInertia);
-  } else {
-    calculateCenterColors();
+    }
   }
+  
+  // 如果没有足够的数据或者速度太小，则直接计算中心颜色
+  calculateCenterColors();
 }
 
 // 初始化Canvas
@@ -531,6 +598,10 @@ onBeforeUnmount(() => {
   }
   if (updateTimer) {
     clearTimeout(updateTimer);
+  }
+  // 清理节流定时器
+  if (throttleTimer) {
+    clearTimeout(throttleTimer);
   }
 });
 
