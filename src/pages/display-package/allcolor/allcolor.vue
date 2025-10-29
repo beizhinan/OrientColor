@@ -596,6 +596,7 @@ export default {
         "偏黄的",
         "偏淡的",
         "黯",
+        "鲜",
         "带使",
         "头青",
         "豆青",
@@ -1084,7 +1085,6 @@ export default {
   color: white;
   padding: 6rpx 10rpx;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
   font-size: 18rpx;
   line-height: 1.2;
 }

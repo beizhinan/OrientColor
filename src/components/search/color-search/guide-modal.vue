@@ -80,7 +80,7 @@ export default {
   right: 0;
   display: flex;
   justify-content: center;
-  z-index: 1000; /* 确保在其他元素之上 */
+  z-index: 9999; /* 提高层级确保在色盘等元素之上 */
 }
 
 .guide-modal-content {
@@ -120,7 +120,7 @@ export default {
   right: 0;
   display: flex;
   justify-content: center;
-  z-index: 1001; /* 确保在第一个弹窗之上 */
+  z-index: 10000; /* 提高层级确保在色盘等元素之上 */
 }
 
 .guide-modal-content-2 {

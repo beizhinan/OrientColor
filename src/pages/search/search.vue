@@ -22,7 +22,7 @@
             :class="{ active: activeTab === 'image' }"
             @click="switchTab('image')"
           >
-            图象检索
+            图像检索
           </view>
         </view>
       </view>
@@ -100,7 +100,6 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
 
 .tab-container {
   display: flex;
