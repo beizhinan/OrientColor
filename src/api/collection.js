@@ -3,7 +3,7 @@ import { request } from '@/utils/request'
 export function getCollection(user_id){
 	return new Promise((resolve, reject) => {
 	    request({
-		  url:`http://39.97.55.169:8080/api/v1/user/collection?user_id=${user_id}`,
+		  url:`/user/collection?user_id=${user_id}`,
 	      method: 'GET',
 	    })
 	    .then(response => {

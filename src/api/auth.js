@@ -29,7 +29,7 @@ export function wxLogin() {
  */
 export function wxAuthLogin(code) {
   return request({
-      url: 'http://39.97.55.169:8080/eastern_color/api/user/login/wechat',
+      url: 'https://coloreast.cn/eastern_color/api/user/login/wechat',
       method: 'POST',
       data: { code },
       header: {
