@@ -87,7 +87,7 @@ export const useCollectedStore = defineStore('collectionStore',{
 			console.log(sendData)
 		    return new Promise((resolve, reject) => {
 		      uni.request({
-		        url:`http://39.97.55.169:8080/api/v1/user/collection?user_id=${authStore.user_id}`,
+		        url:`https://coloreast.cn/api/v1/user/collection?user_id=${authStore.user_id}`,
 		        method: 'PUT',
 		        header: {
 		          'Content-Type': 'application/json'
