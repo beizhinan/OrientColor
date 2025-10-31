@@ -87,11 +87,12 @@ let updateTimer = null;
 const selectedColor = ref(null);
 const currentAngle = ref(0);
 const showLowChroma = ref(false);
+const drawFinished = ref(false); // 添加绘制完成状态
 
 // 中心颜色相关
 const centerColors = ref([]);
 
-const emit = defineEmits(["low-chroma-toggle"]);
+const emit = defineEmits(["low-chroma-toggle", "draw-finish"]); // 添加draw-finish事件
 
 // 手势状态管理
 const gestureState = ref({
@@ -216,6 +217,8 @@ function performDrawColorWheel() {
       try {
         if (!res || !res[0] || !res[0].width || !res[0].height) {
           console.error("无法获取canvas节点或节点尺寸信息不完整:", res);
+          drawFinished.value = true;
+          emit("draw-finish");
           return;
         }
 
@@ -332,13 +335,24 @@ function performDrawColorWheel() {
           }
         });
 
-        canvasContext.draw();
+        // 设置绘制未完成状态
+        drawFinished.value = false;
+        
+        canvasContext.draw(false, () => {
+          // 绘制完成后设置状态并触发事件
+          drawFinished.value = true;
+          emit("draw-finish");
+        });
       } catch (error) {
         console.error("绘制色块失败:", error);
+        drawFinished.value = true;
+        emit("draw-finish");
       }
     });
   } catch (error) {
     console.error("查询canvas节点失败:", error);
+    drawFinished.value = true;
+    emit("draw-finish");
   }
 }
 

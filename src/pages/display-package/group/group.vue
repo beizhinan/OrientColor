@@ -14,7 +14,11 @@
       </view>
 
       <!-- 空数据提示 -->
-      <empty-data v-if="colorList.length === 0 && !loading" />
+      <empty-data 
+        v-if="colorList.length === 0 && !loading" 
+        @close="handleEmptyDataClose"
+        @return="handleEmptyDataReturn"
+      />
     </view>
   </view>
 </template>
@@ -107,6 +111,18 @@ export default {
       uni.navigateTo({
         url: `/pages/display-package/colorblock/colorblock?${queryString}`,
       });
+    },
+
+    // 处理空数据组件的关闭事件
+    handleEmptyDataClose() {
+      // 返回上一页
+      uni.navigateBack();
+    },
+
+    // 处理空数据组件的返回事件
+    handleEmptyDataReturn() {
+      // 返回上一页
+      uni.navigateBack();
     },
   },
 };

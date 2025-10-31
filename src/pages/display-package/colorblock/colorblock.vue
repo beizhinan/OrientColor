@@ -139,7 +139,7 @@
                 >
               </view>
               <view class="info-item double-width">
-                <text class="info-label">图形来源</text>
+                <text class="info-label">色彩来源</text>
                 <text class="info-value link" @click="toggleSources">
                   点击查看图片来源→
                 </text>
@@ -238,7 +238,7 @@
 
 <script>
 import SaveSuccessModal from "@/components/colorblock/SaveSuccessModal.vue";
-import { getColorDetail } from '../api/colorblock.js';
+import { getColorDetail } from "../api/colorblock.js";
 
 export default {
   components: {
@@ -247,7 +247,7 @@ export default {
   data() {
     return {
       colorData: {
-        sources: []
+        sources: [],
       },
       parentColor: "",
       secondaryColor: "",
@@ -272,13 +272,16 @@ export default {
       if (options.name) {
         params.name = decodeURIComponent(options.name);
       }
-      
+
       // 调用API获取颜色详情
       this.fetchColorDetail(params);
-      
+
       // 使用 colorData 中的 title 字段作为页面标题
       uni.setNavigationBarTitle({
-        title: this.colorData.title || this.colorData.name || decodeURIComponent(options.name),
+        title:
+          this.colorData.title ||
+          this.colorData.name ||
+          decodeURIComponent(options.name),
       });
     }
   },
@@ -319,9 +322,9 @@ export default {
         if (res.status === "success") {
           this.colorData = {
             ...this.colorData,
-            ...res.data
+            ...res.data,
           };
-          
+
           // 更新页面标题
           uni.setNavigationBarTitle({
             title: this.colorData.title || this.colorData.name,
@@ -341,7 +344,7 @@ export default {
         });
       }
     },
-    
+
     toggleSources() {
       this.showSources = !this.showSources;
     },
@@ -356,17 +359,21 @@ export default {
       if (!this.descriptionExpanded) {
         // 获取原始位置信息
         const query = uni.createSelectorQuery();
-        query.select(".description-container").boundingClientRect();
+        query.select(".description-container-wrapper").boundingClientRect();
+        query.selectViewport().scrollOffset();
         query.exec((res) => {
-          if (res[0]) {
+          if (res[0] && res[1]) {
+            const containerRect = res[0];
+            const scrollData = res[1];
+            
             this.originalPosition = {
-              top: res[0].top + this.scrollTop, // 加上滚动位置
-              left: res[0].left,
-              width: res[0].width,
+              top: containerRect.top + scrollData.scrollTop,
+              left: containerRect.left,
+              width: containerRect.width,
             };
 
-            // 保存展开前的高度，用于占位
-            this.descriptionWrapperHeight = res[0].height + "px";
+            // 保存展开前的高度，用于占位 - 使用固定高度200rpx
+            this.descriptionWrapperHeight = "200rpx";
             this.descriptionExpanded = true;
           }
         });
@@ -575,8 +582,12 @@ export default {
 .description-container.expanded-container {
   position: absolute;
   z-index: 1000;
-  width: calc(100% - 40rpx); /* 减去左右padding */
-  box-sizing: border-box; /* 确保padding不影响宽度计算 */
+  width: calc(100% - 15rpx); /* 与原始容器保持一致的宽度计算 */
+  box-sizing: border-box;
+  max-height: 300rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+  left: 0; /* 确保定位准确 */
 }
 
 /* 描述内容 */
@@ -589,7 +600,7 @@ export default {
 
 /* 收起状态 - 文本截断显示 */
 .description-content.collapsed {
-  height: 140rpx;
+  height: 100rpx;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 4;
@@ -600,6 +611,9 @@ export default {
 .description-content.expanded {
   background-color: #e2f7dc;
   padding-bottom: 60rpx;
+  max-height: 200rpx; /* 设置最大高度以启用滚动 */
+  height: 200rpx;
+  overflow-y: auto; /* 启用垂直滚动 */
 }
 
 /* 切换按钮 */

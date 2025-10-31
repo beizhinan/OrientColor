@@ -26,7 +26,7 @@ export default {
     // 图标路径
     iconSrc: {
       type: String,
-      default: "/static/icons/empty.png", // 默认图标路径
+      default: "/static/empty.png", // 默认图标路径
     },
     // 提示文本
     message: {
@@ -58,6 +58,7 @@ export default {
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin: 0 auto; /* 添加这行使组件水平居中 */
 }
 
 .icon {

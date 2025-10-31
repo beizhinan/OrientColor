@@ -235,7 +235,7 @@ export default {
 
       // 跳转到详情页
       uni.navigateTo({
-        url: `/pages/colorblock/colorblock?${queryString}`,
+        url: `/pages/display-package/colorblock/colorblock?${queryString}`,
       });
     },
   },

@@ -7,14 +7,6 @@
       @confirmed="handleSpectrumConfirmed"
     ></color-spectrum-modal>
 
-    <!-- 引导弹窗 -->
-    <guide-modal
-      v-if="showGuideModal"
-      :show="showFirstGuide"
-      @next="handleFirstGuideNext"
-      @learned="handleGuideLearned"
-    ></guide-modal>
-
     <!-- 页面内容（只有在弹窗关闭后才显示） -->
     <view v-if="!showSpectrumModal">
       <view class="content">
@@ -55,10 +47,23 @@
         "
         :class="{ 'blur-background': showSecondGuide }"
       >
-        <color-picker @low-chroma-toggle="handleLowChromaToggle"></color-picker>
+        <color-picker 
+          @low-chroma-toggle="handleLowChromaToggle" 
+          @draw-finish="handleDrawFinish"
+        ></color-picker>
       </view>
     </view>
   </view>
+  
+  <!-- 引导弹窗移到组件外部，确保层级最高 -->
+  <guide-modal
+    v-if="showGuideModal && canvasDrawFinished"
+    :show="showFirstGuide"
+    :text="firstGuideText"
+    :second-text="secondGuideText"
+    @next="handleFirstGuideNext"
+    @learned="handleGuideLearned"
+  ></guide-modal>
 </template>
 
 <script>
@@ -87,6 +92,9 @@ export default {
       showGuideModal: false, // 控制引导弹窗显示
       showFirstGuide: false, // 控制第一个引导步骤
       showSecondGuide: false, // 控制第二个引导步骤
+      firstGuideText: "转动色彩圆盘或点击某个色系查看放大图像",
+      secondGuideText: "点击上方切换按钮可查看低彩度色彩详情",
+      canvasDrawFinished: false // Canvas绘制完成状态
     };
   },
   created() {
@@ -103,6 +111,7 @@ export default {
     resetToInitialState() {
       // 重置到初始状态
       this.colorStore.reset();
+      this.canvasDrawFinished = false;
     },
 
     handleLowChromaToggle(isLowChroma) {
@@ -165,6 +174,7 @@ export default {
         this.showGuideModal = true;
         this.showFirstGuide = true;
         this.showSecondGuide = false; // 确保第二步引导初始为false
+        this.canvasDrawFinished = false; // 重置Canvas绘制状态
       }
     },
 
@@ -182,6 +192,11 @@ export default {
       // 保存引导弹窗显示日期到本地存储
       uni.setStorageSync("lastGuideModalDate", new Date().toDateString());
     },
+    
+    // 处理Canvas绘制完成事件
+    handleDrawFinish() {
+      this.canvasDrawFinished = true;
+    }
   },
 };
 </script>
