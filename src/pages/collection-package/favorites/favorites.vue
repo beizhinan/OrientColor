@@ -5,13 +5,13 @@
 		<view class="title">{{data.name}}</view>
 		<view class="frame" v-show="this.flag">
 			<view class="content"
-			v-for="(item,index) in data?.colorCard"
+			v-for="(item,index) in this.colorCards"
 			:key = "item.cardId"
 			>
 				<view class="details">
 					<view class="band" :style="{ background: colorCards[index].gradient }"></view>
-					<view class="order">{{item.name}}</view>
-					<view class="brief">#{{item.system}},{{item.hue}},{{item.category}},{{item.theme}}</view>
+					<!-- <view class="order">{{item.name}}</view> -->
+					<view class="order">#{{item.cardName}}</view>
 				</view>
 				<view class="btnBox">
 					<button class="btn" style="margin-bottom: 8rpx; border-color: #c69c6d; color:#c69c6d" @click="deleteData(index)">删除</button>
@@ -99,10 +99,24 @@
 				    //console.log("colorCard 不是数组，已重置为空数组")
 				}
 				 // 提取colorCard数组，并为每个项生成渐变样式
-				this.colorCards = (this.item.colorCard || []).map(card => ({
-				    ...card,
-				    gradient: this.generateGradient(card.color) // 直接使用card.color生成渐变
-				}))
+				this.colorCards = (this.item.colorCard || []).map(card => {
+					console.log(card.system, card.hue, card.category, card.theme)
+				  const parts = [card.system, card.hue, card.category, card.theme]
+				      .filter(part => {
+				        // 步骤1：排除 null 和 undefined
+				        if (part == null) return false; 
+				        // 步骤2：如果是字符串，排除空字符串和纯空格
+				        if (typeof part === 'string' && part.trim() === '') return false;
+				        // 其他情况（有效非空值）保留
+				        return true;
+				      });
+					console.log(parts)
+				    return {
+				      ...card,
+				      gradient: this.generateGradient(card.color),
+				      cardName: parts.join(',')||'未知色卡'
+				    };
+				})
 				console.log(this.colorCards[0].gradient)
 			}
 		},
