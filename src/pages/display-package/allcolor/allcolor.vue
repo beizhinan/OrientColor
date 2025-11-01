@@ -259,6 +259,7 @@ import {
   getLevelTwoColors,
   getLevelThreeColors,
   getLevelFourColors,
+  getColorPrefixes
 } from "../api/allcolor";
 
 export default {
@@ -278,6 +279,7 @@ export default {
       expandedIndex: -1,
       isInfoExpanded: false, // 添加控制信息展开状态的变量
       thirdLevelExpandMap: {}, // 添加用于跟踪三级分类展开状态的对象
+      colorPrefixes: [], // 从API获取的颜色前缀列表
       // 颜色映射表，用于设置不同颜色类别的主题色
       colorMap: {
         绿: "#40c860",
@@ -329,8 +331,22 @@ export default {
   onLoad(options) {
     // 初始化加载一级颜色数据
     this.loadLevelOneColors();
+    // 加载颜色前缀数据
+    this.loadColorPrefixes();
   },
   methods: {
+    // 加载颜色前缀数据
+    async loadColorPrefixes() {
+      try {
+        const res = await getColorPrefixes();
+        if (res.status === "success") {
+          this.colorPrefixes = res.data;
+        }
+      } catch (error) {
+        console.error("获取颜色前缀数据失败:", error);
+      }
+    },
+    
     // 加载一级颜色数据
     async loadLevelOneColors() {
       try {
@@ -590,25 +606,8 @@ export default {
 
     // 获取颜色名称的前缀（如"上好"、"偏黄的"）
     getPrefix(colorName) {
-      // 常见前缀列表
-      const prefixes = [
-        "上好",
-        "偏黄的",
-        "偏淡的",
-        "黯",
-        "鲜",
-        "带使",
-        "头青",
-        "豆青",
-        "浅翠",
-        "深翠",
-        "墨",
-        "浓",
-        "上等",
-        "普通",
-        "脂",
-        "粉",
-      ];
+      // 使用从API获取的前缀列表
+      const prefixes = this.colorPrefixes;
 
       for (const prefix of prefixes) {
         if (colorName.startsWith(prefix)) {

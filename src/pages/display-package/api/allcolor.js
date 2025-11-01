@@ -19,3 +19,8 @@ export function getLevelThreeColors(parentId) {
 export function getLevelFourColors(parentId) {
   return request.get(`/colors/level-four/${parentId}`)
 }
+
+// 获取颜色前缀数据
+export function getColorPrefixes() {
+  return request.get(`/colors/prefix`)
+}

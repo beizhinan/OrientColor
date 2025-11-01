@@ -147,7 +147,6 @@ export default {
 }
 
 .page {
-  padding: 40rpx 0;
   position: relative;
   height: 100vh;
 }

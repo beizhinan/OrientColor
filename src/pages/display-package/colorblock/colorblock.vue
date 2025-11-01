@@ -93,7 +93,7 @@
                 <text class="info-label">色相</text>
                 <text
                   class="info-value link"
-                  @click="navigateToGroup('色相', colorData.hue)"
+                  @click="navigateToGroup('色相名', colorData.hue)"
                 >
                   {{ colorData.hue
                   }}{{ colorData.englishHue ? " " + colorData.englishHue : "" }}
@@ -365,7 +365,7 @@ export default {
           if (res[0] && res[1]) {
             const containerRect = res[0];
             const scrollData = res[1];
-            
+
             this.originalPosition = {
               top: containerRect.top + scrollData.scrollTop,
               left: containerRect.left,
@@ -582,7 +582,7 @@ export default {
 .description-container.expanded-container {
   position: absolute;
   z-index: 1000;
-  width: calc(100% - 15rpx); /* 与原始容器保持一致的宽度计算 */
+  width: calc(100% - 10rpx); /* 与原始容器保持一致的宽度计算 */
   box-sizing: border-box;
   max-height: 300rpx;
   overflow: hidden;

@@ -252,7 +252,7 @@ export default {
 }
 
 .head {
-  padding: 0 0 10rpx;
+  padding: 30rpx 10rpx;
   align-items: center;
 }
 

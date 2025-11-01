@@ -3,7 +3,16 @@
     <!-- 顶部色系名称标题 -->
     <view class="color-system-title">
       <view class="color-prefixes">
-        <view class="prefix">{{ name }}</view>
+        <view
+          v-for="(colorGroup, index) in colorData" 
+          :key="index"
+          class="prefix"
+          :style="{ 
+            left: `${(index + 0.5) * (100 / colorData.length)}%`
+          }"
+        >
+          {{ colorGroup.label }}
+        </view>
       </view>
     </view>
 
@@ -288,21 +297,35 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 0 30rpx 0 30rpx;
-  height: 600rpx;
+  height: 700rpx;
   position: relative;
 }
 
 .color-system-title {
   margin-bottom: 10rpx;
-  text-align: center;
+  position: relative;
+  color: #c69c6d;
+  padding: 0 20rpx;
+  height: 40rpx;
+}
+
+.color-prefixes {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .color-prefixes .prefix {
   font-size: 28rpx;
-  padding: 8rpx 20rpx;
   color: #9f7735;
   font-weight: bold;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  height: 100%;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .title-row {

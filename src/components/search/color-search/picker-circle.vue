@@ -9,15 +9,15 @@
 
     <!-- 中心三个颜色显示 -->
     <!-- <view class="center-colors-info" v-if="centerColors.length > 0">
-      <view 
-        v-for="(color, index) in centerColors" 
+      <view
+        v-for="(color, index) in centerColors"
         :key="index"
         class="center-color-item"
         :class="{ 'center-main': index === 1 }"
         @click="selectColor(color)"
       >
-        <view 
-          class="center-color-preview" 
+        <view
+          class="center-color-preview"
           :style="{ backgroundColor: color.hex }"
         ></view>
         <text class="center-color-label">{{ color.label }}</text>
@@ -251,8 +251,7 @@ function performDrawColorWheel() {
         // 绘制色块
         currentData.forEach((category) => {
           // 计算原始角度并转换为弧度
-          const hStartOriginal =
-            ((360 - (category.h[1] || 0)) * Math.PI) / 180;
+          const hStartOriginal = ((360 - (category.h[1] || 0)) * Math.PI) / 180;
           const hEndOriginal = ((360 - (category.h[0] || 0)) * Math.PI) / 180;
 
           // 应用旋转
@@ -309,8 +308,7 @@ function performDrawColorWheel() {
 
               const innerRadius =
                 maxRadius * (0.1 + (actualCStart / maxC) * 0.9);
-              const outerRadius =
-                maxRadius * (0.1 + (actualCEnd / maxC) * 0.9);
+              const outerRadius = maxRadius * (0.1 + (actualCEnd / maxC) * 0.9);
 
               const rgb = labToRgb(
                 matchedColor.l,
@@ -337,7 +335,7 @@ function performDrawColorWheel() {
 
         // 设置绘制未完成状态
         drawFinished.value = false;
-        
+
         canvasContext.draw(false, () => {
           // 绘制完成后设置状态并触发事件
           drawFinished.value = true;
@@ -479,7 +477,7 @@ function handleTouchStart(event) {
       velocity: 0,
       // 新增用于连续跟踪移动的属性
       lastX: clientX,
-      positions: [{x: clientX, time: Date.now()}] // 用于计算速度的历史位置
+      positions: [{ x: clientX, time: Date.now() }], // 用于计算速度的历史位置
     };
   }
 }
@@ -501,17 +499,17 @@ function handleTouchMove(event) {
 
     const now = Date.now();
     const currentX = event.touches[0].clientX;
-    
+
     // 更新历史位置记录，仅保留最近100毫秒内的记录用于速度计算
     const currentTime = Date.now();
     gestureState.value.positions = gestureState.value.positions.filter(
-      pos => currentTime - pos.time < 100
+      (pos) => currentTime - pos.time < 100
     );
-    gestureState.value.positions.push({x: currentX, time: currentTime});
+    gestureState.value.positions.push({ x: currentX, time: currentTime });
 
     // 计算基于上一次移动的角度变化
     const deltaMoveX = currentX - gestureState.value.lastX;
-    
+
     // 更新角度 - 使用更灵敏的系数
     currentAngle.value = currentAngle.value + deltaMoveX * 0.8;
 
@@ -537,24 +535,24 @@ function handleTouchEnd() {
     const latest = positions[positions.length - 1];
     const oldest = positions[0];
     const deltaTime = latest.time - oldest.time;
-    
+
     if (deltaTime > 0) {
       const deltaX = latest.x - oldest.x;
       const velocity = deltaX / deltaTime; // 像素/毫秒
-      
+
       // 只有当速度足够大时才启动惯性动画
       if (Math.abs(velocity) > 0.05) {
         let currentVelocity = velocity;
         let lastTime = Date.now();
         const deceleration = 0.95; // 更平滑的减速
-        
+
         const animateInertia = () => {
           const now = Date.now();
           const deltaTimeMs = now - lastTime;
           lastTime = now;
-          
+
           // 使用指数衰减计算新速度
-          currentVelocity *= Math.pow(deceleration, deltaTimeMs/16);
+          currentVelocity *= Math.pow(deceleration, deltaTimeMs / 16);
           currentAngle.value += currentVelocity * deltaTimeMs * 0.8;
 
           // 使用节流优化的绘制函数
@@ -574,7 +572,7 @@ function handleTouchEnd() {
       }
     }
   }
-  
+
   // 如果没有足够的数据或者速度太小，则直接计算中心颜色
   calculateCenterColors();
 }
@@ -990,18 +988,18 @@ const low = [
 .toggle-button-container {
   display: flex;
   justify-content: center;
-  padding: 10px;
+  padding: 5px;
 }
 
 .toggle-button {
   background-color: #c69c6d;
   border: none;
   color: white;
-  padding: 8px 16px;
+  padding: 6px 12px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 14px;
+  font-size: 12px;
   border-radius: 20px;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
