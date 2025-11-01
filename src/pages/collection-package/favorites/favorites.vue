@@ -114,8 +114,9 @@
 				    return {
 				      ...card,
 				      gradient: this.generateGradient(card.color),
-				      cardName: parts.join(',')||'未知色卡'
+				      cardName: parts.join(',')||'全条件色卡'
 				    };
+
 				})
 				console.log(this.colorCards[0].gradient)
 			}
