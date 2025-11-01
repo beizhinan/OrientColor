@@ -15,6 +15,17 @@
         }}</text>
       </view>
     </view>
+	
+	<!-- 退出确认框 -->
+	<view class="background" v-show="logout">
+		<view class="mains">
+			<view class="words">确定要退出登录吗</view>
+			<view class="option">
+				<modelButtonVue @tap="logout=false">取消</modelButtonVue>
+				<modelButtonVue @tap="reset">确认</modelButtonVue>
+			</view>
+		</view>
+	</view>
 
     <!-- 其他功能区域 -->
     <view class="menu-list">
@@ -32,7 +43,7 @@
 			mode="aspectFit"
 			></image>
 			<text class="title">{{ item.title }}</text>
-			<!-- 使用本地图标替换uni-icons -->
+			<!-- 使用本地图标替换uni-icons-->
 			<image
 			class="arrow-icon"
 			src="/static/user/arrow-right.png"
@@ -42,7 +53,7 @@
     </view>
   </view>
 	<!-- 底部文字 -->
-	<view class="words">
+	<view class="bottom">
 		<!-- 使用图片替代文字 -->
 		<image
 		:style="{width:'215rpx',height:'50rpx'}"
@@ -61,8 +72,9 @@
 import { ref,watch } from "vue";
 import { useAuthStore } from "@/stores/auth.js";
 import { onShow } from "@dcloudio/uni-app";
-
+import modelButtonVue from '@/components/collect/modelButton.vue'
 const authStore = useAuthStore();
+const logout = ref(false);
 
 // 默认头像
 const defaultAvatar = "../../static/default-avatar.png";
@@ -101,7 +113,16 @@ const handleUserClick = () => {
     // 跳转到登录页面
     uni.navigateTo({ url: "/pages/auth-package/login/login" });
   }
+  else{
+	  console.log("想退出");
+	  logout.value = true;
+  }
 };
+
+const reset= ()=>{
+	authStore.clearAuth();
+	logout.value = false;
+}
 
 // 导航到其他页面
 const navigateTo = (path) => {
@@ -202,7 +223,7 @@ const navigateTo = (path) => {
   height: 32rpx;
 }
 
-.words{
+.bottom{
 	position: fixed;
 	bottom: 100rpx;
 	left:50%;
@@ -211,4 +232,44 @@ const navigateTo = (path) => {
 	height:70rpx;
 	text-align: center;
 }
+
+	/*确认框*/
+	.background{
+		position: fixed; /* 固定定位，脱离文档流覆盖全屏 */
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0; /* 四边贴齐屏幕边缘 */
+		background-color: rgba(243, 242, 245,0.8);
+		z-index: 999; /* 确保在页面内容上方（需大于其他元素z-index） */
+	}
+	/* 中间弹窗内容 */
+	.mains {
+		position: absolute; /* 相对于蒙版定位 */
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%); /* 居中对齐 */
+		background-color: white; 
+		height:475rpx;
+		width: 650rpx;
+		border-radius: 20rpx;
+		/* opacity: 1; */ /* 透明度 */
+	}
+	.words{
+		position: absolute; 
+		top: 175rpx; 
+		left: 50%; 
+		transform: translateX(-50%); /* 水平居中修正 */
+		font-size: 40rpx;
+		font-weight: bold;
+	}
+	.option{
+		position: absolute; 
+		bottom: 80rpx;
+		right:45rpx;
+		display: flex;
+		justify-content: space-between;
+		height:80rpx;
+		width: 320rpx;
+	}
 </style>
