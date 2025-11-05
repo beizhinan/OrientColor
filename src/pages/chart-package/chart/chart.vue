@@ -150,6 +150,44 @@
 			//坐标系
 			const axesHelper = new THREE.AxesHelper(4)
 			group.add(axesHelper)
+			
+			// === 坐标轴标签 ===
+			function createTextSprite(text, color = '#000000', fontSize = 100) {
+				let canvas, context;
+				canvas = wx.createOffscreenCanvas({ type: '2d', width: 256, height: 128 });
+				context = canvas.getContext('2d');
+			
+				// 绘制文字
+				context.font = `${fontSize}px Arial`;
+				context.fillStyle = color;
+				context.textAlign = 'center';
+				context.textBaseline = 'middle';
+				context.fillText(text, 128, 64);
+			
+				const texture = new THREE.CanvasTexture(canvas);
+				texture.needsUpdate = true;
+			
+				const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+				const sprite = new THREE.Sprite(material);
+				sprite.scale.set(0.8, 0.4, 1);
+				return sprite;
+			}
+			
+			// 创建三个坐标轴文字标签
+			const labelX = createTextSprite('L', '#000000');
+			labelX.position.set(10.2, 0, 0);
+			
+			const labelY = createTextSprite('a', '#000000');
+			labelY.position.set(0, 5.2, 0);
+			
+			const labelZ = createTextSprite('b', '#000000');
+			labelZ.position.set(0, 0, 5.2);
+			
+			group.add(labelX);
+			group.add(labelY);
+			group.add(labelZ);
+			
+			
 			// XZ 平面
 			const gridXZ = new THREE.GridHelper(10, 10, 0xcccccc, 0xeeeeee);
 			gridXZ.rotation.x = 0;
