@@ -5,9 +5,9 @@
       <view class="title-bar">
         <text class="title">推荐色谱</text>
         <view class="spacer"></view>
-        <button class="total-spectrum-btn" @click="navigateToAllColor">
+        <!-- <button class="total-spectrum-btn" @click="navigateToAllColor">
           总谱
-        </button>
+        </button> -->
       </view>
       <view class="waterfall">
         <!-- 第一列 -->

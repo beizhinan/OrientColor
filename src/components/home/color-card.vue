@@ -34,7 +34,7 @@
 export default {
   props: {
     id: {
-      type: Number,
+      type: String,
       default: null,
     },
     headerText: {
@@ -47,11 +47,11 @@ export default {
     },
     title: {
       type: String,
-      default: "开化寺",
+      default: "",
     },
     description: {
       type: String,
-      default: "介绍",
+      default: "",
     },
     video: {
       type: String,
