@@ -4,11 +4,11 @@
     <view class="color-system-title">
       <view class="color-prefixes">
         <view
-          v-for="(colorGroup, index) in colorData" 
+          v-for="(colorGroup, index) in uniqueColorData" 
           :key="index"
           class="prefix"
           :style="{ 
-            left: `${(index + 0.5) * (100 / colorData.length)}%`
+            left: `${(index + 0.5) * (100 / uniqueColorData.length)}%`
           }"
         >
           {{ colorGroup.label }}
@@ -93,6 +93,8 @@
 </template>
 
 <script>
+import { getColorListData } from '@/api/search/color-search.js'
+
 // LAB颜色空间转换函数
 function labToRgb(l, a, b) {
   let y = (l + 16) / 116;
@@ -147,72 +149,119 @@ function rgbToHex(r, g, b) {
 }
 
 export default {
+  props: {
+    isLowChroma: {
+      type: Boolean,
+      default: false
+    },
+    centerColors: {
+      type: Array,
+      default: () => []
+    }
+  },
   data() {
     return {
       name: "黄色系",
       hueValues: [110, 95, 83, 65], // 色相刻度（倒序，实现左大右小）
       chromaValues: [95, 65, 50, 36, 14], // 彩度刻度（降序，实现上大下小）
-      colorData: [
-        {
-          name: "oY",
-          label: "偏橙的黄色",
-          h: [65, 83],
-          colors: [
-            { l: 70, a: 7, b: 22, c: 23, h: 72 },
-            { l: 59, a: 10, b: 23, c: 25, h: 67 },
-            { l: 43, a: 5, b: 15, c: 16, h: 72 },
-            { l: 33, a: 4, b: 14, c: 14, h: 74 },
-
-            { l: 73, a: 11, b: 31, c: 33, h: 71 },
-            { l: 69, a: 10, b: 40, c: 41, h: 77 },
-            { l: 59, a: 12, b: 35, c: 37, h: 71 },
-            { l: 49, a: 13, b: 28, c: 31, h: 66 },
-
-            { l: 80, a: 12, b: 47, c: 48, h: 75 },
-            { l: 67, a: 15, b: 44, c: 47, h: 71 },
-            { l: 64, a: 17, b: 53, c: 56, h: 72 },
-            { l: 56, a: 19, b: 40, c: 44, h: 65 },
-
-            { l: 76, a: 25, b: 60, c: 65, h: 68 },
-            { l: 69, a: 17, b: 65, c: 67, h: 75 },
-            { l: 77, a: 13, b: 65, c: 67, h: 79 },
-            { l: 71, a: 11, b: 68, c: 69, h: 81 },
-            { l: 64, a: 20, b: 67, c: 70, h: 73 },
-          ],
-        },
-        {
-          name: "Y",
-          label: "黄色",
-          h: [83, 95],
-          colors: [
-            { l: 85, a: 5, b: 54, c: 54, h: 85 },
-            { l: 79, a: -1, b: 45, c: 45, h: 91 },
-            { l: 75, a: 4, b: 35, c: 35, h: 84 },
-
-            { l: 83, a: 4, b: 75, c: 75, h: 87 },
-            { l: 72, a: -1, b: 65, c: 65, h: 91 },
-          ],
-        },
-        {
-          name: "gY",
-          label: "偏绿的黄色",
-          h: [95, 110],
-          colors: [
-            { l: 85, a: -8, b: 37, c: 38, h: 103 },
-            { l: 66, a: -6, b: 19, c: 20, h: 108 },
-            { l: 49, a: -5, b: 15, c: 16, h: 109 },
-            { l: 40, a: -2, b: 13, c: 13, h: 99 },
-          ],
-        },
-      ],
+      colorData: [],
       showDebug: true, // 调试开关已关闭
       cellColors: [], // 存储每个单元格的颜色
     };
   },
-  mounted() {
-    this.initColorMatrix();
+  watch: {
+    // 监听中心颜色变化
+    centerColors: {
+      handler(newVal) {
+        if (newVal && newVal.length > 0) {
+          this.fetchColorListData();
+        }
+      },
+      immediate: true
+    },
+    isLowChroma: {
+      handler() {
+        this.fetchColorListData();
+      }
+    }
+  },
+  computed: {
+    uniqueColorData() {
+      const seen = new Set();
+      return this.colorData.filter(item => {
+        if (seen.has(item.label)) {
+          return false;
+        } else {
+          seen.add(item.label);
+          return true;
+        }
+      });
+    }
   },
   methods: {
+    // 从API获取颜色列表数据
+    async fetchColorListData() {
+      try {
+        // 如果是低艳色模式，不需要请求API，使用默认数据
+        if (this.isLowChroma) {
+          this.initDefaultLowChromaData();
+          return;
+        }
+        
+        // 确保有中心颜色数据
+        if (!this.centerColors || this.centerColors.length === 0) {
+          console.warn('没有中心颜色数据');
+          return;
+        }
+        
+        const res = await getColorListData(this.isLowChroma, this.centerColors);
+        if (res.status === "success") {
+          this.hueValues = res.data.hueValues;
+          this.chromaValues = res.data.chromaValues;
+          this.colorData = res.data.colorData;
+          this.initColorMatrix();
+        } else {
+          console.error("获取颜色列表数据失败:", res.message);
+        }
+      } catch (error) {
+        console.error("获取颜色列表数据异常:", error);
+      }
+    },
+    
+    // 初始化默认低艳色数据
+    initDefaultLowChromaData() {
+      // 为低艳色提供默认数据
+      this.hueValues = [110, 95, 83, 65];
+      this.chromaValues = [95, 65, 50, 36, 14];
+      this.colorData = [
+        {
+          name: "Ng",
+          label: "绿色",
+          h: [91, 127],
+          colors: [
+            { l: 94, a: 0, b: 0, c: 0, h: 109 }
+          ]
+        },
+        {
+          name: "Ngy",
+          label: "黄绿色",
+          h: [91, 127],
+          colors: [
+            { l: 92, a: -1, b: 4, c: 4, h: 102 }
+          ]
+        },
+        {
+          name: "No",
+          label: "橙色",
+          h: [45, 91],
+          colors: [
+            { l: 87, a: 2, b: 7, c: 7, h: 74 }
+          ]
+        }
+      ];
+      this.initColorMatrix();
+    },
+    
     initColorMatrix() {
       // 确保正确初始化二维数组
       this.cellColors = Array(this.chromaValues.length - 1)
@@ -239,12 +288,23 @@ export default {
       // 根据行列索引找到对应的颜色数据
       const hue = this.hueValues[hueIndex];
       const chroma = this.chromaValues[chromaIndex];
+      
+      // 查找对应的色系信息
+      let colorGroup = null;
+      for (const group of this.colorData) {
+        const hStart = Math.min(...group.h);
+        const hEnd = Math.max(...group.h);
+        if (hue >= hStart && hue <= hEnd) {
+          colorGroup = group;
+          break;
+        }
+      }
 
-      // 创建一个模拟的颜色对象
+      // 创建颜色对象
       const color = {
-        h: hue,
-        c: chroma,
-        // 可以添加更多颜色信息
+        h: colorGroup.h,
+        name: colorGroup ? colorGroup.name : '',
+        label: colorGroup ? colorGroup.label : ''
       };
 
       // 发送事件通知父组件

@@ -55,6 +55,7 @@ import {
   watch,
   getCurrentInstance,
 } from "vue";
+import { getColorWheelData, getLowChromaColorDetail } from '@/api/search/color-search.js'
 
 // 获取当前组件实例
 const instance = getCurrentInstance();
@@ -89,22 +90,43 @@ const currentAngle = ref(0);
 const showLowChroma = ref(false);
 const drawFinished = ref(false); // 添加绘制完成状态
 
-// 中心颜色相关
+// 添加两个独立的角度存储变量
+const highChromaAngle = ref(0);
+const lowChromaAngle = ref(0);
+
+// 颜色数据
+const gener = ref([]); // 高艳色数据
+const low = ref([]);  // 低艳色数据
+
 const centerColors = ref([]);
 
-const emit = defineEmits(["low-chroma-toggle", "draw-finish"]); // 添加draw-finish事件
+const emit = defineEmits(["low-chroma-toggle", "draw-finish", "update:center-colors", "low-chroma-center-selected", "angle-update"]);
 
-// 手势状态管理
-const gestureState = ref({
-  isDragging: false,
-  isClick: true,
-  startX: 0,
-  startY: 0,
-  startAngle: 0,
-  lastTimestamp: 0,
-  velocity: 0,
-  inertiaTimer: null,
+// 添加defineExpose来暴露方法给父组件调用
+defineExpose({
+  setAngle,
+  getAngle
 });
+
+// 添加防抖控制
+let angleUpdateTimer = null;
+
+// 角度设置方法，供父组件调用
+function setAngle(angle) {
+  currentAngle.value = angle;
+  if (showLowChroma.value) {
+    lowChromaAngle.value = angle;
+  } else {
+    highChromaAngle.value = angle;
+  }
+  drawColorWheel();
+  calculateCenterColors();
+}
+
+// 获取当前角度的方法
+function getAngle() {
+  return currentAngle.value;
+}
 
 // LAB颜色空间转换函数
 function labToRgb(l, a, b) {
@@ -234,7 +256,7 @@ function performDrawColorWheel() {
         // 清空画布
         canvasContext.clearRect(0, 0, width, height);
 
-        const currentData = showLowChroma.value ? low : gener;
+        const currentData = showLowChroma.value ? low.value : gener.value;
         const minDisplayC = showLowChroma.value ? 0 : 14;
         const maxC = 100;
 
@@ -357,6 +379,14 @@ function performDrawColorWheel() {
 // 处理中心点击
 const handleCenterClick = () => {
   showLowChroma.value = !showLowChroma.value;
+  
+  // 切换模式时恢复对应的角度
+  if (showLowChroma.value) {
+    currentAngle.value = lowChromaAngle.value;
+  } else {
+    currentAngle.value = highChromaAngle.value;
+  }
+  
   drawColorWheel();
 
   // 发送事件通知父组件
@@ -373,7 +403,7 @@ const calculateCenterColors = () => {
   const centerAngle = (((currentAngle.value + 90) % 360) + 360) % 360;
   const chartCenterAngle = centerAngle;
 
-  const currentData = showLowChroma.value ? low : gener;
+  const currentData = showLowChroma.value ? low.value : gener.value;
   const result = [];
 
   // 左侧颜色 (中心角度-15度)
@@ -386,7 +416,11 @@ const calculateCenterColors = () => {
   if (centerColor) {
     result.push(centerColor);
     // 自动选择中心颜色
-    if (!gestureState.value.isDragging) {
+    // 修复：确保 gestureState 已定义且正在拖拽时不选择颜色
+    if (typeof gestureState !== 'undefined' && gestureState.value && !gestureState.value.isDragging) {
+      selectedColor.value = centerColor;
+    } else if (typeof gestureState === 'undefined' || !gestureState.value) {
+      // 如果 gestureState 还未定义，则直接选择颜色
       selectedColor.value = centerColor;
     }
   }
@@ -397,6 +431,14 @@ const calculateCenterColors = () => {
   if (rightColor) result.push(rightColor);
 
   centerColors.value = result;
+  
+  // 发送中心颜色更新事件
+  emit("update:center-colors", result);
+  
+  // 如果是低艳色模式，发送中心颜色给父组件以获取详情数据
+  if (showLowChroma.value && centerColor) {
+    emit("low-chroma-center-selected", centerColor);
+  }
 };
 
 // 根据角度查找颜色
@@ -443,6 +485,18 @@ const findColorAtAngle = (data, angle) => {
 const selectColor = (color) => {
   selectedColor.value = color;
 };
+
+// 手势状态管理
+const gestureState = ref({
+  isDragging: false,
+  isClick: true,
+  startX: 0,
+  startY: 0,
+  startAngle: 0,
+  lastTimestamp: 0,
+  velocity: 0,
+  inertiaTimer: null,
+});
 
 // 手势处理
 function handleTouchStart(event) {
@@ -581,18 +635,58 @@ function handleTouchEnd() {
 function initCanvas() {
   try {
     canvasContext = uni.createCanvasContext("colorWheel", instance);
-    drawColorWheel();
-    calculateCenterColors();
+    fetchColorData();
   } catch (error) {
     console.error("初始化Canvas失败:", error);
   }
 }
 
+// 从API获取颜色数据
+async function fetchColorData() {
+  try {
+    // 获取高艳色数据
+    const highChromaRes = await getColorWheelData(false);
+    if (highChromaRes.status === "success") {
+      gener.value = highChromaRes.data.colorCategories;
+    }
+
+    // 获取低艳色数据
+    const lowChromaRes = await getColorWheelData(true);
+    if (lowChromaRes.status === "success") {
+      low.value = lowChromaRes.data.colorCategories;
+    }
+
+    drawColorWheel();
+    calculateCenterColors();
+  } catch (error) {
+    console.error("获取颜色数据失败:", error);
+  }
+}
+
 // 监听角度变化，更新中心颜色
 watch(currentAngle, () => {
-  if (!gestureState.value.isDragging) {
+  // 修复：确保 gestureState 已定义
+  if (typeof gestureState !== 'undefined' && gestureState.value && !gestureState.value.isDragging) {
+    calculateCenterColors();
+  } else if (typeof gestureState === 'undefined' || !gestureState.value) {
+    // 如果 gestureState 还未定义，则直接计算中心颜色
     calculateCenterColors();
   }
+  
+  // 更新对应模式的角度存储
+  if (showLowChroma.value) {
+    lowChromaAngle.value = currentAngle.value;
+  } else {
+    highChromaAngle.value = currentAngle.value;
+  }
+  
+  // 防抖发送角度更新事件
+  if (angleUpdateTimer) {
+    clearTimeout(angleUpdateTimer);
+  }
+  angleUpdateTimer = setTimeout(() => {
+    emit("angle-update", currentAngle.value);
+  }, 100);
 });
 
 // 监听色盘切换
@@ -617,364 +711,7 @@ onBeforeUnmount(() => {
   }
 });
 
-// 颜色数据
-const gener = [
-  {
-    name: "R",
-    label: "红色",
-    h: [10, 31],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 71, a: 22, b: 9, c: 24, h: 22 },
-      { l: 59, a: 18, b: 9, c: 20, h: 27 },
-      { l: 40, a: 21, b: 10, c: 23, h: 26 },
-      { l: 32, a: 24, b: 9, c: 26, h: 20 },
-      { l: 29, a: 14, b: 3, c: 14, h: 14 },
-      { l: 21, a: 23, b: 10, c: 26, h: 24 },
-
-      { l: 52, a: 35, b: 13, c: 37, h: 21 },
-      { l: 45, a: 31, b: 11, c: 33, h: 20 },
-      { l: 37, a: 31, b: 12, c: 34, h: 22 },
-      { l: 29, a: 37, b: 14, c: 39, h: 22 },
-      { l: 25, a: 35, b: 19, c: 40, h: 28 },
-
-      { l: 54, a: 48, b: 28, c: 56, h: 30 },
-      { l: 47, a: 41, b: 23, c: 47, h: 30 },
-      { l: 40, a: 39, b: 23, c: 45, h: 31 },
-      { l: 30, a: 37, b: 20, c: 42, h: 28 },
-    ],
-  },
-  {
-    name: "oR",
-    label: "偏橙的红色",
-    h: [31, 40],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 51, a: 17, b: 11, c: 20, h: 33 },
-      { l: 42, a: 27, b: 20, c: 33, h: 36 },
-      { l: 41, a: 33, b: 24, c: 41, h: 36 },
-      { l: 32, a: 21, b: 15, c: 26, h: 37 },
-
-      { l: 62, a: 42, b: 36, c: 55, h: 40 },
-      { l: 52, a: 55, b: 40, c: 68, h: 35 },
-      { l: 49, a: 40, b: 30, c: 50, h: 37 },
-      { l: 42, a: 44, b: 34, c: 55, h: 37 },
-    ],
-  },
-  {
-    name: "O",
-    label: "橙色",
-    h: [40, 65],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 58, a: 13, b: 23, c: 26, h: 60 },
-      { l: 51, a: 14, b: 17, c: 21, h: 51 },
-      { l: 37, a: 15, b: 15, c: 21, h: 45 },
-      { l: 25, a: 12, b: 14, c: 18, h: 49 },
-
-      { l: 69, a: 17, b: 31, c: 35, h: 61 },
-      { l: 55, a: 25, b: 33, c: 41, h: 53 },
-      { l: 47, a: 13, b: 28, c: 31, h: 64 },
-      { l: 43, a: 23, b: 39, c: 45, h: 60 },
-      { l: 37, a: 24, b: 24, c: 34, h: 45 },
-      { l: 30, a: 18, b: 20, c: 27, h: 48 },
-
-      { l: 64, a: 31, b: 41, c: 52, h: 53 },
-      { l: 57, a: 34, b: 44, c: 56, h: 52 },
-      { l: 54, a: 36, b: 52, c: 63, h: 56 },
-
-      { l: 66, a: 49, b: 45, c: 67, h: 43 },
-      { l: 62, a: 59, b: 71, c: 92, h: 50 },
-      { l: 59, a: 53, b: 61, c: 81, h: 49 },
-      { l: 52, a: 44, b: 55, c: 70, h: 51 },
-    ],
-  },
-  {
-    name: "oY",
-    label: "偏橙的黄色",
-    h: [65, 83],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 70, a: 7, b: 22, c: 23, h: 72 },
-      { l: 59, a: 10, b: 23, c: 25, h: 67 },
-      { l: 43, a: 5, b: 15, c: 16, h: 72 },
-      { l: 33, a: 4, b: 14, c: 14, h: 74 },
-
-      { l: 73, a: 11, b: 31, c: 33, h: 71 },
-      { l: 69, a: 10, b: 40, c: 41, h: 77 },
-      { l: 59, a: 12, b: 35, c: 37, h: 71 },
-      { l: 49, a: 13, b: 28, c: 31, h: 66 },
-
-      { l: 80, a: 12, b: 47, c: 48, h: 75 },
-      { l: 67, a: 15, b: 44, c: 47, h: 71 },
-      { l: 64, a: 17, b: 53, c: 56, h: 72 },
-      { l: 56, a: 19, b: 40, c: 44, h: 65 },
-
-      { l: 76, a: 25, b: 60, c: 65, h: 68 },
-      { l: 69, a: 17, b: 65, c: 67, h: 75 },
-      { l: 77, a: 13, b: 65, c: 67, h: 79 },
-      { l: 71, a: 11, b: 68, c: 69, h: 81 },
-      { l: 64, a: 20, b: 67, c: 70, h: 73 },
-    ],
-  },
-  {
-    name: "Y",
-    label: "黄色",
-    h: [83, 95],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 85, a: 5, b: 54, c: 54, h: 85 },
-      { l: 79, a: -1, b: 45, c: 45, h: 91 },
-      { l: 75, a: 4, b: 35, c: 35, h: 84 },
-
-      { l: 83, a: 4, b: 75, c: 75, h: 87 },
-      { l: 72, a: -1, b: 65, c: 65, h: 91 },
-    ],
-  },
-  {
-    name: "gY",
-    label: "偏绿的黄色",
-    h: [95, 110],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 85, a: -8, b: 37, c: 38, h: 103 },
-      { l: 66, a: -6, b: 19, c: 20, h: 108 },
-      { l: 49, a: -5, b: 15, c: 16, h: 109 },
-      { l: 40, a: -2, b: 13, c: 13, h: 99 },
-    ],
-  },
-  {
-    name: "yG",
-    label: "偏黄的绿色",
-    h: [110, 150],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 69, a: -14, b: 9, c: 17, h: 148 },
-      { l: 64, a: -8, b: 8, c: 11, h: 135 },
-      { l: 57, a: -8, b: 8, c: 11, h: 135 },
-      { l: 54, a: -14, b: 11, c: 17, h: 141 },
-      { l: 47, a: -14, b: 9, c: 17, h: 147 },
-      { l: 46, a: -11, b: 11, c: 15, h: 134 },
-      { l: 36, a: -5, b: 10, c: 11, h: 117 },
-      { l: 59, a: -17, b: 13, c: 21, h: 143 },
-      { l: 49, a: -14, b: 14, c: 20, h: 136 },
-      { l: 40, a: -23, b: 25, c: 34, h: 133 },
-      { l: 36, a: -28, b: 20, c: 35, h: 144 },
-      { l: 27, a: -11, b: 18, c: 21, h: 123 },
-    ],
-  },
-  {
-    name: "G",
-    label: "绿色",
-    h: [150, 170],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 78, a: -15, b: 5, c: 16, h: 161 },
-      { l: 70, a: -19, b: 8, c: 21, h: 157 },
-      { l: 61, a: -18, b: 8, c: 20, h: 156 },
-      { l: 48, a: -22, b: 12, c: 25, h: 151 },
-      { l: 39, a: -20, b: 11, c: 23, h: 152 },
-      { l: 67, a: -25, b: 10, c: 27, h: 158 },
-      { l: 62, a: -28, b: 11, c: 30, h: 159 },
-      { l: 54, a: -29, b: 12, c: 32, h: 158 },
-      { l: 47, a: -29, b: 8, c: 30, h: 164 },
-      { l: 41, a: -29, b: 12, c: 31, h: 158 },
-
-      { l: 69, a: -58, b: 18, c: 60, h: 163 },
-      { l: 58, a: -55, b: 19, c: 58, h: 161 },
-      { l: 52, a: -50, b: 21, c: 54, h: 157 },
-    ],
-  },
-  {
-    name: "bG",
-    label: "偏蓝的绿色",
-    h: [170, 220],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 54, a: -19, b: -12, c: 22, h: 213 },
-      { l: 49, a: -12, b: -4, c: 13, h: 198 },
-      { l: 40, a: -20, b: -7, c: 21, h: 199 },
-
-      { l: 67, a: -34, b: -4, c: 35, h: 187 },
-      { l: 52, a: -24, b: 2, c: 24, h: 176 },
-      { l: 51, a: -42, b: -2, c: 42, h: 183 },
-      { l: 41, a: -25, b: 4, c: 26, h: 171 },
-      { l: 35, a: -30, b: -4, c: 30, h: 188 },
-    ],
-  },
-  {
-    name: "gB",
-    label: "偏绿的蓝色",
-    h: [220, 255],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 74, a: -4, b: -12, c: 13, h: 252 },
-      { l: 46, a: -11, b: -14, c: 18, h: 231 },
-      { l: 35, a: -12, b: -10, c: 16, h: 220 },
-
-      { l: 47, a: -6, b: -20, c: 21, h: 254 },
-      { l: 38, a: -10, b: -23, c: 25, h: 247 },
-    ],
-  },
-  {
-    name: "B",
-    label: "蓝色",
-    h: [255, 275],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 70, a: -3, b: -27, c: 27, h: 264 },
-      { l: 61, a: -5, b: -22, c: 22, h: 257 },
-      { l: 49, a: -6, b: -29, c: 29, h: 262 },
-      { l: 39, a: -3, b: -24, c: 25, h: 263 },
-      { l: 34, a: -4, b: -28, c: 28, h: 262 },
-
-      { l: 55, a: 2, b: -42, c: 42, h: 272 },
-      { l: 44, a: -9, b: -44, c: 45, h: 259 },
-      { l: 40, a: -5, b: -37, c: 37, h: 263 },
-      { l: 34, a: 3, b: -42, c: 42, h: 274 },
-
-      { l: 53, a: -13, b: -40, c: 42, h: 252 },
-      { l: 37, a: -2, b: -50, c: 51, h: 267 },
-    ],
-  },
-  {
-    name: "PB",
-    label: "蓝紫色",
-    h: [275, 290],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 34, a: 3, b: -27, c: 27, h: 276 },
-      { l: 27, a: 7, b: -34, c: 35, h: 281 },
-
-      { l: 50, a: 8, b: -41, c: 42, h: 281 },
-      { l: 39, a: 16, b: -48, c: 51, h: 289 },
-      { l: 34, a: 17, b: -58, c: 61, h: 286 },
-      { l: 29, a: 15, b: -49, c: 51, h: 287 },
-    ],
-  },
-  {
-    name: "P",
-    label: "紫色",
-    h: [290, 300],
-    c: [
-      [14, 36],
-      [36, 50],
-      [50, 65],
-      [65, 95],
-    ],
-    colors: [
-      { l: 51, a: 8, b: -17, c: 19, h: 297 },
-      { l: 34, a: 34, b: -64, c: 72, h: 298 },
-      { l: 26, a: 15, b: -39, c: 42, h: 292 },
-    ],
-  },
-];
-
-//低艳色数据
-const low = [
-  {
-    name: "Np",
-    label: "紫色",
-    h: [310, 330],
-    c: [[0, 100]],
-    colors: [{ l: 22, a: 10, b: -6, c: 12, h: 330 }],
-  },
-  {
-    name: "Npb",
-    label: "蓝紫色",
-    h: [275, 310],
-    c: [[0, 100]],
-    colors: [{ l: 30, a: 2, b: -4, c: 5, h: 294 }],
-  },
-  {
-    name: "Nb",
-    label: "蓝色",
-    h: [190, 275],
-    c: [[0, 100]],
-    colors: [{ l: 54, a: -7, b: -7, c: 10, h: 227 }],
-  },
-  {
-    name: "Ng",
-    label: "绿色",
-    h: [127, 190],
-    c: [[0, 100]],
-    colors: [{ l: 94, a: 0, b: 0, c: 0, h: 182 }],
-  },
-  {
-    name: "Ngy",
-    label: "黄绿色",
-    h: [91, 127],
-    c: [[0, 100]],
-    colors: [{ l: 92, a: -1, b: 4, c: 4, h: 102 }],
-  },
-  {
-    name: "No",
-    label: "橙色",
-    h: [45, 91],
-    c: [[0, 100]],
-    colors: [{ l: 87, a: 2, b: 7, c: 7, h: 74 }],
-  },
-];
+// 颜色数据已在fetchColorData函数中从API获取
 </script>
 
 <style scoped>

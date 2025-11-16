@@ -25,7 +25,12 @@
         v-if="colorStore.currentView === 'picker-list'"
         :class="{ 'blur-background': showFirstGuide || showSecondGuide }"
       >
-        <color-list @color-selected="handleColorSelect"></color-list>
+        <color-list
+          :is-low-chroma="false"
+          :center-colors="centerColors"
+          @color-selected="handleColorSelect"
+        >
+        </color-list>
       </view>
 
       <view
@@ -35,7 +40,12 @@
           colorStore.currentView === 'picker-low-chroma'
         "
       >
-        <color-detail @go-back="handleGoBack"></color-detail>
+        <color-detail
+          :color-data="selectedColorDetails"
+          :title="selectedColorTitle"
+          @go-back="handleGoBack"
+        >
+        </color-detail>
       </view>
 
       <!-- 只在需要显示色盘时才显示 -->
@@ -47,14 +57,18 @@
         "
         :class="{ 'blur-background': showSecondGuide }"
       >
-        <color-picker 
-          @low-chroma-toggle="handleLowChromaToggle" 
+        <color-picker
+          ref="colorPicker"
+          @low-chroma-toggle="handleLowChromaToggle"
           @draw-finish="handleDrawFinish"
+          @update:center-colors="handleCenterColorsUpdate"
+          @low-chroma-center-selected="handleLowChromaCenterSelected"
+          @angle-update="handleAngleUpdate"
         ></color-picker>
       </view>
     </view>
   </view>
-  
+
   <!-- 引导弹窗移到组件外部，确保层级最高 -->
   <guide-modal
     v-if="showGuideModal && canvasDrawFinished"
@@ -73,6 +87,7 @@ import ColorList from "@/components/search/color-search/color-list.vue";
 import ColorDetail from "@/components/search/color-search/color-detail.vue";
 import ColorSpectrumModal from "@/components/search/color-search/color-spectrum-modal.vue";
 import GuideModal from "@/components/search/color-search/guide-modal.vue";
+import { getColorDetail, getLowChromaColorDetail } from "@/api/search/color-search.js";
 
 export default {
   components: {
@@ -94,7 +109,13 @@ export default {
       showSecondGuide: false, // 控制第二个引导步骤
       firstGuideText: "转动色彩圆盘或点击某个色系查看放大图像",
       secondGuideText: "点击上方切换按钮可查看低彩度色彩详情",
-      canvasDrawFinished: false // Canvas绘制完成状态
+      canvasDrawFinished: false, // Canvas绘制完成状态
+      centerColors: [], // 存储色盘中心颜色
+      selectedColorDetails: [], // 存储选中颜色的详细信息
+      selectedColorTitle: "颜色详情", // 选中颜色的标题
+      previousView: 'picker-list', // 保存进入详情页前的视图状态
+      previousHighChromaAngle: 0, // 保存进入详情页前高艳色模式的角度
+      previousLowChromaAngle: 0  // 保存进入详情页前低艳色模式的角度
     };
   },
   created() {
@@ -114,30 +135,122 @@ export default {
       this.canvasDrawFinished = false;
     },
 
+    handleLowChromaCenterSelected(centerColor) {
+      // 保存当前视图状态和色盘角度
+      this.previousView = this.colorStore.currentView;
+      
+      // 保存不同模式的角度
+      if (this.$refs.colorPicker) {
+        const currentAngle = this.$refs.colorPicker.getAngle();
+        if (this.colorStore.currentView === 'picker-low-chroma') {
+          this.previousLowChromaAngle = currentAngle;
+        } else {
+          this.previousHighChromaAngle = currentAngle;
+        }
+      }
+      
+      // 处理低艳色中心颜色选择事件
+      this.fetchLowChromaColorDetail(centerColor);
+    },
+
+    async fetchLowChromaColorDetail(centerColor) {
+      try {
+        const res = await getLowChromaColorDetail(true, centerColor);
+        if (res.status === "success") {
+          this.selectedColorDetails = res.data;
+          this.selectedColorTitle = centerColor.label 
+            ? `${centerColor.label}色系` 
+            : "颜色详情";
+          this.colorStore.showPickerAndLowChroma();
+        } else {
+          console.error("获取低艳色详细信息失败:", res.message);
+          uni.showToast({
+            title: "获取颜色信息失败",
+            icon: "none",
+          });
+        }
+      } catch (error) {
+        console.error("获取低艳色详细信息异常:", error);
+        uni.showToast({
+          title: "请求失败",
+          icon: "none",
+        });
+      }
+    },
+
     handleLowChromaToggle(isLowChroma) {
       if (isLowChroma) {
         // 切换到低艳色时，显示色盘和详情组件
         this.colorStore.showPickerAndLowChroma();
+        // 获取低艳色数据
+        this.handleLowChromaCenterSelected(this.centerColors[1] || this.centerColors[0]);
       } else {
         // 切换回主色盘时，显示list组件和色盘
         this.colorStore.showPickerAndList();
       }
     },
 
-    handleColorSelect(color) {
-      // 点击颜色列表中的颜色时，只显示detail组件，隐藏色盘和列表
-      this.colorStore.showPickerAndDetail(color);
+    async handleColorSelect(color) {
+      try {
+        // 保存当前视图状态和色盘角度
+        this.previousView = this.colorStore.currentView;
+        
+        // 保存不同模式的角度
+        if (this.$refs.colorPicker) {
+          const currentAngle = this.$refs.colorPicker.getAngle();
+          if (this.colorStore.currentView === 'picker-low-chroma') {
+            this.previousLowChromaAngle = currentAngle;
+          } else {
+            this.previousHighChromaAngle = currentAngle;
+          }
+        }
+        
+        // 点击颜色列表中的颜色时，获取详细信息并显示detail组件
+        console.log("点击了颜色:", color);
+        const res = await getColorDetail(color);
+        if (res.status === "success") {
+          this.selectedColorDetails = res.data;
+          this.selectedColorTitle = color.label
+            ? `${color.label}色系`
+            : "颜色详情";
+          this.colorStore.showPickerAndDetail(color);
+        } else {
+          console.error("获取颜色详细信息失败:", res.message);
+          uni.showToast({
+            title: "获取颜色信息失败",
+            icon: "none",
+          });
+        }
+      } catch (error) {
+        console.error("获取颜色详细信息异常:", error);
+        uni.showToast({
+          title: "请求失败",
+          icon: "none",
+        });
+      }
     },
 
     // 处理返回事件
     handleGoBack() {
-      // 如果当前是低艳度模式，返回低艳度模式视图
-      if (this.colorStore.currentView === "picker-low-chroma") {
+      // 恢复进入详情页前的视图状态
+      if (this.previousView === 'picker-low-chroma') {
         this.colorStore.showPickerAndLowChroma();
       } else {
-        // 否则返回到主色盘和列表视图
+        // 默认返回到主色盘和列表视图
         this.colorStore.showPickerAndList();
       }
+      
+      // 恢复进入详情页前的色盘角度
+      this.$nextTick(() => {
+        // 通过 refs 调用子组件方法设置角度
+        if (this.$refs.colorPicker) {
+          if (this.previousView === 'picker-low-chroma') {
+            this.$refs.colorPicker.setAngle(this.previousLowChromaAngle);
+          } else {
+            this.$refs.colorPicker.setAngle(this.previousHighChromaAngle);
+          }
+        }
+      });
     },
 
     // 处理弹窗确认事件
@@ -192,10 +305,20 @@ export default {
       // 保存引导弹窗显示日期到本地存储
       uni.setStorageSync("lastGuideModalDate", new Date().toDateString());
     },
-    
+
     // 处理Canvas绘制完成事件
     handleDrawFinish() {
       this.canvasDrawFinished = true;
+    },
+
+    // 处理中心颜色更新
+    handleCenterColorsUpdate(colors) {
+      this.centerColors = colors;
+    },
+    
+    // 处理色盘角度更新
+    handleAngleUpdate(angle) {
+      // 不再需要这个方法来保存角度，因为picker内部已经分别保存了两种模式的角度
     }
   },
 };
