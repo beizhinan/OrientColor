@@ -1,9 +1,17 @@
- <template>
+<template>
   <view class="color-picker-container">
-    <!-- 切换高低色盘按钮 -->
+    <!-- 切换高低色盘按钮和导航按钮 -->
     <view class="toggle-button-container">
+      <button class="nav-button" @click="rotateLeft">
+        <text class="nav-button-text">◀</text>
+      </button>
+      
       <button class="toggle-button" @click="handleCenterClick">
         {{ showLowChroma ? "切换到高艳色色盘" : "切换到低艳色色盘" }}
+      </button>
+      
+      <button class="nav-button" @click="rotateRight">
+        <text class="nav-button-text">▶</text>
       </button>
     </view>
 
@@ -100,6 +108,9 @@ const low = ref([]);  // 低艳色数据
 
 const centerColors = ref([]);
 
+// 色系数据
+const hueCategories = ref([]);
+
 const emit = defineEmits(["low-chroma-toggle", "draw-finish", "update:center-colors", "low-chroma-center-selected", "angle-update"]);
 
 // 添加defineExpose来暴露方法给父组件调用
@@ -126,6 +137,124 @@ function setAngle(angle) {
 // 获取当前角度的方法
 function getAngle() {
   return currentAngle.value;
+}
+
+// 向左旋转一个色系
+function rotateLeft() {
+  const categories = showLowChroma.value ? low.value : gener.value;
+  if (categories.length === 0) return;
+  
+  // 获取当前中心角度
+  const centerAngle = (((currentAngle.value + 90) % 360) + 360) % 360;
+  
+  // 找到当前色系
+  let currentCategoryIndex = -1;
+  for (let i = 0; i < categories.length; i++) {
+    const category = categories[i];
+    const hStart = category.h[0] || 0;
+    const hEnd = category.h[1] || 0;
+    
+    let inRange = false;
+    if (hStart <= hEnd) {
+      inRange = centerAngle >= hStart && centerAngle <= hEnd;
+    } else {
+      inRange = centerAngle >= hStart || centerAngle <= hEnd;
+    }
+    
+    if (inRange) {
+      currentCategoryIndex = i;
+      break;
+    }
+  }
+  
+  // 计算下一个色系的角度
+  let nextCategoryIndex = currentCategoryIndex - 1;
+  if (nextCategoryIndex < 0) {
+    nextCategoryIndex = categories.length - 1;
+  }
+  
+  const nextCategory = categories[nextCategoryIndex];
+  if (nextCategory) {
+    // 计算目标角度，使该色系位于中心
+    const targetHue = (nextCategory.h[0] + nextCategory.h[1]) / 2;
+    const targetAngle = targetHue - 90;
+    
+    // 更新角度
+    currentAngle.value = targetAngle;
+    
+    // 触发重新绘制
+    drawColorWheel();
+    calculateCenterColors();
+    
+    // 更新对应模式的角度存储
+    if (showLowChroma.value) {
+      lowChromaAngle.value = currentAngle.value;
+    } else {
+      highChromaAngle.value = currentAngle.value;
+    }
+    
+    // 发送角度更新事件
+    emit("angle-update", currentAngle.value);
+  }
+}
+
+// 向右旋转一个色系
+function rotateRight() {
+  const categories = showLowChroma.value ? low.value : gener.value;
+  if (categories.length === 0) return;
+  
+  // 获取当前中心角度
+  const centerAngle = (((currentAngle.value + 90) % 360) + 360) % 360;
+  
+  // 找到当前色系
+  let currentCategoryIndex = -1;
+  for (let i = 0; i < categories.length; i++) {
+    const category = categories[i];
+    const hStart = category.h[0] || 0;
+    const hEnd = category.h[1] || 0;
+    
+    let inRange = false;
+    if (hStart <= hEnd) {
+      inRange = centerAngle >= hStart && centerAngle <= hEnd;
+    } else {
+      inRange = centerAngle >= hStart || centerAngle <= hEnd;
+    }
+    
+    if (inRange) {
+      currentCategoryIndex = i;
+      break;
+    }
+  }
+  
+  // 计算下一个色系的角度
+  let nextCategoryIndex = currentCategoryIndex + 1;
+  if (nextCategoryIndex >= categories.length) {
+    nextCategoryIndex = 0;
+  }
+  
+  const nextCategory = categories[nextCategoryIndex];
+  if (nextCategory) {
+    // 计算目标角度，使该色系位于中心
+    const targetHue = (nextCategory.h[0] + nextCategory.h[1]) / 2;
+    const targetAngle = targetHue - 90;
+    
+    // 更新角度
+    currentAngle.value = targetAngle;
+    
+    // 触发重新绘制
+    drawColorWheel();
+    calculateCenterColors();
+    
+    // 更新对应模式的角度存储
+    if (showLowChroma.value) {
+      lowChromaAngle.value = currentAngle.value;
+    } else {
+      highChromaAngle.value = currentAngle.value;
+    }
+    
+    // 发送角度更新事件
+    emit("angle-update", currentAngle.value);
+  }
 }
 
 // LAB颜色空间转换函数
@@ -725,7 +854,9 @@ onBeforeUnmount(() => {
 .toggle-button-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 5px;
+  gap: 20px;
 }
 
 .toggle-button {
@@ -739,10 +870,34 @@ onBeforeUnmount(() => {
   font-size: 12px;
   border-radius: 20px;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  flex: 1;
+  max-width: 200px;
 }
 
 .toggle-button:active {
   background-color: #9f7735;
+}
+
+.nav-button {
+  background-color: #c69c6d;
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.nav-button:active {
+  background-color: #9f7735;
+}
+
+.nav-button-text {
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .center-colors-info {
