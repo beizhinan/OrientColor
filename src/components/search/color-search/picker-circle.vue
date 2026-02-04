@@ -712,51 +712,7 @@ function handleTouchEnd() {
 
   gestureState.value.isDragging = false;
 
-  // 基于最近的触摸点计算更准确的速度
-  const positions = gestureState.value.positions;
-  if (positions.length > 1) {
-    const latest = positions[positions.length - 1];
-    const oldest = positions[0];
-    const deltaTime = latest.time - oldest.time;
-
-    if (deltaTime > 0) {
-      const deltaX = latest.x - oldest.x;
-      const velocity = deltaX / deltaTime; // 像素/毫秒
-
-      // 只有当速度足够大时才启动惯性动画
-      if (Math.abs(velocity) > 0.05) {
-        let currentVelocity = velocity;
-        let lastTime = Date.now();
-        const deceleration = 0.95; // 更平滑的减速
-
-        const animateInertia = () => {
-          const now = Date.now();
-          const deltaTimeMs = now - lastTime;
-          lastTime = now;
-
-          // 使用指数衰减计算新速度
-          currentVelocity *= Math.pow(deceleration, deltaTimeMs / 16);
-          currentAngle.value += currentVelocity * deltaTimeMs * 0.8;
-
-          // 使用节流优化的绘制函数
-          drawColorWheel();
-
-          // 当速度降到足够小时停止动画
-          if (Math.abs(currentVelocity) > 0.001) {
-            gestureState.value.inertiaTimer = raf(animateInertia);
-          } else {
-            gestureState.value.inertiaTimer = null;
-            calculateCenterColors();
-          }
-        };
-
-        gestureState.value.inertiaTimer = raf(animateInertia);
-        return;
-      }
-    }
-  }
-
-  // 如果没有足够的数据或者速度太小，则直接计算中心颜色
+  // 直接计算中心颜色，不再执行惯性动画
   calculateCenterColors();
 }
 
