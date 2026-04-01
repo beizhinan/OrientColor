@@ -164,6 +164,7 @@ export default {
       name: "黄色系",
       hueValues: [110, 95, 83, 65], // 色相刻度（倒序，实现左大右小）
       chromaValues: [95, 65, 50, 36, 14], // 彩度刻度（降序，实现上大下小）
+	  //chromaValues:[14,36,50,65,95],
       colorData: [],
       showDebug: true, // 调试开关已关闭
       cellColors: [], // 存储每个单元格的颜色
@@ -217,7 +218,8 @@ export default {
         const res = await getColorListData(this.isLowChroma, this.centerColors);
         if (res.status === "success") {
           this.hueValues = res.data.hueValues;
-          this.chromaValues = res.data.chromaValues;
+          this.chromaValues = res.data.chromaValues.reverse();
+		  //console.log("res.this.chromaValues = ",this.chromaValues)
           this.colorData = res.data.colorData;
           this.initColorMatrix();
         } else {
@@ -233,6 +235,7 @@ export default {
       // 为低艳色提供默认数据
       this.hueValues = [110, 95, 83, 65];
       this.chromaValues = [95, 65, 50, 36, 14];
+	  //this.chromaValues=[14 ,36 ,50 ,65, 95];
       this.colorData = [
         {
           name: "Ng",
