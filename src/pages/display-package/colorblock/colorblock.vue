@@ -267,15 +267,7 @@
 			  </view>
           </view>
         </view>
-		<view class="source-list">
-		  <!-- 循环已注释，固定单来源 + 单图展示 -->
-		  <view class="source-item">
-		    
-		
-		      <!-- 右侧图片区域 已删除，只保留单图 -->
-		    </view>		
-		  </view>
-		</view>
+
       </view>
     </view>
 
