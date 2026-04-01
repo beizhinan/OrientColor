@@ -34,7 +34,7 @@
       <!-- 切换内容区域 -->
       <view v-if="!showSources" class="description-wrapper">
         <!-- 默认显示的颜色信息 -->
-        <view
+        <!-- <view
           class="description-container-wrapper"
           :style="{ height: descriptionWrapperHeight }"
         >
@@ -42,7 +42,7 @@
             class="description-container"
             :class="{ 'expanded-container': descriptionExpanded }"
           >
-            <!-- 未展开状态下的文本截断显示 -->
+            
             <view
               v-if="!descriptionExpanded"
               class="description-content collapsed"
@@ -50,7 +50,7 @@
               <rich-text :nodes="formattedDescription"></rich-text>
             </view>
 
-            <!-- 展开状态下的滚动显示 -->
+            
             <scroll-view v-else class="description-content expanded" scroll-y>
               <rich-text :nodes="formattedDescription"></rich-text>
             </scroll-view>
@@ -59,7 +59,16 @@
               {{ descriptionExpanded ? "收起" : "详情" }}
             </text>
           </view>
-        </view>
+        </view> -->
+		<!-- 详情弹窗版 -->
+		<view class="description-container-wrapper">
+		  <view class="description-container">
+		    <view class="description-content collapsed">
+		      <rich-text :nodes="formattedDescription"></rich-text>
+		    </view>
+		    <text class="toggle-btn" @click="openPopup">详情</text>
+		  </view>
+		</view>
 
         <view class="basic-info">
           <view class="section-title">颜色信息</view>
@@ -140,10 +149,15 @@
               </view>
               <view class="info-item double-width">
                 <text class="info-label">色彩来源</text>
-                <text class="info-value link" @click="toggleSources">
+                <!-- <text class="info-value link" @click="toggleSources">
                   点击查看图片来源→
-                </text>
+                </text> -->
+				<text class="info-value" :class="colorData.sources && colorData.sources.length ? 'link' : ''"
+				  @click="toggleSources">
+				  {{ colorData.sources && colorData.sources.length ? '点击查看图片来源→' : '——' }}
+				</text>
               </view>
+			  
             </view>
           </view>
         </view>
@@ -185,7 +199,7 @@
             v-for="(source, index) in colorData.sources"
             :key="index"
           >
-            <view class="source-content">
+            <view class="source-content" v-if="source.microcosmic&&source.macro">
               <!-- 左侧：信息项 -->
               <view class="source-info">
                 <view class="info-item">
@@ -193,13 +207,16 @@
                   <text class="info-value info-value-bold">{{
                     source.name
                   }}</text>
+				  <!-- <text class="info-value info-value-bold">this</text> -->
                 </view>
                 <view class="info-item">
                   <text class="info-label">取样位置\n</text>
                   <text class="info-value">{{ source.location }}</text>
+				  <!-- <text class="info-value">不知道</text> -->
                 </view>
                 <view class="info-item">
                   <text class="info-label">微观照片</text>
+				  <!-- <view class="source-image-thumb">123</view> -->
                   <image
                     class="source-image-thumb"
                     :src="source.microcosmic"
@@ -208,10 +225,10 @@
                   />
                 </view>
               </view>
-
               <!-- 右侧：宏观图片 -->
               <view class="source-image">
                 <text class="info-label">宏观照片</text>
+				<!-- <view class="source-image-large">456</view> -->
                 <image
                   class="source-image-large"
                   :src="source.macro"
@@ -220,8 +237,45 @@
                 />
               </view>
             </view>
+			
+			<view class="source-content" v-else>
+			  <!-- 左侧：仅展示来源信息 -->
+			  <view class="source-info">
+			    <view class="info-item">
+			      <text class="info-label">来源：</text>
+			      <text class="info-label">{{source.name}}</text>
+			    </view>
+					
+			    <!-- 单张图片（保留样式与边框，只显示一张） -->
+			    <view class="info-item">
+			      <text class="info-label">参考图片</text>
+			      <image
+					v-if="source.macro"
+			        class="source-image-one"
+			        :src="source.macro"
+			        @click="viewPhoto(source.macro)"
+			        mode="aspectFill"
+			      />
+				  <image
+					v-else
+				    class="source-image-one"
+				    :src="source.microcosmic"
+				    @click="viewPhoto(source.microcosmic)"
+				    mode="aspectFill"
+				  />
+			    </view>
+			  </view>
           </view>
         </view>
+		<view class="source-list">
+		  <!-- 循环已注释，固定单来源 + 单图展示 -->
+		  <view class="source-item">
+		    
+		
+		      <!-- 右侧图片区域 已删除，只保留单图 -->
+		    </view>		
+		  </view>
+		</view>
       </view>
     </view>
 
@@ -233,16 +287,25 @@
       iconSrc="/static/image.png"
       @confirm="showSaveSuccessModal = false"
     />
+	
+	<PopupDetail
+	  :visible="showPopup"
+	  :title="colorData.name"
+	  :description="colorData.description"
+	  @close="closePopup"
+	/>
   </view>
 </template>
 
 <script>
 import SaveSuccessModal from "@/components/colorblock/SaveSuccessModal.vue";
+import PopupDetail from "@/components/colorblock/popup-detail.vue";
 import { getColorDetail } from "../api/colorblock.js";
 
 export default {
   components: {
     SaveSuccessModal,
+	PopupDetail
   },
   data() {
     return {
@@ -259,6 +322,7 @@ export default {
       descriptionWrapperHeight: "auto", // 用于保持占位高度
       scrollTop: 0, // 页面滚动位置
       showSaveSuccessModal: false, // 控制保存成功弹窗显示
+	  showPopup:false,//显示详情弹窗
     };
   },
 
@@ -315,6 +379,15 @@ export default {
   },
 
   methods: {
+	  // 打开弹窗
+	  openPopup() {
+	    this.showPopup = true;
+	    console.log("打开弹窗");
+	  },
+	  closePopup() {
+	    this.showPopup = false;
+	    console.log("关闭弹窗");
+	  },
     // 获取颜色详情数据
     async fetchColorDetail(params) {
       try {
@@ -344,8 +417,17 @@ export default {
         });
       }
     },
-
+	// 显示详情弹窗
+	showDescModal() {
+	  uni.showModal({
+		title: '颜色详情',
+		content: this.colorData.description || '暂无描述',
+		confirmText: '确定',
+		showCancel: false,
+	  });
+	},
     toggleSources() {
+		if (!this.colorData.sources || this.colorData.sources.length === 0) return;
       this.showSources = !this.showSources;
     },
     viewPhoto(url) {
@@ -1012,5 +1094,12 @@ export default {
   font-weight: bold;
   margin-bottom: 8rpx;
   text-align: center;
+}
+
+.source-image-one {
+  width: 60%;
+  height: 300rpx;
+  background-color: #e8e1d7;
+  margin-bottom: 10rpx;
 }
 </style>

@@ -352,10 +352,23 @@ export default {
       try {
         const res = await getLevelOneColors();
         if (res.status === "success") {
-          this.colorList = res.data;
+			console.log("res.data:",res.data)
+          this.colorList = (res.data || []).filter(color => {
+                // 1. 排除color本身是NULL/undefined的情况
+                if (!color) return false;
+                // 2. 排除核心字段（id/名称/编码等）为NULL/空的情况（根据你实际字段调整）
+                if (!color.name || color.name === '' || color.name === "NULL") return false; // 名称为空则过滤
+                //if (!color.code || color.code === '' || color.code === null) return false; // 颜色码为空则过滤
+                // 可选：如果有其他核心字段需要过滤，可添加
+                // if (!color.xxx || color.xxx === null) return false;
+                return true;
+            });
+		  console.log("colorList:",this.colorList)
           if (res.data.length > 0) {
-            this.selectedColor = res.data[0];
-            this.colorData = res.data[0];
+            // this.selectedColor = res.data[0];
+            // this.colorData = res.data[0];
+			this.selectedColor = this.colorList[0];
+			this.colorData = this.colorList[0];
             // 加载二级颜色数据
             this.loadLevelTwoColors(this.selectedColor.id);
           }
