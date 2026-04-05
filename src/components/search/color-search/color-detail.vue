@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <view class="title">
-      <text class="title-content">xx色系</text>
+      <text class="title-content">{{ title }}</text>
     </view>
     <view class="return-link-wrapper" v-if="colorStore.currentView !== 'picker-low-chroma'">
       <text class="return-link" @click="goBack">返回上一级</text>
@@ -64,118 +64,26 @@
 import { useColorStore } from "@/stores/colorStore";
 
 export default {
+  props: {
+    colorData: {
+      type: Array,
+      default: () => []
+    },
+    title: {
+      type: String,
+      default: "颜色详情"
+    }
+  },
   setup() {
     const colorStore = useColorStore();
     return { colorStore };
   },
-  data() {
-    return {
-      colorList: [
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-        {
-          L: 78,
-          a: 13,
-          b: 13,
-          C: 13,
-          H: 81,
-          code: "No-0-15",
-          category: "实物色",
-          source: "高岭土",
-          name: "赭白土",
-          colorCode: "#00007f",
-        },
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-        {
-          L: 87,
-          a: 2,
-          b: 7,
-          C: 7,
-          H: 74,
-          code: "No-0-17",
-          category: "实物色",
-          source: "白土, 鹤白",
-          name: "鹤白",
-          colorCode: "#EAE3D7",
-        },
-      ],
-    };
+  computed: {
+    colorList() {
+      return this.colorData && this.colorData.length > 0 ? this.colorData : [];
+    }
   },
   methods: {
-    // 返回上一页
-    goBack() {
-      uni.navigateBack();
-    },
-
     // 根据背景色计算文字颜色
     getTextColor(hex) {
       const rgb = this.hexToRgb(hex);

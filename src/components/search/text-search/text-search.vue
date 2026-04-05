@@ -99,7 +99,8 @@ export default {
       if (this.selectedTag === "全部") {
         return this.colorList;
       }
-      return this.colorList.filter((color) => color.type === this.selectedTag);
+      // 修改筛选条件：从 type 改为 category
+      return this.colorList.filter((color) => color.category === this.selectedTag);
     },
   },
   mounted() {
@@ -252,7 +253,7 @@ export default {
 }
 
 .head {
-  padding: 30rpx 10rpx;
+  padding: 30rpx 10rpx 0 10rpx;
   align-items: center;
 }
 
@@ -354,7 +355,7 @@ export default {
   width: 100%;
   padding: 0 25rpx;
   box-sizing: border-box;
-  margin-top: 40rpx;
+  margin-top: 20rpx;
   min-height: 300rpx;
   position: relative;
   flex: 1;
@@ -365,9 +366,14 @@ export default {
 .color-list {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   gap: 20rpx;
   padding-bottom: 20rpx;
+}
+
+/* 添加占位元素来确保最后一行正确对齐 */
+.color-list::after {
+  content: "";
+  flex: auto;
 }
 
 .loading,

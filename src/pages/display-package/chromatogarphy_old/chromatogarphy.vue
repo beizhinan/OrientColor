@@ -22,20 +22,20 @@
         <view class="color-tabs">
           <view
             v-for="color in colorList"
-            :key="color.id"
+            :key="color"
             class="tab-item"
-            :class="{ active: selectedColor && selectedColor.id === color.id }"
+            :class="{ active: selectedColor === color }"
             :style="
-              selectedColor && selectedColor.id === color.id
+              selectedColor === color
                 ? {
-                    backgroundColor: colorMap[color.name] || '#40c860',
+                    backgroundColor: colorMap[color] || '#40c860',
                     color: 'white',
                   }
                 : {}
             "
             @click="selectColor(color)"
           >
-            {{ color.name }}
+            {{ color }}
           </view>
         </view>
 
@@ -45,17 +45,13 @@
           <view class="color-tags">
             <view
               v-for="tag in currentColorTags"
-              :key="tag.id"
+              :key="tag"
               class="tag-item"
-              :class="{ active: selectedTag && selectedTag.id === tag.id }"
-              :style="
-                selectedTag && selectedTag.id === tag.id
-                  ? { color: currentColorTheme }
-                  : {}
-              "
+              :class="{ active: selectedTag === tag }"
+              :style="selectedTag === tag ? { color: currentColorTheme } : {}"
               @click="selectTag(tag)"
             >
-              {{ tag.name }}
+              {{ tag }}
             </view>
           </view>
 
@@ -65,11 +61,9 @@
               v-for="(subColor, index) in filteredColorGroups"
               :key="subColor.name"
               class="description-container"
-              :class="{ 'expanded-container': expandedIndex === index }"
             >
               <!-- 未展开状态下的文本截断显示 -->
               <view
-                v-if="expandedIndex !== index"
                 class="description-content collapsed"
               >
                 <text
@@ -86,24 +80,33 @@
                 </text>
               </view>
 
-              <!-- 展开状态下的滚动显示 -->
-              <scroll-view v-else class="description-content expanded" scroll-y>
-                <text
-                  v-for="(paragraph, idx) in formatDescription(
-                    subColor.description
-                  )"
-                  :key="idx"
-                >
-                  <text v-if="paragraph.isEmptyLine">\n</text>
-                  <text v-else-if="paragraph.isTitle" class="section-title">{{
-                    paragraph.text + "\n"
-                  }}</text>
-                  <text v-else>{{ paragraph.text + "\n" }}</text>
+              <!-- 展开状态下的滚动显示（覆盖层） -->
+              <view 
+                v-if="expandedIndex === index" 
+                class="description-content expanded overlay"
+              >
+                <scroll-view class="expanded-scroll" scroll-y>
+                  <text
+                    v-for="(paragraph, idx) in formatDescription(
+                      subColor.description
+                    )"
+                    :key="idx"
+                  >
+                    <text v-if="paragraph.isEmptyLine">\n</text>
+                    <text v-else-if="paragraph.isTitle" class="section-title">{{
+                      paragraph.text + "\n"
+                    }}</text>
+                    <text v-else>{{ paragraph.text + "\n" }}</text>
+                  </text>
+                </scroll-view>
+                
+                <text class="toggle-btn overlay-btn" @click="toggleExpand(index)">
+                  收起
                 </text>
-              </scroll-view>
+              </view>
 
-              <text class="toggle-btn" @click="toggleExpand(index)">
-                {{ expandedIndex === index ? "收起" : "词条详情" }}
+              <text class="toggle-btn" @click="toggleExpand(index)" v-if="expandedIndex !== index">
+                词条详情
               </text>
             </view>
           </view>
@@ -168,66 +171,18 @@
               </text>
             </view>
 
-            <view class="color-palette-container">
-              <!-- 修改颜色展示布局 -->
+            <view class="color-palette">
               <view
-                v-for="(row, rowIndex) in getColorRows(thirdLevel.children)"
-                :key="rowIndex"
-                class="color-row"
+                v-for="color in thirdLevel.children"
+                :key="color.name"
+                class="color-item"
               >
-                <view class="color-col special-col">
-                  <view
-                    v-if="row['上好']"
-                    class="color-swatch"
-                    :style="{ backgroundColor: row['上好'].value }"
-                    @click="goToColorDetail(row['上好'])"
-                  >
-                    <view class="color-label">
-                      <text class="prefix-line">{{
-                        getPrefix(row["上好"].name)
-                      }}</text>
-                      <text class="suffix-line">{{
-                        getSuffix(row["上好"].name)
-                      }}</text>
-                    </view>
-                  </view>
-                </view>
-
-                <view class="color-col special-col">
-                  <view
-                    v-if="row['常使']"
-                    class="color-swatch"
-                    :style="{ backgroundColor: row['常使'].value }"
-                    @click="goToColorDetail(row['常使'])"
-                  >
-                    <view class="color-label">
-                      <text class="prefix-line">{{
-                        getPrefix(row["常使"].name)
-                      }}</text>
-                      <text class="suffix-line">{{
-                        getSuffix(row["常使"].name)
-                      }}</text>
-                    </view>
-                  </view>
-                </view>
-
-                <view class="color-col normal-col">
-                  <view
-                    v-for="color in row.other"
-                    :key="color.name"
-                    class="color-swatch"
-                    :style="{ backgroundColor: color.value }"
-                    @click="goToColorDetail(color)"
-                  >
-                    <view class="color-label">
-                      <text class="prefix-line">{{
-                        getPrefix(color.name)
-                      }}</text>
-                      <text class="suffix-line">{{
-                        getSuffix(color.name)
-                      }}</text>
-                    </view>
-                  </view>
+                <view
+                  class="color-swatch"
+                  :style="{ backgroundColor: color.value }"
+                  @click="goToColorDetail(color)"
+                >
+                  <text class="color-label">{{ color.name }}</text>
                 </view>
               </view>
             </view>
@@ -254,13 +209,7 @@
 </template>
 
 <script>
-import {
-  getLevelOneColors,
-  getLevelTwoColors,
-  getLevelThreeColors,
-  getLevelFourColors,
-  getColorPrefixes
-} from "../api/allcolor";
+import { getChromatographyDetail } from "../api/chromatography.js";
 
 export default {
   data() {
@@ -268,18 +217,19 @@ export default {
       id: null,
       title: "",
       colorList: [],
-      selectedColor: null,
-      selectedTag: null,
-      levelOneData: {},
-      levelTwoData: {},
-      levelThreeData: {},
-      levelFourData: {},
-      colorData: {},
+      selectedColor: "",
+      selectedTag: "",
+      allColorData: {},
+      colorData: {
+        name: "",
+        imgurl: "",
+        description: "",
+        culturalInfo: [],
+      },
       isFavorite: false,
       expandedIndex: -1,
-      isInfoExpanded: false, // 添加控制信息展开状态的变量
-      thirdLevelExpandMap: {}, // 添加用于跟踪三级分类展开状态的对象
-      colorPrefixes: [], // 从API获取的颜色前缀列表
+      isInfoExpanded: false,
+      thirdLevelExpandMap: {},
       // 颜色映射表，用于设置不同颜色类别的主题色
       colorMap: {
         绿: "#40c860",
@@ -294,160 +244,160 @@ export default {
   computed: {
     // 当前选中色系的所有标签
     currentColorTags() {
-      if (!this.selectedColor) return [];
-      return this.levelTwoData[this.selectedColor.id] || [];
+      const colorKey = this.selectedColor;
+      // 确保数据存在再访问
+      if (
+        !this.allColorData[colorKey] ||
+        !this.allColorData[colorKey].subColors
+      ) {
+        return [];
+      }
+      return (
+        this.allColorData[colorKey].subColors.map(
+          (subColor) => subColor.name
+        ) || []
+      );
     },
 
     // 根据筛选条件过滤后的颜色分组
     filteredColorGroups() {
-      if (!this.selectedColor || !this.selectedTag) return [];
+      const colorKey = this.selectedColor;
+      // 确保数据存在再访问
+      if (
+        !this.allColorData[colorKey] ||
+        !this.allColorData[colorKey].subColors
+      ) {
+        return [];
+      }
 
-      const levelTwos = this.levelTwoData[this.selectedColor.id] || [];
-      const selectedGroup = levelTwos.find(
-        (subColor) => subColor.id === this.selectedTag.id
+      const selectedGroup = this.allColorData[colorKey].subColors.find(
+        (subColor) => subColor.name === this.selectedTag
       );
 
-      if (!selectedGroup) return [];
-
-      return [
-        {
-          name: selectedGroup.name,
-          description: selectedGroup.description,
-          children:
-            this.levelThreeData[selectedGroup.id]?.map((thirdLevel) => ({
-              ...thirdLevel,
-              children: this.levelFourData[thirdLevel.id] || [],
-            })) || [],
-        },
-      ];
+      return selectedGroup
+        ? [
+            {
+              name: selectedGroup.name,
+              description: selectedGroup.description,
+              children: selectedGroup.children,
+            },
+          ]
+        : [];
     },
 
     // 获取当前选中颜色的主题色
     currentColorTheme() {
-      if (!this.selectedColor) return "#40c860";
-      return this.colorMap[this.selectedColor.name] || "#40c860"; // 默认使用绿色
+      return this.colorMap[this.selectedColor] || "#40c860"; // 默认使用绿色
     },
   },
   onLoad(options) {
-    // 初始化加载一级颜色数据
-    this.loadLevelOneColors();
-    // 加载颜色前缀数据
-    this.loadColorPrefixes();
+    if (options.id && options.title) {
+      this.id = options.id;
+      this.title = decodeURIComponent(options.title);
+
+      // 获取色谱数据
+      this.loadChromatographyData();
+    }
+
+    uni.setNavigationBarTitle({
+      title: this.title + "色谱",
+    });
+
+    uni.setNavigationBarColor({
+      frontColor: "#000000",
+      backgroundColor: "#F8F8F8",
+    });
   },
   methods: {
-    // 加载颜色前缀数据
-    async loadColorPrefixes() {
+    // 加载色谱数据
+    async loadChromatographyData() {
       try {
-        const res = await getColorPrefixes();
+        const res = await getChromatographyDetail(this.id, this.title);
         if (res.status === "success") {
-          this.colorPrefixes = res.data;
-        }
-      } catch (error) {
-        console.error("获取颜色前缀数据失败:", error);
-      }
-    },
-    
-    // 加载一级颜色数据
-    async loadLevelOneColors() {
-      try {
-        const res = await getLevelOneColors();
-        if (res.status === "success") {
-			console.log("res.data:",res.data)
-          this.colorList = (res.data || []).filter(color => {
-                // 1. 排除color本身是NULL/undefined的情况
-                if (!color) return false;
-                // 2. 排除核心字段（id/名称/编码等）为NULL/空的情况（根据你实际字段调整）
-                if (!color.name || color.name === '' || color.name === "NULL") return false; // 名称为空则过滤
-                //if (!color.code || color.code === '' || color.code === null) return false; // 颜色码为空则过滤
-                // 可选：如果有其他核心字段需要过滤，可添加
-                // if (!color.xxx || color.xxx === null) return false;
-                return true;
+          // 设置获取到的数据
+          // 转换新数据结构为旧结构以适配UI
+          const convertedData = {};
+          res.data.colorOne.forEach((color) => {
+            convertedData[color.name] = {
+              name: color.name,
+              imgurl: color.imgurl,
+              description: color.description,
+              culturalInfo: color.culturalInfo,
+              subColors: color.colorTwo.map((subColor) => ({
+                name: subColor.name,
+                description: subColor.description,
+                children: subColor.colorThree.map((thirdLevel) => ({
+                  name: thirdLevel.name,
+                  description: thirdLevel.description,
+                  children: thirdLevel.colorFour,
+                })),
+              })),
+            };
+          });
+
+          this.allColorData = convertedData;
+
+          // 初始化颜色列表
+          this.colorList = res.data.categories;
+
+          // 设置默认选中颜色
+          if (this.colorList.length > 0) {
+            this.selectedColor = this.colorList[0];
+            this.colorData = convertedData[this.selectedColor];
+
+            // 更新页面标题和背景图
+            uni.setNavigationBarTitle({
+              title: res.data.title + "色谱",
             });
-		  console.log("colorList:",this.colorList)
-          if (res.data.length > 0) {
-            // this.selectedColor = res.data[0];
-            // this.colorData = res.data[0];
-			this.selectedColor = this.colorList[0];
-			this.colorData = this.colorList[0];
-            // 加载二级颜色数据
-            this.loadLevelTwoColors(this.selectedColor.id);
+
+            // 设置顶部信息
+            this.colorData.name = res.data.title;
+            this.colorData.description = res.data.description;
+            this.colorData.imgurl = res.data.headerImage;
+
+            // 设置默认选中的标签
+            if (
+              this.colorData.subColors &&
+              this.colorData.subColors.length > 0
+            ) {
+              this.selectedTag = this.colorData.subColors[0].name;
+            }
           }
+        } else {
+          console.error("获取色谱数据失败:", res.message);
+          uni.showToast({
+            title: "获取数据失败",
+            icon: "none",
+          });
         }
       } catch (error) {
-        console.error("获取一级颜色数据失败:", error);
-      }
-    },
-
-    // 加载二级颜色数据
-    async loadLevelTwoColors(parentId) {
-      try {
-        const res = await getLevelTwoColors(parentId);
-        if (res.status === "success") {
-          // 使用Vue的$set方法确保响应式更新
-          this.$set(this.levelTwoData, parentId, res.data);
-          if (res.data.length > 0) {
-            this.selectedTag = res.data[0];
-            // 加载三级颜色数据
-            this.loadLevelThreeColors(res.data[0].id);
-          }
-        }
-      } catch (error) {
-        console.error("获取二级颜色数据失败:", error);
-      }
-    },
-
-    // 加载三级颜色数据
-    async loadLevelThreeColors(parentId) {
-      try {
-        const res = await getLevelThreeColors(parentId);
-        if (res.status === "success") {
-          this.$set(this.levelThreeData, parentId, res.data);
-
-          // 加载四级颜色数据
-          for (const item of res.data) {
-            this.loadLevelFourColors(item.id);
-          }
-        }
-      } catch (error) {
-        console.error("获取三级颜色数据失败:", error);
-      }
-    },
-
-    // 加载四级颜色数据
-    async loadLevelFourColors(parentId) {
-      try {
-        const res = await getLevelFourColors(parentId);
-        if (res.status === "success") {
-          this.$set(this.levelFourData, parentId, res.data);
-        }
-      } catch (error) {
-        console.error("获取四级颜色数据失败:", error);
+        console.error("获取色谱数据异常:", error);
+        uni.showToast({
+          title: "数据加载异常",
+          icon: "none",
+        });
       }
     },
 
     // 选择色系
     selectColor(color) {
       this.selectedColor = color;
-      this.colorData = color;
-      this.expandedIndex = -1;
-
-      // 如果该颜色的二级数据尚未加载，则加载
-      if (!this.levelTwoData[color.id]) {
-        this.loadLevelTwoColors(color.id);
-      } else if (this.levelTwoData[color.id].length > 0) {
-        this.selectedTag = this.levelTwoData[color.id][0];
+      this.colorData = this.allColorData[color];
+      // 确保数据存在再访问
+      if (
+        this.colorData &&
+        this.colorData.subColors &&
+        this.colorData.subColors.length > 0
+      ) {
+        this.selectedTag = this.colorData.subColors[0].name;
       }
+      this.expandedIndex = -1;
     },
 
     // 选择标签
     selectTag(tag) {
       this.selectedTag = tag;
       this.expandedIndex = -1;
-
-      // 如果该标签的三级数据尚未加载，则加载
-      if (!this.levelThreeData[tag.id]) {
-        this.loadLevelThreeColors(tag.id);
-      }
     },
 
     // 添加收藏切换方法
@@ -465,22 +415,27 @@ export default {
       let parentGroup = null;
       let grandParentGroup = null;
 
-      // 查找当前颜色的父级和祖父级分组
-      if (this.filteredColorGroups && this.filteredColorGroups.length > 0) {
-        const currentGroup = this.filteredColorGroups[0];
-        for (let child of currentGroup.children) {
-          const foundColor = child.children.find(
-            (c) => c.name === color.name && c.value === color.value
-          );
-          if (foundColor) {
-            parentGroup = child;
-            grandParentGroup = currentGroup;
-            break;
+      // 确保数据存在再访问
+      if (this.colorData.subColors) {
+        for (let subColor of this.colorData.subColors) {
+          for (let child of subColor.children) {
+            // 确保child.children存在再访问
+            if (child.children && Array.isArray(child.children)) {
+              const foundColor = child.children.find(
+                (c) => c.name === color.name && c.value === color.value
+              );
+              if (foundColor) {
+                parentGroup = child;
+                grandParentGroup = subColor;
+                break;
+              }
+            }
           }
+          if (parentGroup) break;
         }
       }
 
-      let titlePath = this.selectedColor ? this.selectedColor.name : "";
+      let titlePath = this.selectedColor;
       if (grandParentGroup) {
         titlePath += "-" + grandParentGroup.name;
       }
@@ -494,7 +449,7 @@ export default {
           `name=${encodeURIComponent(color.name)}&` +
           `value=${encodeURIComponent(color.value)}&` +
           `id=${color.id || ""}&` +
-          `parentColor=${encodeURIComponent(this.selectedColor?.name || "")}&` +
+          `parentColor=${encodeURIComponent(this.selectedColor)}&` +
           `secondaryColor=${
             grandParentGroup ? encodeURIComponent(grandParentGroup.name) : ""
           }&` +
@@ -562,90 +517,6 @@ export default {
         // Vue 3中可以直接设置属性
         this.thirdLevelExpandMap[index] = true;
       }
-    },
-
-    getColorRows(colors) {
-      if (!colors || !colors.length) return [];
-
-      const rows = [];
-      let currentRow = { 上好: null, 常使: null, other: [] };
-
-      // 先筛选出"上好"和"常使"前缀的颜色
-      const specialColors = {
-        上好: colors.find((color) => color.name.startsWith("上好")),
-        常使: colors.find(
-          (color) => color.name.includes("使") && !color.name.startsWith("上好")
-        ),
-      };
-
-      // 筛选出其他颜色
-      const otherColors = colors.filter(
-        (color) =>
-          !color.name.startsWith("上好") &&
-          !(color.name.includes("使") && !color.name.startsWith("上好"))
-      );
-
-      // 如果有特殊颜色，添加第一行
-      if (specialColors["上好"] || specialColors["常使"]) {
-        currentRow["上好"] = specialColors["上好"];
-        currentRow["常使"] = specialColors["常使"];
-
-        // 填充其他颜色到第一行（最多3个）
-        currentRow.other = otherColors.slice(0, 3);
-        rows.push(currentRow);
-
-        // 处理剩余的其他颜色（每行3个）
-        const remainingColors = otherColors.slice(3);
-        for (let i = 0; i < remainingColors.length; i += 3) {
-          rows.push({
-            上好: null,
-            常使: null,
-            other: remainingColors.slice(i, i + 3),
-          });
-        }
-      } else {
-        // 没有特殊颜色，直接按每行5个排列
-        for (let i = 0; i < otherColors.length; i += 5) {
-          rows.push({
-            上好: null,
-            常使: null,
-            other: otherColors.slice(i, i + 5),
-          });
-        }
-      }
-
-      return rows;
-    },
-
-    // 获取颜色名称的前缀（如"上好"、"偏黄的"）
-    getPrefix(colorName) {
-      // 使用从API获取的前缀列表
-      const prefixes = this.colorPrefixes;
-
-      for (const prefix of prefixes) {
-        if (colorName.startsWith(prefix)) {
-          return prefix;
-        }
-      }
-
-      // 对于包含"使"字但不以"上好"开头的情况
-      if (colorName.includes("使") && !colorName.startsWith("上好")) {
-        // 找到"使"字的位置并返回前面的部分+使
-        const shiIndex = colorName.indexOf("使");
-        return colorName.substring(0, shiIndex + 1);
-      }
-
-      // 如果没有找到匹配的前缀，返回空字符串
-      return "";
-    },
-
-    // 获取颜色名称的后缀（如"大绿"）
-    getSuffix(colorName) {
-      const prefix = this.getPrefix(colorName);
-      if (prefix) {
-        return colorName.substring(prefix.length);
-      }
-      return colorName;
     },
   },
 };
@@ -807,9 +678,6 @@ export default {
 .color-tags {
   display: flex;
   flex-wrap: wrap;
-  max-height: 140rpx;
-  overflow-y: auto;
-  padding: 10rpx 0;
 }
 
 .tag-item {
@@ -831,21 +699,13 @@ export default {
 .expandable-area {
   position: relative;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-  min-height: 300rpx; /* 添加最小高度以保持布局稳定 */
 }
 
 .description-container {
   margin-bottom: 20rpx;
   position: relative;
-  min-height: 280rpx; /* 确保容器有最小高度 */
-}
-
-.description-container.expanded-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  /* 固定高度以避免展开/收起时影响布局 */
+  height: 270rpx;
 }
 
 .description-content {
@@ -876,13 +736,24 @@ export default {
   background-color: rgba(226, 247, 220, 0.2); /* #e2f7dc 透明度0.2 */
 }
 
-/* 展开状态下的样式 */
-.description-content.expanded {
+/* 展开状态下的样式（覆盖层） */
+.description-content.expanded.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 520rpx;
   width: 92%;
   white-space: pre-wrap;
   background-color: #e2f7dc;
-  padding-bottom: 50rpx;
+  z-index: 100;
+  border-radius: 8rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.expanded-scroll {
+  height: 450rpx;
+  padding: 10rpx 20rpx;
 }
 
 .toggle-btn {
@@ -897,19 +768,24 @@ export default {
   border-radius: 0 0 8rpx 8rpx;
   position: relative;
   z-index: 101;
+  margin-top: -20rpx; /* 往上移一点 */
+  margin-left: auto;
+  width: fit-content;
 }
 
-/* 当展开时，调整按钮位置 */
-.description-container.expanded-container .toggle-btn {
+/* 展开状态下的按钮 */
+.toggle-btn.overlay-btn {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
-  text-align: center; /* 居中对齐 */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
   margin-top: 0;
   background-color: #e2f7dc;
-  padding: 10rpx 0;
+  padding: 10rpx 20rpx;
   border-radius: 0 0 8rpx 8rpx;
+  z-index: 102;
+  width: fit-content;
 }
 
 /* 三级分类容器 */
@@ -997,8 +873,7 @@ export default {
   background-color: inherit;
 }
 
-.third-level-description-container.expanded-third-level-container
-  .third-level-toggle-btn {
+.third-level-description-container.expanded-third-level-container .third-level-toggle-btn {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -1043,61 +918,35 @@ export default {
   line-height: 1.5;
 }
 
-/* 颜色展示容器 */
-.color-palette-container {
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
   margin-top: 20rpx;
 }
 
-/* 颜色行 */
-.color-row {
-  display: flex;
-  margin-bottom: 20rpx;
-}
-
-/* 颜色列 */
-.color-col {
-  display: flex;
-}
-
-/* 特殊列（上好、常使） */
-.special-col {
-  width: 20%;
-  margin-right: 2%;
-}
-
-/* 普通列（其他颜色） */
-.normal-col {
-  width: 66%;
-}
-
-.normal-col .color-swatch {
+.color-item {
   width: 30%;
-  margin-right: 4%;
+  margin-right: 3%;
   margin-bottom: 20rpx;
 }
 
-.normal-col .color-swatch:nth-child(3n) {
+.color-item:nth-child(3n) {
   margin-right: 0;
 }
 
 .color-swatch {
-  height: 120rpx;
+  height: 80rpx;
+  border-radius: 8rpx;
   position: relative;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: flex-end;
-  /* 确保色块占满容器 */
-  width: 100%;
 }
 
 .color-label {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
   color: white;
   padding: 6rpx 10rpx;
+  font-size: 22rpx;
   width: 100%;
-  font-size: 18rpx;
-  line-height: 1.2;
 }
 </style>
